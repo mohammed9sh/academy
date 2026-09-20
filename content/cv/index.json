@@ -1,0 +1,941 @@
+{
+  "id": "cv",
+  "key": "cv",
+  "icon": "👁️",
+  "title": "Computer Vision",
+  "desc": "From pixels to spatial understanding — detection, depth, segmentation, and visual control for intelligent physical systems.",
+  "chapters": [
+    {
+      "id": "cv1",
+      "title": "Classical Vision Foundations",
+      "sub": "Image processing · Features · Camera geometry",
+      "units": [
+        {
+          "id": "cv1-1",
+          "title": "Image Formation & Filtering",
+          "meta": "Cameras, kernels, spatial filtering",
+          "xp": 90,
+          "watch": {
+            "title": "CS231N Lecture 1 — Introduction to CV",
+            "url": "https://www.youtube.com/watch?v=vT1JzLTH4G4",
+            "focus": "First 30 min. What is an image tensor, why CV is hard, the gap between pixels and meaning."
+          },
+          "concept": {
+            "title": "Cameras turn light into numbers",
+            "body": "<p>A digital camera measures light intensity at each sensor location. The result is a <strong>tensor of shape H×W×C</strong>. A 224×224 RGB image = 150,528 numbers.</p><p><strong>Spatial filtering</strong> (convolution with a kernel): blur with Gaussian, detect edges with Sobel, sharpen with Laplacian. Modern CNNs learn these filters — understanding classical ones gives you intuition for what your model does.</p>",
+            "analogy": "A camera is a light measurement device. Each pixel asks: 'how many photons hit me?' The answer is a number. Your model gets millions of these numbers and must extract meaning.",
+            "visual": "Gaussian blur (3×3):\n[1 2 1]\n[2 4 2] / 16\n[1 2 1]\n\nSobel (horizontal edges):\n[-1  0  1]\n[-2  0  2]\n[-1  0  1]"
+          },
+          "challenge": {
+            "q": "You apply Gaussian blur before edge detection. Most likely effect?",
+            "opts": [
+              {
+                "t": "Edges sharpen — Gaussian enhances high-frequency features",
+                "c": false
+              },
+              {
+                "t": "Edge detection degrades — blurring removes high-frequency edge information",
+                "c": true
+              },
+              {
+                "t": "No effect — CNNs ignore preprocessing",
+                "c": false
+              },
+              {
+                "t": "Edges more accurate — noise removed with edges",
+                "c": false
+              }
+            ],
+            "hint": "Edges are high-frequency features. Gaussian is a low-pass filter.",
+            "exp": "Gaussian blur removes high-frequency content — including edges. This is why preprocessing choices matter: you may remove signal along with noise."
+          },
+          "project": {
+            "title": "Classical Filter Toolkit",
+            "desc": "Build a reusable image processing toolkit across three domains: natural, medical, robotics.",
+            "format": "Python script + README",
+            "deliverables": [
+              "Implement: Gaussian blur, Sobel edges, Laplacian sharpening (numpy)",
+              "Apply to: natural RGB image, chest X-ray, robot depth frame",
+              "Side-by-side visualization for all three domains",
+              "README: which filters suit each domain and why?"
+            ],
+            "hint": "scipy.signal.convolve2d or manual numpy. PIL/OpenCV to load. matplotlib to display."
+          }
+        },
+        {
+          "id": "cv1-2",
+          "title": "Feature Extraction",
+          "meta": "SIFT, ORB, HOG — classical descriptors",
+          "xp": 100,
+          "watch": {
+            "title": "CS231N Lecture 8 — Spatial Localization (first 20 min)",
+            "url": "https://www.youtube.com/watch?v=_GfPYLNQank",
+            "focus": "How classical features motivated deep learning. Why hand-crafted features were limited."
+          },
+          "concept": {
+            "title": "Describing patches before deep learning",
+            "body": "<p><strong>HOG</strong>: gradient histograms, used in pedestrian detection. <strong>SIFT</strong>: scale/rotation invariant keypoints. <strong>ORB</strong>: fast binary descriptor — still used in real-time SLAM systems where speed matters more than accuracy.</p><p>CNNs replaced HOG/SIFT for most tasks. Understanding classical features gives you intuition for what deep layers discover.</p>",
+            "analogy": "Classical features manually measure face properties (nose width, eye distance). Deep learning learns its own measurements — but knowing manual ones helps you understand what the network discovers.",
+            "visual": "HOG pipeline:\nImage → gradient magnitude/direction\n→ local cell histograms → block normalization\n→ feature vector\n\nORB = oriented keypoints + binary BRIEF descriptors"
+          },
+          "challenge": {
+            "q": "A robot localizing in a plain white corridor needs to match views to a map. Which detector performs worst?",
+            "opts": [
+              {
+                "t": "ORB — only works outdoors",
+                "c": false
+              },
+              {
+                "t": "SIFT — requires color images",
+                "c": false
+              },
+              {
+                "t": "All classical detectors — need corners/edges/texture to find keypoints",
+                "c": true
+              },
+              {
+                "t": "HOG — cannot handle rotation",
+                "c": false
+              }
+            ],
+            "hint": "Classical detectors need gradient variation. What happens on uniform surfaces?",
+            "exp": "All classical detectors fail in low-texture environments — plain walls have no corners or gradients. This is why deep learning or LiDAR is preferred for SLAM in structured indoor environments like hospitals or warehouses."
+          },
+          "project": {
+            "title": "Feature Matching Pipeline",
+            "desc": "Build a classical feature matching pipeline and test its limits.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Extract ORB keypoints from two views of same scene",
+              "Match with BFMatcher + Lowe ratio test, visualize",
+              "Apply to: textured outdoor scene (works) vs low-texture indoor (fails)",
+              "Quantify: correct matches per case",
+              "README: when classical vs deep features for your robotics/medical work?"
+            ],
+            "hint": "cv2.ORB_create(), detectAndCompute(), BFMatcher. Ratio test: keep where dist1/dist2 < 0.75."
+          }
+        },
+        {
+          "id": "cv1-3",
+          "title": "Camera Models & Geometry",
+          "meta": "Intrinsics, extrinsics, projection",
+          "xp": 110,
+          "watch": {
+            "title": "MIT 6.8300 Lec 2 — Image Formation (free OCW)",
+            "url": "https://ocw.mit.edu/courses/6-8300-advances-in-computer-vision-spring-2024/",
+            "focus": "Pinhole camera model, intrinsic matrix K, projection from 3D world to 2D pixel."
+          },
+          "concept": {
+            "title": "How 3D world becomes 2D image",
+            "body": "<p>Every camera: <strong>p = K [R|t] P</strong>. K = intrinsic matrix (focal length, principal point). [R|t] = extrinsic matrix (camera pose). Non-negotiable for robotics CV: depth estimation, stereo, visual odometry, 3D reconstruction all depend on this.</p>",
+            "analogy": "K is the camera's personality — fixed focal length, principal point. [R|t] is where you place it in the world. Together they tell you where any 3D point lands on your sensor.",
+            "visual": "p = K · [R|t] · P\nK = [[fx,  0, cx],\n     [ 0, fy, cy],\n     [ 0,  0,  1]]\nu = fx·X/Z + cx\nv = fy·Y/Z + cy"
+          },
+          "challenge": {
+            "q": "Camera: f=500px, point at Z=2m, X=0.5m right of optical axis. Pixel displacement from center?",
+            "opts": [
+              {
+                "t": "125 px",
+                "c": true
+              },
+              {
+                "t": "250 px",
+                "c": false
+              },
+              {
+                "t": "1000 px",
+                "c": false
+              },
+              {
+                "t": "500 px",
+                "c": false
+              }
+            ],
+            "hint": "displacement = fx · X/Z = 500 · 0.5/2",
+            "exp": "500 × 0.5/2 = 125 px. This formula governs all stereo, depth, and odometry calculations."
+          },
+          "project": {
+            "title": "Camera Calibration & Projection",
+            "desc": "Calibrate a real camera. Project 3D points, verify with ground truth.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Calibrate using OpenCV chessboard or KITTI calibration files",
+              "Project 3D points → image, compare with GT pixel positions",
+              "Visualize: reprojection error per point",
+              "Undistort image using calibration parameters",
+              "README: what does K tell you about your camera?"
+            ],
+            "hint": "cv2.calibrateCamera(), cv2.projectPoints(). KITTI includes calibration files if no chessboard."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "cv1-a",
+        "title": "Classical Vision Pipeline",
+        "xp": 280,
+        "desc": "Full pipeline: calibrate, extract features, match views, estimate relative camera pose.",
+        "deliverables": [
+          "Camera calibration and undistortion",
+          "ORB feature extraction + matching with ratio test",
+          "Essential matrix estimation from matched points",
+          "Decompose E → R and t (relative camera pose)",
+          "Visualize: matched features + camera motion direction",
+          "README: map each classical component to its modern deep equivalent"
+        ],
+        "hint": "OpenCV: calibrateCamera → undistort → ORB → BFMatcher → findEssentialMat → recoverPose.",
+        "linkedin": "Just completed Classical Vision. Built a full pipeline from camera calibration to pose estimation — backbone of classical visual odometry. #ComputerVision #Robotics"
+      }
+    },
+    {
+      "id": "cv2",
+      "title": "Deep Learning for Vision",
+      "sub": "CNNs · Architectures · Training",
+      "units": [
+        {
+          "id": "cv2-1",
+          "title": "CNNs — How and Why They Work",
+          "meta": "Convolution, pooling, receptive fields",
+          "xp": 120,
+          "watch": {
+            "title": "CS231N Lecture 5 — Convolutional Neural Networks",
+            "url": "https://www.youtube.com/watch?v=bNb2fEVKeEo",
+            "focus": "Full ~70 min. Why spatial structure matters, receptive fields, pooling, weight sharing. This is the core."
+          },
+          "concept": {
+            "title": "Learning filters, not hand-crafting them",
+            "body": "<p>Classical CV: you design filters. CNNs: data decides. <strong>Receptive field</strong>: how much of the original image influences one neuron — grows with depth. Early layers detect edges. Deep layers detect objects. <strong>Weight sharing</strong>: one filter everywhere — translation invariant.</p>",
+            "analogy": "Classical CV hires specialists for every task. CNNs hire generalists who learn the best tools for YOUR specific data.",
+            "visual": "RF grows by (k-1) per layer for k×k kernels:\n1 layer(3×3): RF=3\n5 layers(3×3): RF=11\n\nLayer hierarchy:\nL1: edges, colors\nL2: corners, textures\nL3: parts (eyes, wheels)\nL4+: objects, scenes"
+          },
+          "challenge": {
+            "q": "CNN has 5 conv layers, each 3×3, stride=1. Receptive field of layer 5 neuron?",
+            "opts": [
+              {
+                "t": "3×3 — same as kernel",
+                "c": false
+              },
+              {
+                "t": "11×11",
+                "c": true
+              },
+              {
+                "t": "15×15",
+                "c": false
+              },
+              {
+                "t": "25×25",
+                "c": false
+              }
+            ],
+            "hint": "RF = 1 + 5×(3-1). Add (k-1) per layer.",
+            "exp": "1 + 5×2 = 11×11. Deep networks needed for large objects — many layers for RF to cover the full object."
+          },
+          "project": {
+            "title": "CNN Feature Visualizer",
+            "desc": "Train a small CNN from scratch. Visualize what each layer learns.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Train 4-layer CNN on CIFAR-10 (~85% accuracy)",
+              "Visualize learned filters in layer 1 (should show edges/colors)",
+              "Feature maps for a specific input across all layers",
+              "Grad-CAM on 5 test images",
+              "README: does the hierarchy (edges→parts→objects) appear in your visualizations?"
+            ],
+            "hint": "torchvision.utils.make_grid for filters. Forward hooks to capture feature maps."
+          }
+        },
+        {
+          "id": "cv2-2",
+          "title": "Modern Architectures",
+          "meta": "ResNet, DenseNet, ViT — when to use what",
+          "xp": 130,
+          "watch": {
+            "title": "CS231N Lecture 9 — CNN Architectures",
+            "url": "https://www.youtube.com/watch?v=DAOcjicFr1Y",
+            "focus": "ResNet skip connections (mathematical reason), DenseNet, ViT overview. ~50 min."
+          },
+          "concept": {
+            "title": "Architecture design as engineering decisions",
+            "body": "<p><strong>ResNet</strong>: output = F(x)+x. Skip connections solve vanishing gradients. Dominates medical imaging. <strong>DenseNet</strong>: each layer connects to ALL previous layers. Max feature reuse. Strong for scarce data. <strong>ViT</strong>: patches as tokens, self-attention, no inductive bias — needs large data.</p>",
+            "analogy": "ResNet: highway with emergency lanes. DenseNet: everyone talks to everyone. ViT: global meeting where every patch attends to every other simultaneously.",
+            "visual": "ResNet block:\nx → [Conv-BN-ReLU-Conv-BN] → (+x) → ReLU\n\nDenseNet layer n:\nx_n = F([x_0, x_1, ..., x_{n-1}])\n\nViT:\npatches → embeddings → transformer × N → class token"
+          },
+          "challenge": {
+            "q": "1,500 labeled chest X-rays. Best starting architecture?",
+            "opts": [
+              {
+                "t": "ViT-Base pretrained — attention beats convolution",
+                "c": false
+              },
+              {
+                "t": "DenseNet-121 pretrained — gold standard for chest X-ray (CheXNet)",
+                "c": true
+              },
+              {
+                "t": "ResNet-18 from scratch — simpler is better",
+                "c": false
+              },
+              {
+                "t": "All perform identically on small datasets",
+                "c": false
+              }
+            ],
+            "hint": "DenseNet-121 is the CheXNet architecture. ViT needs more fine-tuning data than ResNet families.",
+            "exp": "DenseNet-121 pretrained is the gold standard for chest X-ray (CheXNet paper). Dense connections are a built-in regularizer for small datasets. ViT needs large pretraining to generalize. From scratch is worst — 1,500 images cannot learn representations from random init."
+          },
+          "project": {
+            "title": "Architecture Benchmark on Medical Images",
+            "desc": "Benchmark ResNet-18, DenseNet-121, ViT-tiny on a medical dataset.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Fine-tune all three on NIH Chest X-ray mini split",
+              "Training curves, final AUROC, inference time, parameter count",
+              "Grad-CAM (ResNet/DenseNet) vs attention maps (ViT) on same images",
+              "Table: accuracy vs compute vs parameters",
+              "README: which would you deploy clinically and why?"
+            ],
+            "hint": "timm library has all three. Same hyperparameters for fair comparison. Freeze backbone first, then unfreeze."
+          }
+        },
+        {
+          "id": "cv2-3",
+          "title": "Training Deep Models",
+          "meta": "Transfer learning, augmentation, loss design",
+          "xp": 110,
+          "watch": {
+            "title": "CS231N Lecture 7 — Training Neural Networks II",
+            "url": "https://www.youtube.com/watch?v=_JB0AO7QxSA",
+            "focus": "LR schedules, batch normalization intuition, regularization strategies. ~60 min."
+          },
+          "concept": {
+            "title": "The engineering of making models learn",
+            "body": "<p><strong>Transfer learning</strong>: start from ImageNet weights — model already knows edges, textures, shapes. Fine-tune for your domain. Critical for medical (small datasets). <strong>Medical augmentation</strong>: careful — don't flip in ways that change clinical meaning. <strong>Focal loss</strong>: for class imbalance (common in medical).</p>",
+            "analogy": "Transfer learning: hiring someone who already knows how to drive and teaching them your city's roads. Training from scratch: teaching someone who has never seen a road.",
+            "visual": "Fine-tuning strategy:\n1. Freeze backbone, train head (few epochs)\n2. Unfreeze last few layers, lower LR\n3. Unfreeze all, very low LR (optional)\n\nFocal loss: -α(1-pt)^γ · log(pt)\nγ>0 downweights easy examples"
+          },
+          "challenge": {
+            "q": "Classifier: 95% accuracy, AUROC=0.61. Dataset: 90% normal, 10% pneumonia. Problem?",
+            "opts": [
+              {
+                "t": "Model is overfitting — reduce complexity",
+                "c": false
+              },
+              {
+                "t": "Class imbalance — model predicts \"normal\" always, achieving 90% accuracy trivially",
+                "c": true
+              },
+              {
+                "t": "Learning rate too high",
+                "c": false
+              },
+              {
+                "t": "Transfer learning is hurting — train from scratch",
+                "c": false
+              }
+            ],
+            "hint": "If 90% are normal, predicting \"normal\" always gives 90% accuracy. What does AUROC=0.61 reveal?",
+            "exp": "Predicting \"normal\" always achieves 90% accuracy but AUROC≈0.5. Your 0.61 shows barely above random. Fix: weighted CE or focal loss, oversample minority class, use AUROC as primary metric not accuracy."
+          },
+          "project": {
+            "title": "Imbalanced Medical Classifier",
+            "desc": "Train on deliberately imbalanced medical data. Compare loss functions.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Create 90/10 imbalanced split (normal/pneumonia)",
+              "Train: standard CE, weighted CE, focal loss",
+              "Compare: accuracy, AUROC, F1, precision-recall curve for each",
+              "Best threshold at 0.9 sensitivity from PR curve",
+              "README: what metric should you use for imbalanced medical data?"
+            ],
+            "hint": "torch.nn.CrossEntropyLoss(weight=...) for weighted CE. sklearn for AUROC, F1."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "cv2-a",
+        "title": "Medical Image Classification — Module 1",
+        "xp": 400,
+        "desc": "Your first research module: comparative study of learned representations. Publication-worthy.",
+        "deliverables": [
+          "Train ResNet-18, DenseNet-121, ViT-tiny with proper splits and class imbalance handling",
+          "Full evaluation: AUROC, F1, calibration (ECE), reliability diagrams",
+          "Grad-CAM / attention maps — do models attend to clinically relevant regions?",
+          "Architecture comparison table",
+          "README + 1-page methods write-up in MICCAI workshop format"
+        ],
+        "hint": "The write-up: motivation, dataset, methods, results table, Grad-CAM figure, limitations.",
+        "linkedin": "Published Module 1 of my PhD research: comparative study of ResNet, DenseNet, ViT for medical image classification. Full results on GitHub. #MedicalAI #DeepLearning"
+      }
+    },
+    {
+      "id": "cv3",
+      "title": "Detection & Segmentation",
+      "sub": "YOLO · UNet · Instance masks · Tracking",
+      "units": [
+        {
+          "id": "cv3-1",
+          "title": "Object Detection",
+          "meta": "YOLO, Faster R-CNN, IoU, NMS",
+          "xp": 140,
+          "watch": {
+            "title": "CS231N Lecture 11 — Detection and Segmentation (first 35 min)",
+            "url": "https://www.youtube.com/watch?v=nDPWywWRIRs",
+            "focus": "Detection evolution: sliding windows → R-CNN → Faster R-CNN → YOLO. Why each step was needed."
+          },
+          "concept": {
+            "title": "From classification to localization",
+            "body": "<p><strong>Faster R-CNN</strong>: RPN proposes regions, classifier refines. Accurate, ~5fps. <strong>YOLO</strong>: one-pass grid prediction, real-time. For robotics: YOLO. For medical (accuracy critical): Faster R-CNN or YOLO with careful NMS tuning.</p><p><strong>IoU</strong> = overlap/union. <strong>NMS</strong>: keep highest-confidence, remove duplicates.</p>",
+            "analogy": "Faster R-CNN: security guard who first flags suspicious areas, then examines each carefully. YOLO: surveillance camera processing the entire scene in one glance.",
+            "visual": "IoU = |A∩B|/|A∪B|  (0=no overlap, 1=perfect)\nNMS: sort by confidence\n→ keep if IoU < threshold with all kept boxes\nmAP = mean Average Precision across IoU thresholds"
+          },
+          "challenge": {
+            "q": "YOLOv8 misses occluded instrument 30% of frames; Faster R-CNN misses only 8%. Why?",
+            "opts": [
+              {
+                "t": "YOLO is slower so it skips frames",
+                "c": false
+              },
+              {
+                "t": "Faster R-CNN two-stage process allows careful per-region analysis of difficult cases",
+                "c": true
+              },
+              {
+                "t": "YOLO cannot handle video input",
+                "c": false
+              },
+              {
+                "t": "Faster R-CNN uses larger input resolution by default",
+                "c": false
+              }
+            ],
+            "hint": "What does two-stage processing allow that single-pass cannot?",
+            "exp": "Two-stage detectors dedicate a full classification pass per proposed region — more thorough on difficult/occluded cases. For safety-critical surgical robotics, accuracy-speed tradeoff often favors accuracy."
+          },
+          "project": {
+            "title": "Surgical Instrument Detector",
+            "desc": "Deploy YOLOv8 on a surgical or medical instrument video.",
+            "format": "Python script + annotated video + README",
+            "deliverables": [
+              "Run YOLOv8 on surgical tool video (YouTube or CholecT50 dataset)",
+              "Boxes, class labels, confidence per frame",
+              "Log: detection rate per class, confidence distribution, missed frames",
+              "Failure analysis: occlusion, lighting, fast motion",
+              "README: would you deploy this in a real OR? What needs to change?"
+            ],
+            "hint": "pip install ultralytics. model = YOLO(\"yolov8n.pt\"). model.track(source=\"video.mp4\") for video."
+          }
+        },
+        {
+          "id": "cv3-2",
+          "title": "Semantic & Instance Segmentation",
+          "meta": "UNet, Mask R-CNN, pixel masks",
+          "xp": 140,
+          "watch": {
+            "title": "CS231N Lecture 11 — Segmentation (from 35 min)",
+            "url": "https://www.youtube.com/watch?v=nDPWywWRIRs",
+            "focus": "FCN, UNet skip connections, instance vs semantic segmentation difference."
+          },
+          "concept": {
+            "title": "Pixel-level understanding",
+            "body": "<p><strong>UNet</strong>: encoder (compress) + decoder (expand) + skip connections preserving spatial detail. Critical for medical imaging where precise boundaries matter. <strong>Mask R-CNN</strong>: Faster R-CNN + mask prediction branch. Detects + classifies + segments simultaneously.</p>",
+            "analogy": "Detection = rectangle around a country. Segmentation = coloring every pixel precisely, respecting every coastline. UNet's skip connections keep the high-resolution blueprint while building the compressed overview.",
+            "visual": "UNet:\nEncoder: 572→286→143→72→36\nDecoder: 36→72→143→286→572\nSkip: copy+concat encoder features at each scale\n→ preserves fine spatial detail"
+          },
+          "challenge": {
+            "q": "UNet retinal vessels: Dice=0.91 (thick), Dice=0.43 (thin, 1-2px). Most likely cause?",
+            "opts": [
+              {
+                "t": "Model needs more layers",
+                "c": false
+              },
+              {
+                "t": "Class imbalance — thin vessels are tiny pixel fraction, loss dominated by background",
+                "c": true
+              },
+              {
+                "t": "Skip connections are causing this — remove them",
+                "c": false
+              },
+              {
+                "t": "Wrong loss metric",
+                "c": false
+              }
+            ],
+            "hint": "How much of the image is 1-2px thin vessels vs background?",
+            "exp": "Extreme class imbalance. Thin vessels occupy very few pixels — standard loss ignores them. Fix: weighted loss upweighting thin vessel pixels, or topology-aware loss penalizing missed thin structures."
+          },
+          "project": {
+            "title": "Retinal Vessel Segmentation",
+            "desc": "Train UNet for retinal vessels. Handle thin structure challenge.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Train UNet on DRIVE retinal vessel dataset (20 training images)",
+              "Compare: standard Dice loss vs weighted Dice (upweight thin vessels)",
+              "Dice score per vessel thickness category",
+              "Visualization: prediction overlay, error map (thin vs thick vessels)",
+              "README: what does this tell you about loss design for medical imaging?"
+            ],
+            "hint": "segmentation-models-pytorch. DRIVE dataset is free. Compute vessel thickness with distance transform for loss weighting."
+          },
+          "secondary_watch": {
+            "title": "AI for Medicine Specialization — Course 1: AI for Medical Diagnosis",
+            "url": "https://learn.deeplearning.ai/specializations/ai-for-medicine/lesson/k22qhi/welcome-to-the-specialization-with-andrew-and-pranav",
+            "focus": "Week 2-3: segmentation evaluation metrics (Dice coefficient, IoU), class imbalance handling, UNet architecture for medical images, soft Dice loss. These fill a specific gap: clinical evaluation metrics and loss functions used in medical image segmentation that CS231N does not cover."
+          }
+        },
+        {
+          "id": "cv3-3",
+          "title": "Tracking & Temporal Consistency",
+          "meta": "SORT, DeepSORT, identity switches",
+          "xp": 120,
+          "watch": {
+            "title": "SORT paper abstract + intro (15 min read)",
+            "url": "https://arxiv.org/abs/1602.00763",
+            "focus": "Core idea: Kalman filter (motion prediction) + IoU matching (Hungarian algorithm). The simplest effective tracker."
+          },
+          "concept": {
+            "title": "Identity across time",
+            "body": "<p><strong>SORT</strong>: Kalman predicts next position, Hungarian algorithm matches predictions to detections by IoU. <strong>DeepSORT</strong>: adds appearance features for occlusion and re-entry. When objects cross, appearance helps re-assign IDs.</p>",
+            "analogy": "SORT: predict where your friend is walking, check if anyone nearby matches. DeepSORT: also check what your friend is wearing — useful when people cross paths.",
+            "visual": "SORT per frame:\n1. Kalman predict → expected positions\n2. Detect → new bounding boxes\n3. Hungarian match: predictions↔detections by IoU\n4. Update matched, create new, delete lost (>max_age)"
+          },
+          "challenge": {
+            "q": "SORT loses surgical instrument for 3 frames (occluded). It reappears. What happens to its ID?",
+            "opts": [
+              {
+                "t": "ID preserved — SORT remembers across occlusions",
+                "c": false
+              },
+              {
+                "t": "ID may change — track deleted after max_age, reappearing object gets new ID",
+                "c": true
+              },
+              {
+                "t": "SORT pauses and resumes with same ID",
+                "c": false
+              },
+              {
+                "t": "SORT automatically switches to DeepSORT",
+                "c": false
+              }
+            ],
+            "hint": "SORT deletes tracks after max_age missed frames. What happens on reappearance?",
+            "exp": "Track deleted after max_age frames — reappearing instrument gets a new ID (identity switch). Fix: increase max_age or use DeepSORT's appearance features for re-identification."
+          },
+          "project": {
+            "title": "Instrument Tracker with Identity",
+            "desc": "Implement SORT on your surgical detector. Measure identity switches.",
+            "format": "Python script + annotated video + README",
+            "deliverables": [
+              "Implement SORT: Kalman filter + Hungarian matching",
+              "Annotate tracks with consistent colors and IDs",
+              "Detect and log identity switches",
+              "Compare: SORT with max_age=1 vs max_age=5",
+              "README: how often does ID switch? What would fix it for a real surgical robot?"
+            ],
+            "hint": "filterpy for Kalman. scipy.optimize.linear_sum_assignment for Hungarian matching."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "cv3-a",
+        "title": "Surgical Scene Understanding Pipeline",
+        "xp": 450,
+        "desc": "Detect, segment, and track all instruments simultaneously. Portfolio-grade.",
+        "deliverables": [
+          "Detection: YOLOv8 on surgical instruments",
+          "Segmentation: pixel masks per instrument per frame",
+          "Tracking: SORT with consistent IDs and identity switch log",
+          "Per-frame JSON: {frame, instruments:[{id,class,box,mask_area,confidence,track_age}]}",
+          "README + demo video + architecture diagram"
+        ],
+        "hint": "Chain: YOLOv8 → SAM or UNet → SORT. JSON logging is your evaluation infrastructure.",
+        "linkedin": "Built a surgical scene understanding pipeline: real-time detection + segmentation + tracking. This is \"intelligent physical systems\" at the perception layer. #SurgicalAI #ComputerVision"
+      }
+    },
+    {
+      "id": "cv4",
+      "title": "3D Vision & Depth",
+      "sub": "Stereo · Monocular depth · Point clouds",
+      "units": [
+        {
+          "id": "cv4-1",
+          "title": "Stereo Vision",
+          "meta": "Epipolar geometry, disparity, depth = fB/d",
+          "xp": 140,
+          "watch": {
+            "title": "MIT 6.8300 Lec 4 — Stereo and Depth",
+            "url": "https://ocw.mit.edu/courses/6-8300-advances-in-computer-vision-spring-2024/",
+            "focus": "Epipolar constraint, disparity computation, depth = fB/d derivation."
+          },
+          "concept": {
+            "title": "Two cameras, one depth",
+            "body": "<p><strong>Epipolar geometry</strong>: a point in the left image lies on a known line in the right image — reduces 2D search to 1D. <strong>Disparity</strong> d = horizontal shift. <strong>depth = f·B/d</strong>. More disparity = closer. <strong>Point cloud</strong>: convert depth map to 3D (x,y,z) per pixel.</p>",
+            "analogy": "Your two eyes give depth perception. Close one — the world flattens. Closer objects shift more between your two views — that shift IS depth information.",
+            "visual": "Disparity: d = u_left - u_right\nDepth: Z = f·B/d\nf=focal length, B=baseline between cameras\n\nLarge disparity → small depth (close)\nSmall disparity → large depth (far)"
+          },
+          "challenge": {
+            "q": "Stereo: B=0.12m, f=600px. Object A: d=60px. Object B: d=6px. Which is closer and depths?",
+            "opts": [
+              {
+                "t": "A is closer: A=1.2m, B=12m",
+                "c": true
+              },
+              {
+                "t": "B is closer: B=1.2m, A=12m",
+                "c": false
+              },
+              {
+                "t": "Both equally close",
+                "c": false
+              },
+              {
+                "t": "A=0.1m, B=1.0m",
+                "c": false
+              }
+            ],
+            "hint": "Z = f·B/d. Higher disparity = closer.",
+            "exp": "Z_A = 600×0.12/60 = 1.2m. Z_B = 600×0.12/6 = 12m. A is 10× closer."
+          },
+          "project": {
+            "title": "Stereo Depth Pipeline",
+            "desc": "Disparity → depth map → point cloud.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "KITTI stereo pair → disparity with OpenCV StereoSGBM",
+              "Disparity → depth map using f and B from calibration",
+              "Project to 3D point cloud (x,y,z per pixel)",
+              "Visualize with Open3D, color-coded by depth",
+              "README: what does the robot now know that it didn't from a 2D image?"
+            ],
+            "hint": "cv2.StereoSGBM_create(). KITTI calib files give f and B. open3d.geometry.PointCloud for visualization."
+          }
+        },
+        {
+          "id": "cv4-2",
+          "title": "Monocular Depth & Neural 3D",
+          "meta": "Self-supervised depth, NeRF basics",
+          "xp": 130,
+          "watch": {
+            "title": "Depth Anything V2 blog post + NeRF abstract (10 min)",
+            "url": "https://depth-anything-v2.github.io/",
+            "focus": "How self-supervised monocular depth works (photometric loss). What NeRF does conceptually."
+          },
+          "concept": {
+            "title": "3D from one camera",
+            "body": "<p><strong>Monocular depth</strong>: predict depth from single image using learned priors. Self-supervised: adjacent frames + camera motion → photometric reconstruction loss. No labels needed. <strong>DepthAnything / MiDaS</strong>: foundation models. Strong zero-shot but needs domain fine-tuning. <strong>NeRF</strong>: learns 3D scene from multiple views, synthesizes novel viewpoints.</p>",
+            "analogy": "Monocular depth: one eye, using learned experience about depth cues. NeRF: memorize an entire 3D scene so well you can recreate any view from any angle.",
+            "visual": "Self-supervised monocular:\nFrame t + Frame t+1 + pose network\n→ warp t using predicted depth+pose\n→ photometric loss with t+1\n→ no depth labels needed"
+          },
+          "challenge": {
+            "q": "DepthAnything fine-tuned outdoors, deployed in surgical scene. Fails. Specific challenge beyond distribution shift?",
+            "opts": [
+              {
+                "t": "Surgical scenes are too dark",
+                "c": false
+              },
+              {
+                "t": "Shiny metallic instruments violate Lambertian assumption — specular reflections confuse photometric loss",
+                "c": true
+              },
+              {
+                "t": "Monocular depth requires color images",
+                "c": false
+              },
+              {
+                "t": "Instruments move too fast",
+                "c": false
+              }
+            ],
+            "hint": "Self-supervised depth assumes surfaces reflect diffusely. What are surgical instruments made of?",
+            "exp": "Shiny metallic surfaces violate the Lambertian assumption — highlights move with viewpoint, not geometry. Photometric consistency breaks on surgical instruments. This is an open problem in surgical CV."
+          },
+          "project": {
+            "title": "Depth Domain Gap Study",
+            "desc": "Run monocular depth on your domain. Quantify gap. Attempt fine-tuning.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Run DepthAnything v2 on: outdoor (works), indoor, medical/surgical",
+              "Visualize depth maps, assess failure modes per domain",
+              "Compute AbsRel/RMSE if GT available (NYU Depth v2 for indoor)",
+              "Fine-tune on 20 target domain samples, measure improvement",
+              "README: what does the domain gap mean for your application?"
+            ],
+            "hint": "DepthAnything v2 on HuggingFace. Even qualitative analysis is valuable."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "cv4-a",
+        "title": "3D Scene Perception System",
+        "xp": 350,
+        "desc": "Stereo input → complete 3D: depth map, point cloud, detected objects with distance estimates.",
+        "deliverables": [
+          "Stereo depth map (StereoSGBM or learned)",
+          "3D point cloud generation and visualization",
+          "YOLOv8 detection projected into 3D — each object gets a 3D position",
+          "Distance estimate per object from camera center",
+          "README: how would this feed into robot grasping or navigation?"
+        ],
+        "hint": "Combine stereo depth + YOLO detection. Project 2D boxes to 3D using depth at box center.",
+        "linkedin": "Built a 3D scene perception system: stereo depth + object detection in 3D space. The robot now knows WHERE objects are, not just what they are. #3DVision #Robotics"
+      }
+    },
+    {
+      "id": "cv5",
+      "title": "Perception to Action",
+      "sub": "Optical flow · Visual odometry · Navigation",
+      "units": [
+        {
+          "id": "cv5-1",
+          "title": "Optical Flow & Motion",
+          "meta": "RAFT, Farneback, ego-motion",
+          "xp": 120,
+          "watch": {
+            "title": "CS231N Lecture 12 — first 20 min on optical flow",
+            "url": "https://www.youtube.com/watch?v=6wcs6szJWMY",
+            "focus": "What optical flow is, Lucas-Kanade intuition, why dense flow matters for video understanding."
+          },
+          "concept": {
+            "title": "Seeing motion as a field",
+            "body": "<p><strong>Optical flow</strong>: for every pixel, estimate (u,v) motion to next frame. <strong>RAFT</strong>: deep, iterative refinement, state of the art. For robotics: separate camera ego-motion from object motion. Background flow = ego-motion. Anomalous flow = moving obstacles.</p>",
+            "analogy": "Optical flow is the velocity map of your image. Every pixel gets an arrow showing where it moved. Decode which arrows come from camera motion vs actual objects moving.",
+            "visual": "Forward camera motion → radial outward flow from FOE\nMoving object → flow different from background\nDense flow: H×W×2 (u,v per pixel)\nRAFT: 12 iterative refinement steps"
+          },
+          "challenge": {
+            "q": "Hospital robot moving forward detects anomalous optical flow in lower-right of frame. What does this indicate?",
+            "opts": [
+              {
+                "t": "Camera calibration error",
+                "c": false
+              },
+              {
+                "t": "Moving object (person, cart) in that region — different from expected ego-motion pattern",
+                "c": true
+              },
+              {
+                "t": "Robot is accelerating",
+                "c": false
+              },
+              {
+                "t": "Low frame rate causing blur",
+                "c": false
+              }
+            ],
+            "hint": "Background = predictable radial ego-motion. What causes a region to differ?",
+            "exp": "Anomalous flow = independent object motion. Principle behind optical-flow obstacle detection: compute expected ego-motion, subtract, flag residual motion as moving obstacles."
+          },
+          "project": {
+            "title": "Motion Segmentation for Navigation",
+            "desc": "Compute optical flow. Segment moving obstacles from static background.",
+            "format": "Python script + annotated video + README",
+            "deliverables": [
+              "Dense optical flow with RAFT on robot navigation video",
+              "Segment: moving objects (high residual flow) vs static background",
+              "Visualize: flow field as arrows + motion mask overlaid on video",
+              "README: how would you integrate this into a robot safety system?"
+            ],
+            "hint": "torchvision.models.optical_flow has RAFT. Flow magnitude = sqrt(u²+v²). Background ≈ median flow direction."
+          }
+        },
+        {
+          "id": "cv5-2",
+          "title": "Visual Odometry & SLAM Basics",
+          "meta": "Pose estimation, drift, loop closure",
+          "xp": 150,
+          "watch": {
+            "title": "Cyrill Stachniss SLAM lecture (first 25 min)",
+            "url": "https://www.youtube.com/watch?v=U6vr3iNrwRA",
+            "focus": "What is SLAM, why VO drifts, what loop closure does. Conceptual foundation."
+          },
+          "concept": {
+            "title": "Where am I? Using only images.",
+            "body": "<p><strong>Visual odometry</strong>: estimate camera trajectory from image sequences. Chain R,t estimates → full trajectory. <strong>Drift</strong>: small errors accumulate. <strong>Loop closure</strong>: detect revisited places, correct accumulated error. Classical VO: ORB keypoints → essential matrix → R,t.</p>",
+            "analogy": "Walking blindfolded, counting steps and turns. Each small counting error adds up (drift). If you recognize a landmark you've seen before, you can correct your position (loop closure).",
+            "visual": "VO pipeline:\nFrame t, t+1 → keypoints → match\n→ Essential matrix E → R, t\n→ chain: T_{t+1} = T_t · [R|t]\nDrift: ε per step → O(n·ε) total error"
+          },
+          "challenge": {
+            "q": "VO drift: indoors 0.5%, outdoors 8%. Most likely cause?",
+            "opts": [
+              {
+                "t": "Outdoor scenes have more moving objects",
+                "c": false
+              },
+              {
+                "t": "Outdoor: large illumination and scale changes — keypoints become inconsistent across frames",
+                "c": true
+              },
+              {
+                "t": "Indoor cameras have higher resolution",
+                "c": false
+              },
+              {
+                "t": "VO only works with stereo cameras outdoors",
+                "c": false
+              }
+            ],
+            "hint": "What makes keypoint matching harder outdoors: dynamic lighting, shadows, large depth range.",
+            "exp": "Outdoor: dynamic lighting, large depth variation, greater frame-to-frame texture changes → less reliable keypoint matching → more per-frame error. Indoor: controlled lighting, static objects, known scale."
+          },
+          "project": {
+            "title": "Visual Odometry on KITTI",
+            "desc": "Implement classical VO on KITTI. Visualize drift. Quantify ATE.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "ORB keypoints, match with ratio test",
+              "Essential matrix estimation, decompose to R and t",
+              "Chain poses → trajectory (GT scale for monocular)",
+              "Plot estimated vs GT trajectory (top-down view)",
+              "Compute ATE (Absolute Trajectory Error)",
+              "README: where does drift appear? What would loop closure fix?"
+            ],
+            "hint": "KITTI sequence 00. cv2.findEssentialMat(pts1, pts2, K), cv2.recoverPose(E,...)."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "cv5-a",
+        "title": "Visual Navigation Module",
+        "xp": 400,
+        "desc": "Optical flow + visual odometry = unified visual navigation module.",
+        "deliverables": [
+          "Optical flow → moving obstacle map per frame",
+          "Visual odometry → pose estimate per frame",
+          "Unified output: {frame, pose:{x,y,theta}, obstacles:[...], nav_decision}",
+          "Run on 200+ frame sequence, plot trajectory + obstacle events",
+          "README: integration into full autonomy stack for a hospital robot"
+        ],
+        "hint": "Focus on clean module interfaces. nav_decision is a simple rule-based layer on top of perception.",
+        "linkedin": "Built a visual navigation module: optical flow for obstacle detection + visual odometry for localization — no GPS needed. #Robotics #ComputerVision #AutonomousSystems"
+      }
+    },
+    {
+      "id": "cv6",
+      "title": "Trustworthy Perception",
+      "sub": "Robustness · OOD · Trust scoring",
+      "units": [
+        {
+          "id": "cv6-1",
+          "title": "Robustness & Corruption Analysis",
+          "meta": "ImageNet-C, mCE, domain shift",
+          "xp": 130,
+          "watch": {
+            "title": "Hendrycks & Dietterich 2019 — abstract + intro (10 min read)",
+            "url": "https://arxiv.org/abs/1903.12261",
+            "focus": "Corruption types, mCE computation, why robustness matters for deployment."
+          },
+          "concept": {
+            "title": "Does your model survive the real world?",
+            "body": "<p>Trained on clean images, deployed facing noise, blur, weather, sensor degradation. <strong>mCE</strong>: mean Corruption Error across 15 corruption types × 5 severities. Medical: scanner noise, motion artifacts, cross-site variation. Robotics: rain, dust, lighting changes.</p>",
+            "analogy": "Testing CV only on clean images is like testing a car only in a sunny parking lot. Real deployment means rain, night, construction zones, and unexpected conditions.",
+            "visual": "Corruptions: Gaussian noise, blur, fog, brightness,\nJPEG, pixelate, elastic transform...\nmCE = mean over corruptions of (error / AlexNet baseline)\nLower mCE = more robust"
+          },
+          "challenge": {
+            "q": "Medical classifier: ECE=0.04 (clean). After Gaussian noise severity=3: ECE=0.21. What does this reveal?",
+            "opts": [
+              {
+                "t": "Needs retraining on noisy data",
+                "c": false
+              },
+              {
+                "t": "Calibration breaks under corruption — model stays confident exactly when it should be uncertain",
+                "c": true
+              },
+              {
+                "t": "ECE not valid under noise",
+                "c": false
+              },
+              {
+                "t": "Severity 3 is unrealistic",
+                "c": false
+              }
+            ],
+            "hint": "Rising ECE under corruption: confidence vs actual accuracy — what is the relationship?",
+            "exp": "Model stays confident even as accuracy drops — worst deployment scenario: fails while appearing reliable. A trustworthy model should show INCREASING uncertainty under corruption."
+          },
+          "project": {
+            "title": "Robustness Profile",
+            "desc": "Complete robustness profile for your medical classifier.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "5 corruption types × 3 severities using albumentations",
+              "Accuracy + ECE at each corruption × severity combination",
+              "Heatmap: corruption type (rows) × severity (cols) → accuracy",
+              "Identify worst-case corruption for your model",
+              "README: which corruptions are most clinically realistic for your setting?"
+            ],
+            "hint": "albumentations: GaussNoise, MotionBlur, RandomFog. sns.heatmap for the corruption heatmap."
+          }
+        },
+        {
+          "id": "cv6-2",
+          "title": "OOD Detection",
+          "meta": "Energy score, Mahalanobis, AUROC",
+          "xp": 140,
+          "watch": {
+            "title": "Hendrycks & Gimpel 2017 — abstract + section 2 (15 min read)",
+            "url": "https://arxiv.org/abs/1610.02136",
+            "focus": "Why max softmax fails for OOD, what AUROC measures in this context."
+          },
+          "concept": {
+            "title": "Knowing what you have not seen",
+            "body": "<p>A chest X-ray model will silently misclassify a knee MRI — with high confidence. <strong>Max softmax</strong>: fails — trained to be confident regardless. <strong>Energy score</strong>: E(x) = -log Σ exp(fᵢ(x)), theoretically grounded. <strong>Mahalanobis</strong>: distance from input to class-conditional feature distributions — best empirically.</p>",
+            "analogy": "A cardiologist trained only in cardiology should say 'I don't know' when shown a dermatology case. OOD detection gives your model the ability to say 'I don't know'.",
+            "visual": "Max softmax: max(softmax(logits))  ← overconfident on OOD\nEnergy: -log Σ exp(f_i(x))  ← theoretically grounded\nMahalanobis: min_c (z-μ_c)ᵀ Σ⁻¹(z-μ_c)  ← best empirically"
+          },
+          "challenge": {
+            "q": "AUROC: max softmax=0.64, energy=0.88, Mahalanobis=0.91. Same model. Why does Mahalanobis win without retraining?",
+            "opts": [
+              {
+                "t": "Mahalanobis uses more parameters",
+                "c": false
+              },
+              {
+                "t": "Uses feature space geometry — detects inputs far from training clusters regardless of output confidence",
+                "c": true
+              },
+              {
+                "t": "Was trained on OOD examples",
+                "c": false
+              },
+              {
+                "t": "AUROC is biased toward Mahalanobis",
+                "c": false
+              }
+            ],
+            "hint": "Where does each method operate: output layer vs intermediate feature space?",
+            "exp": "Mahalanobis measures distance from training class clusters in penultimate feature space — rich representation of what the model knows. OOD inputs far from all clusters are flagged regardless of softmax confidence."
+          },
+          "project": {
+            "title": "OOD Detector for Medical Vision",
+            "desc": "Implement and compare three OOD detection methods.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Baseline: max softmax OOD score",
+              "Energy score: -torch.logsumexp(logits, dim=1)",
+              "Mahalanobis: fit class-conditional Gaussians on training features",
+              "Evaluate: AUROC, FPR@95TPR on medical vs non-medical OOD images",
+              "README: which method for clinical deployment and why?"
+            ],
+            "hint": "Mahalanobis: hook penultimate layer, compute class mean/covariance on train set, score = min class Mahal. distance."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "cv6-a",
+        "title": "Trustworthy Perception Audit — Module 2",
+        "xp": 500,
+        "desc": "Full trustworthiness audit. Module 2 from your research roadmap. Research-paper quality.",
+        "deliverables": [
+          "Robustness profile: accuracy + ECE under 5 corruptions × 3 severities",
+          "OOD detection: three methods, AUROC comparison table",
+          "Calibration: ECE + reliability diagrams (clean vs corrupted)",
+          "Per-prediction trust score: composite signal",
+          "Research report 2–3 pages — MICCAI workshop quality"
+        ],
+        "hint": "This is Module 2 of your PhD research. Report: abstract, problem, methods, results, limitations. Show to your supervisor.",
+        "linkedin": "Published Module 2 of my PhD research: full trustworthiness audit — robustness, calibration, OOD detection. Sharing the methodology. #TrustworthyAI #MedicalAI #PhDResearch"
+      }
+    }
+  ]
+}

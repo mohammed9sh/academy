@@ -1,0 +1,143 @@
+{
+  "id": "math",
+  "key": "math",
+  "icon": "∑",
+  "title": "Mathematics Foundations",
+  "desc": "The mathematical toolkit behind everything in the academy. Work through these before or alongside the main sections — not a blocker, but a reference. Each unit tells you exactly which academy sections depend on it.",
+  "chapters": [
+    {
+      "id": "math1",
+      "title": "Core Mathematical Toolkit",
+      "sub": "Linear algebra · Probability · Calculus · Differential equations",
+      "units": [
+        {
+          "id": "math1-1",
+          "title": "Linear Algebra",
+          "meta": "Vectors, matrices, eigenvalues, SVD — the language of everything",
+          "xp": 60,
+          "watch": {
+            "title": "MIT 18.06 Linear Algebra — Gilbert Strang (36 lectures, MIT OCW)",
+            "url": "https://www.youtube.com/playlist?list=PLE7DDD91010BC51F8",
+            "focus": "Priority lectures: 1 (geometry of linear equations), 6 (column space and null space), 14 (orthogonality), 21 (eigenvalues and eigenvectors), 29 (singular value decomposition). These 5 lectures cover the specific concepts used throughout the academy. Full course if you want the complete foundation."
+          },
+          "concept": {
+            "title": "Why linear algebra is the backbone of the academy",
+            "body": "<p><strong>Where it appears in the academy:</strong></p><p><strong>CV Section:</strong> Images are matrices (H×W×C tensors). Convolution is matrix multiplication. PCA for dimensionality reduction uses eigendecomposition. Camera projection is a matrix operation: p = K[R|t]P.</p><p><strong>ML Section:</strong> Neural network forward pass: y = Wx + b (matrix-vector multiplication). Backpropagation: chain rule of matrix derivatives. Batch training: entire dataset as a matrix.</p><p><strong>TDL Section:</strong> Covariance matrices for uncertainty. SVD for low-rank approximations. Multivariate Gaussian distributions represented as (μ, Σ).</p><p><strong>Robotics Section:</strong> Every transform is a matrix. T ∈ SE(2) is a 3×3 matrix. EKF covariance updates are matrix operations. Circle fitting uses SVD (the NU ME495 14-step algorithm).</p>",
+            "analogy": "Linear algebra is the universal language that all the other sections speak. When CS231N says 'convolution', when Kalman filter says 'covariance update', when CS229 says 'gradient descent' — they are all doing linear algebra. Understanding the language makes every other concept immediately clearer.",
+            "visual": "Key concepts and where they appear:\n\nMatrix multiplication  → Forward pass, transforms, projection\nEigendecomposition     → PCA, covariance ellipses, stability\nSVD                    → Circle fitting (NU ME495), low-rank approx\nDot product            → Attention mechanisms, cosine similarity\nGaussian elimination   → Solving linear systems in kinematics\nDeterminant            → Volume scaling, invertibility checks\n\nSelf-assessment: can you explain why\nT_AC = T_AB · T_BC without memorizing it?"
+          },
+          "challenge": {
+            "q": "A neural network layer has weight matrix W ∈ R^(512×256) and input x ∈ R^256. What is the shape of Wx, and how many multiplications does computing it require?",
+            "opts": [
+              {"t": "Shape: R^512, multiplications: 512×256 = 131,072", "c": true},
+              {"t": "Shape: R^256, multiplications: 256×256 = 65,536", "c": false},
+              {"t": "Shape: R^(512×256), this is a matrix not a vector operation", "c": false},
+              {"t": "Shape: R^512, multiplications: 512 (one per output element)", "c": false}
+            ],
+            "hint": "W is 512 rows × 256 columns. x is a 256-dimensional vector. Matrix-vector multiplication: each output element is a dot product of one row of W with x.",
+            "exp": "W ∈ R^(512×256) multiplied by x ∈ R^256 gives output y ∈ R^512. Each of the 512 output elements requires 256 multiplications (dot product of one row with x) = 512×256 = 131,072 multiplications total. For a batch of 32 inputs: 32×131,072 = ~4M multiplications — just for one layer. This is why GPUs (which parallelize matrix ops) are essential for deep learning."
+          }
+        },
+        {
+          "id": "math1-2",
+          "title": "Probability and Statistics",
+          "meta": "Bayes theorem, distributions, expectation — the language of uncertainty",
+          "xp": 60,
+          "watch": {
+            "title": "Harvard Statistics 110 — Probability, Joe Blitzstein (34 lectures)",
+            "url": "https://www.youtube.com/playlist?list=PL2SOU6wwxB0uwwH80KTQ6ht66KWxbzTIo",
+            "focus": "Priority lectures: 1 (probability and counting), 2 (story proofs, Vandermonde), 4 (conditional probability, Bayes theorem), 8 (random variables and distributions), 23 (Beta distribution), 29 (law of large numbers and CLT), 30 (Multivariate Normal). The edX companion (edx.org/course/introduction-to-probability-0) has interactive problems."
+          },
+          "concept": {
+            "title": "Why probability is the language of robotics and trustworthy AI",
+            "body": "<p>Every major concept in the academy uses probability. Not as background — as the core language.</p><p><strong>TDL Section:</strong> Uncertainty quantification = probability over predictions. Calibration = does P(correct | confidence=0.9) = 0.9? KL divergence = distance between probability distributions. Bayesian inference = updating beliefs with evidence.</p><p><strong>Robotics Section (NU ME495):</strong> Robot pose is a probability distribution N(μ, Σ), not a point. The Kalman filter maintains a Gaussian belief. EKF-SLAM tracks joint probability over robot pose AND landmark positions. Every sensor reading is a random variable with noise model.</p><p><strong>ML Section (CS229):</strong> Maximum Likelihood Estimation derives loss functions from probability. Logistic regression outputs probabilities. Generalization bounds come from concentration inequalities.</p>",
+            "analogy": "In classical programming, variables have exact values. In the academy's world, variables have probability distributions — the robot is 'probably here', the model is 'probably correct with 87% confidence', the sensor reading is 'true distance plus Gaussian noise'. Probability is how you reason rigorously when you are uncertain.",
+            "visual": "Key concepts and where they appear:\n\nBayes theorem          → Kalman update step, classification\nGaussian N(μ, Σ)      → Sensor noise, robot pose belief, KF state\nCLT                    → Why Gaussian assumption is justified\nMLE                    → Deriving cross-entropy loss from probability\nConditional expectation → EKF-SLAM cross-covariance terms\nMarkov chains           → State estimation, MCMC sampling\n\nSelf-assessment: given z = x + ε where ε~N(0,σ²),\ncan you write p(z|x) without looking it up?"
+          },
+          "challenge": {
+            "q": "A sensor measures distance with noise: z = d_true + ε where ε~N(0, 0.04). Your prior belief about the true distance is d~N(2.0, 0.09). You measure z=2.3m. What is the Kalman gain K?",
+            "opts": [
+              {"t": "K = 0.09 / (0.09 + 0.04) = 0.692", "c": true},
+              {"t": "K = 0.04 / (0.09 + 0.04) = 0.308", "c": false},
+              {"t": "K = 0.09 / 0.04 = 2.25", "c": false},
+              {"t": "K cannot be computed without the measurement matrix H", "c": false}
+            ],
+            "hint": "Kalman gain: K = σ²_prior / (σ²_prior + σ²_measurement). Think of it as: how much should I trust the measurement vs my prior?",
+            "exp": "K = P/(P+R) = 0.09/(0.09+0.04) = 0.692. This means: the updated estimate moves 69.2% of the way from the prior (2.0m) toward the measurement (2.3m). Updated estimate = 2.0 + 0.692×(2.3-2.0) = 2.208m. Updated variance = (1-K)×P = 0.308×0.09 = 0.028. The posterior is tighter than either the prior or measurement alone — this is the Kalman filter magic."
+          }
+        },
+        {
+          "id": "math1-3",
+          "title": "Multivariate Calculus",
+          "meta": "Gradients, Jacobians, chain rule — the engine of optimization and EKF",
+          "xp": 60,
+          "watch": {
+            "title": "3Blue1Brown Essence of Calculus + MIT 18.02 Multivariable Calculus",
+            "url": "https://www.youtube.com/playlist?list=PLZHQObOWTQDMsr9K-rj53DwVRMYO3t5Yr",
+            "focus": "Start with 3Blue1Brown Essence of Calculus videos 1-4 (youtube.com/playlist?list=PLZHQObOWTQDMsr9K-rj53DwVRMYO3t5Yr) for geometric intuition — watch all 11 videos (each ~15 min). Then MIT 18.02 (ocw.mit.edu/courses/18-02-multivariable-calculus-fall-2007/) Lectures 1-15 for multivariate extension: partial derivatives, gradients, Jacobians, chain rule for vector functions."
+          },
+          "concept": {
+            "title": "Gradients and Jacobians — two concepts that run the whole academy",
+            "body": "<p><strong>Gradient</strong> ∇f: a vector pointing in the direction of steepest increase of a scalar function. Gradient descent moves opposite to the gradient. Every parameter update in every neural network uses the gradient of the loss w.r.t. parameters.</p><p><strong>Jacobian</strong> J = ∂f/∂x: a matrix of all partial derivatives of a vector function. If f: R^n → R^m, then J ∈ R^(m×n). The Jacobian appears in: backpropagation (chain rule), EKF linearization (F = ∂f/∂x evaluated at current estimate), robot kinematics (velocity Jacobian).</p><p><strong>Chain rule for vector functions:</strong> if z = f(g(x)), then ∂z/∂x = ∂f/∂g · ∂g/∂x (Jacobian multiplication). This is backpropagation.</p>",
+            "analogy": "The gradient tells you which direction is uphill on a landscape. The Jacobian tells you how a multi-dimensional transformation stretches and rotates space locally. Backpropagation is just the chain rule applied recursively through layers — the Jacobian of each layer composed with the next.",
+            "visual": "Gradient (scalar function f: R^n → R):\n∇f = [∂f/∂x₁, ∂f/∂x₂, ..., ∂f/∂xₙ]ᵀ\n\nJacobian (vector function f: R^n → R^m):\nJ = ∂f/∂x  ∈ R^(m×n)\nJ_ij = ∂fᵢ/∂xⱼ\n\nChain rule (backpropagation):\nif z = f(g(x)):\n∂z/∂x = (∂f/∂g) · (∂g/∂x)  ← Jacobian product\n\nEKF: F = ∂f/∂x |_{x̂}  evaluated at current estimate\nThis linearizes f locally — that's all EKF does."
+          },
+          "challenge": {
+            "q": "Neural network: z = W₂·σ(W₁·x). You want ∂L/∂W₁ where L is the scalar loss. Which calculus concept gives you this?",
+            "opts": [
+              {"t": "Gradient descent — you move W₁ in the negative gradient direction", "c": false},
+              {"t": "Chain rule: ∂L/∂W₁ = (∂L/∂z)(∂z/∂σ)(∂σ/∂W₁·x)(∂W₁·x/∂W₁)", "c": true},
+              {"t": "Jacobian of L with respect to x — backprop flows through x not W", "c": false},
+              {"t": "Partial derivative ∂L/∂W₁ computed by perturbing W₁ by ε (numerical)", "c": false}
+            ],
+            "hint": "L depends on W₁ through the chain: W₁ → W₁x → σ(W₁x) → W₂σ(W₁x) → L. Which calculus rule handles composed functions?",
+            "exp": "The chain rule: ∂L/∂W₁ = (∂L/∂z) · (∂z/∂a) · (∂a/∂W₁x) · (∂W₁x/∂W₁) where a = σ(W₁x). Each factor is a Jacobian. Backpropagation is this chain rule applied automatically through computational graphs. Numerical perturbation (option D) works but is O(n) times slower than analytical backprop — impractical for millions of parameters."
+          }
+        },
+        {
+          "id": "math1-4",
+          "title": "Differential Equations",
+          "meta": "ODEs, dynamics, state equations — the physics of robot motion",
+          "xp": 60,
+          "watch": {
+            "title": "MIT 18.03SC Differential Equations — Arthur Mattuck (OCW Scholar format)",
+            "url": "https://www.youtube.com/playlist?list=PL64BDFBDA2AF24F7E",
+            "focus": "Priority lectures: 1 (geometric view of ODEs), 2 (Euler's numerical method), 3 (solving first-order linear ODEs), 7 (complex exponentials), 9-10 (second-order ODEs with constant coefficients). Full OCW Scholar course at ocw.mit.edu/courses/18-03sc-differential-equations-fall-2011/ includes interactive Java demos, problem sets, and solutions. Focus on first and second order ODEs for the academy."
+          },
+          "concept": {
+            "title": "Where differential equations appear in the academy",
+            "body": "<p><strong>Robotics Section Ch2 (Dynamics):</strong> Robot arm equations of motion: τ = M(θ)θ̈ + C(θ,θ̇)θ̇ + G(θ). This is a system of second-order ODEs. Gravity compensation requires solving G(θ). Trajectory simulation requires numerically integrating this ODE (scipy.integrate.odeint).</p><p><strong>Kalman Filter derivation:</strong> The continuous-time Kalman filter is described by the Riccati differential equation dP/dt = AP + PAᵀ + Q - PCᵀR⁻¹CP. The discrete-time KF (what you implement) is the numerical integration of this ODE.</p><p><strong>Hardware Section Ch4 (PID control):</strong> The PID controller error signal e(t) satisfies a differential equation. Stability analysis uses the characteristic equation of the closed-loop ODE.</p>",
+            "analogy": "A differential equation describes how something changes over time as a function of its current state. Robot dynamics say: 'given the current joint angles and velocities, here is how they will accelerate.' The ODE encodes the physics. Numerical integration (Euler, RK4) lets you simulate it forward in time.",
+            "visual": "Types of DEs in the academy:\n\nFirst-order ODE (state estimation):\ndx/dt = Ax + Bu  ← linear time-invariant system\n\nSecond-order ODE (robot dynamics):\nM(θ)θ̈ = τ - C(θ,θ̇)θ̇ - G(θ)\n\nNumerical integration (Euler method):\nx_{k+1} = x_k + dt · f(x_k, u_k)\n\nRK4 (more accurate, what scipy uses):\nk1 = f(x_k)\nk2 = f(x_k + dt/2 · k1)\nk3 = f(x_k + dt/2 · k2)\nk4 = f(x_k + dt · k3)\nx_{k+1} = x_k + dt/6·(k1+2k2+2k3+k4)"
+          },
+          "challenge": {
+            "q": "You have robot dynamics ẍ = -2ẋ - 5x + u. At t=0: x=1, ẋ=0, u=0. After one Euler step with dt=0.1s, what is x(0.1)?",
+            "opts": [
+              {"t": "x(0.1) = 1.0 (state has not changed yet)", "c": false},
+              {"t": "x(0.1) = 1.0 + 0.1×0 = 1.0, ẋ(0.1) = 0 + 0.1×(-5) = -0.5", "c": true},
+              {"t": "x(0.1) = 1 - 0.1×2 = 0.8 (only damping term applies)", "c": false},
+              {"t": "Cannot compute without knowing the full trajectory", "c": false}
+            ],
+            "hint": "Euler: x_{k+1} = x_k + dt·ẋ_k. ẋ_{k+1} = ẋ_k + dt·ẍ_k. Compute ẍ(0) first.",
+            "exp": "ẍ(0) = -2×0 - 5×1 + 0 = -5. Euler step: x(0.1) = 1.0 + 0.1×0 = 1.0. ẋ(0.1) = 0 + 0.1×(-5) = -0.5. So after one step x stays at 1.0 but velocity is now -0.5 m/s (the spring force is pulling it back). After the next step x will decrease. This is why Euler integration with small dt captures the physics — each step applies the ODE locally."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "math1-a",
+        "title": "Mathematical Self-Assessment",
+        "xp": 120,
+        "desc": "A self-directed check: can you connect the math to what you are about to build? This is not graded — it is a diagnostic. Work through each item and note where you need to go deeper.",
+        "deliverables": [
+          "Linear Algebra: implement matrix multiplication from scratch (no numpy), verify on a 3×3 transform composition",
+          "Probability: derive the Kalman gain formula K = P/(P+R) from scratch — start from the definition of the optimal linear estimator",
+          "Calculus: compute the Jacobian of f(x,y) = [x²+y, sin(x)·y] analytically, verify numerically",
+          "DiffEq: implement Euler integration for a simple pendulum θ̈ = -(g/L)sinθ, plot the trajectory for 10 seconds",
+          "README: one paragraph per topic — where does this math appear in the section you are about to start?"
+        ],
+        "hint": "None of these are meant to be hard. They are meant to surface gaps before you hit them inside a more complex unit. 2-3 hours total.",
+        "linkedin": "Before starting my Engineering Academy, I built a mathematical self-assessment — implementing Kalman gain from scratch, Jacobian verification, and pendulum ODE integration. Math becomes engineering when you implement it. #Mathematics #Robotics #MachineLearning"
+      }
+    }
+  ]
+}

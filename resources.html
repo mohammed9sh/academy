@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resources & Roadmap</title>
+<style>
+:root {
+  --bg:#0f1117; --surface:#1a1d27; --surface2:#22263a;
+  --border:#2e3250; --border2:#3d4270;
+  --text:#e8eaf6; --text2:#9196c0; --text3:#5c6090;
+  --accent:#6c8fef; --green:#4caf7d; --amber:#e6a817;
+  --purple:#9c6ef0; --rob:#e87d40; --red:#ef5350;
+  --radius:10px; --radius2:6px;
+  --math:#26c6da; --cv:#4a8fe8; --ml:#4caf7d;
+  --tdl:#9c6ef0; --robotics:#e87d40; --hardware:#e6a817;
+  --adv:#ef5350; --sim:#78909c;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+     background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ── Layout ── */
+.page{max-width:900px;margin:0 auto;padding:2rem 1.25rem 6rem}
+.back{display:inline-flex;align-items:center;gap:6px;font-size:12px;
+      color:var(--text2);padding:5px 12px;border:1px solid var(--border);
+      border-radius:var(--radius2);transition:all .15s;margin-bottom:1.5rem}
+.back:hover{border-color:var(--border2);color:var(--text);text-decoration:none}
+
+/* ── Page header ── */
+.page-header{margin-bottom:2.5rem}
+.page-title{font-size:28px;font-weight:700;letter-spacing:-.5px;margin-bottom:6px}
+.page-title span{color:var(--accent)}
+.page-sub{font-size:13px;color:var(--text2);line-height:1.65;max-width:580px}
+
+/* ── Section headers ── */
+.sec-header{display:flex;align-items:center;gap:10px;margin:2.5rem 0 1rem}
+.sec-header-line{flex:1;height:1px;background:var(--border)}
+.sec-header-label{font-size:10px;font-weight:700;color:var(--text3);
+                  letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
+
+/* ── Summary stats ── */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:2.5rem}
+.stat{background:var(--surface);border:1px solid var(--border);
+      border-radius:var(--radius);padding:14px 10px;text-align:center}
+.stat-num{font-size:26px;font-weight:700;margin-bottom:3px}
+.stat-lbl{font-size:10px;color:var(--text3);letter-spacing:.03em}
+
+/* ── Roadmap ── */
+.roadmap{display:flex;flex-direction:column;gap:0}
+.rm-step{display:flex;gap:16px;position:relative}
+.rm-step:not(:last-child)::before{
+  content:'';position:absolute;left:17px;top:38px;bottom:-8px;
+  width:2px;background:linear-gradient(to bottom,var(--border2),transparent)}
+.rm-num{width:34px;height:34px;border-radius:50%;display:flex;
+        align-items:center;justify-content:center;font-size:12px;font-weight:700;
+        flex-shrink:0;margin-top:3px;border:2px solid;background:var(--bg)}
+.rm-body{flex:1;padding-bottom:24px}
+.rm-phase{font-size:10px;font-weight:700;text-transform:uppercase;
+          letter-spacing:.08em;margin-bottom:2px}
+.rm-title{font-size:15px;font-weight:600;margin-bottom:4px}
+.rm-desc{font-size:12px;color:var(--text2);line-height:1.65;margin-bottom:8px}
+.rm-chips{display:flex;flex-wrap:wrap;gap:5px}
+
+/* ── Chips ── */
+.chip{font-size:11px;font-weight:500;padding:2px 9px;border-radius:20px;
+      white-space:nowrap;border:1px solid}
+.chip.math    {color:var(--math);    border-color:rgba(38,198,218,.3);    background:rgba(38,198,218,.08)}
+.chip.cv      {color:var(--cv);      border-color:rgba(74,143,232,.3);    background:rgba(74,143,232,.08)}
+.chip.ml      {color:var(--ml);      border-color:rgba(76,175,125,.3);    background:rgba(76,175,125,.08)}
+.chip.tdl     {color:var(--tdl);     border-color:rgba(156,110,240,.3);   background:rgba(156,110,240,.08)}
+.chip.robotics{color:var(--robotics);border-color:rgba(232,125,64,.3);    background:rgba(232,125,64,.08)}
+.chip.hardware{color:var(--hardware);border-color:rgba(230,168,23,.3);    background:rgba(230,168,23,.08)}
+.chip.adv     {color:var(--adv);     border-color:rgba(239,83,80,.3);     background:rgba(239,83,80,.08)}
+.chip.sim     {color:var(--sim);     border-color:rgba(120,144,156,.3);   background:rgba(120,144,156,.08)}
+.chip.res     {color:var(--text3);   border-color:var(--border);          background:var(--surface2)}
+
+/* ── Filter bar ── */
+.filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.fb{font-size:11px;padding:4px 12px;border:1px solid var(--border);
+    border-radius:20px;background:none;color:var(--text2);cursor:pointer;
+    transition:all .15s;font-family:inherit}
+.fb:hover{border-color:var(--border2);color:var(--text)}
+.fb.on{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* ── Resource table ── */
+.res-table{display:flex;flex-direction:column;gap:8px}
+.res-card{background:var(--surface);border:1px solid var(--border);
+          border-radius:var(--radius);padding:14px 16px;
+          transition:border-color .15s;cursor:default}
+.res-card:hover{border-color:var(--border2)}
+
+.res-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:8px}
+.res-icon{font-size:18px;flex-shrink:0;margin-top:1px;width:24px;text-align:center}
+.res-main{flex:1;min-width:0}
+.res-title{font-size:13px;font-weight:600;margin-bottom:3px;
+           display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.res-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+
+/* Access badge */
+.badge-free  {font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;
+              background:rgba(76,175,125,.12);color:var(--green);
+              border:1px solid rgba(76,175,125,.25)}
+.badge-audit {font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;
+              background:rgba(108,143,239,.12);color:var(--accent);
+              border:1px solid rgba(108,143,239,.25)}
+
+/* Priority dot */
+.prio-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.prio-dot.primary   {background:var(--green)}
+.prio-dot.secondary {background:var(--accent)}
+.prio-dot.selective {background:var(--amber)}
+.prio-dot.reference {background:var(--text3)}
+
+.res-format{font-size:11px;color:var(--text3)}
+.res-what{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:8px}
+.res-bottom{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+/* How-used pill */
+.how-used{font-size:11px;color:var(--text3);padding:3px 9px;
+          background:var(--surface2);border-radius:4px;
+          border-left:2px solid var(--border2);flex:1;min-width:0;
+          line-height:1.5}
+.how-used strong{color:var(--text2)}
+
+/* Open link */
+.open-link{font-size:11px;font-weight:600;color:var(--accent);
+           padding:4px 10px;background:rgba(108,143,239,.1);
+           border:1px solid rgba(108,143,239,.2);border-radius:var(--radius2);
+           white-space:nowrap;flex-shrink:0}
+.open-link:hover{background:rgba(108,143,239,.18);text-decoration:none}
+
+/* Section chips on card */
+.res-secs{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+
+/* ── Legend ── */
+.legend{display:flex;gap:16px;flex-wrap:wrap;
+        padding:10px 14px;background:var(--surface);
+        border:1px solid var(--border);border-radius:var(--radius2);
+        margin-bottom:14px}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)}
+
+/* Loading */
+.loading{text-align:center;padding:4rem;color:var(--text2)}
+
+@media(max-width:600px){
+  .stats{grid-template-columns:repeat(3,1fr)}
+  .res-right{display:none}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <a href="index.html" class="back">← Back to Academy</a>
+
+  <div class="page-header">
+    <div class="page-title">Resources & <span>Roadmap</span></div>
+    <div class="page-sub">Every resource mapped to the academy — what it is, where it connects, and whether it is free. All 29 resources are either completely free or free to audit.</div>
+  </div>
+
+  <div id="root"><div class="loading">Loading...</div></div>
+</div>
+
+<script>
+// ── Data ──────────────────────────────────────────────────────────────────────
+const ICONS = {
+  course:'🎓', book:'📖', specialization:'📚',
+  seminar_series:'🎤', code_repo:'💻',
+};
+
+const SECTION_COLORS = {
+  math:'math', cv:'cv', ml:'ml', tdl:'tdl',
+  robotics:'robotics', hardware:'hardware',
+  advanced_robotics:'adv', simulation:'sim',
+};
+
+const SECTION_LABELS = {
+  math:'Math', cv:'CV', ml:'ML', tdl:'TDL',
+  robotics:'Robotics', hardware:'Hardware',
+  advanced_robotics:'Adv. Robotics', simulation:'Simulation',
+};
+
+const PRIORITY_LABEL = {
+  primary:  'Primary resource',
+  secondary:'Secondary resource',
+  selective:'Selective — specific sections only',
+  reference:'Background reference',
+};
+
+const ROADMAP = [
+  {
+    num:'0', color:'var(--math)', phase:'Pre-learning',
+    title:'Mathematics Foundations',
+    desc:'Before everything else — linear algebra, probability, calculus, differential equations. Work through as needed, not necessarily upfront.',
+    sections:['math'],
+    resources:['MIT 18.06 Strang','Harvard Stat 110','MIT 18.02 + 3B1B','MIT 18.03SC'],
+  },
+  {
+    num:'1', color:'var(--cv)', phase:'Phase 1 · Months 1–2',
+    title:'Computer Vision',
+    desc:'Image formation, CNNs, detection, segmentation, 3D vision. EECS 498 is the primary resource — more current than CS231N.',
+    sections:['cv'],
+    resources:['EECS 498 (primary)','MIT 6.8300','CS231N (secondary)','AI for Medicine (selective)'],
+  },
+  {
+    num:'2', color:'var(--ml)', phase:'Phase 2 · Months 2–4',
+    title:'AI & ML Foundations',
+    desc:'The mathematical engine. CS229 for theory, Murphy\'s PML book for probabilistic depth, D2L for runnable code.',
+    sections:['ml'],
+    resources:['CS229','Murphy PML book','CS230','Deep Learning Spec','MIT 15.773','D2L'],
+  },
+  {
+    num:'3', color:'var(--tdl)', phase:'Phase 3 · Month 4',
+    title:'Trustworthy Deep Learning',
+    desc:'Uncertainty, calibration, robustness. Builds directly on probability from ML Foundations. MacKay for information theory.',
+    sections:['tdl'],
+    resources:['Murphy PML book','MacKay (entropy chapters)'],
+  },
+  {
+    num:'4', color:'var(--robotics)', phase:'Phase 4 · Months 5–7',
+    title:'Robotics & Physical Systems',
+    desc:'NU ME495 is the core — all 6 interactive widgets are built around it. Corke\'s book provides the Python companion.',
+    sections:['robotics'],
+    resources:['NU ME495','Corke RVC book + GitHub','Multibody Pt I','Modern Robotics (Lynch & Park)','Hello ROS','AA289','Duckietown'],
+  },
+  {
+    num:'5', color:'var(--hardware)', phase:'Phase 5 · Months 7–9',
+    title:'Hands-On Hardware',
+    desc:'Deploy on Raspberry Pi + Arduino. DelftX covers the electrical engineering behind your sensors.',
+    sections:['hardware'],
+    resources:['DelftX Building Robots','Georgia Tech Mechatronics (ref)'],
+  },
+  {
+    num:'6', color:'var(--adv)', phase:'Phase 6 · Advanced',
+    title:'Advanced Robotics',
+    desc:'Manipulation and grasping (MIT Tedrake), underactuated control (MIT Tedrake), screw theory kinematics (Lynch & Park).',
+    sections:['advanced_robotics'],
+    resources:['MIT Robotic Manipulation','MIT Underactuated Robotics','Modern Robotics','Multibody Pt II','AA289'],
+  },
+  {
+    num:'7', color:'var(--sim)', phase:'Phase 7 · Advanced',
+    title:'Engineering Design & Simulation',
+    desc:'State-space modeling, frequency domain control design, LQR/LQG, MPC, hardware-in-the-loop testing.',
+    sections:['simulation'],
+    resources:['MathWorks EDS','DelftX (system integration)','Georgia Tech Mechatronics'],
+  },
+];
+
+// ── Render ────────────────────────────────────────────────────────────────────
+async function boot() {
+  const res  = await fetch('./content/resources.json');
+  const data = await res.json();
+  const root = document.getElementById('root');
+  root.innerHTML =
+    renderStats(data) +
+    renderRoadmapSection() +
+    renderResourcesSection(data);
+}
+
+function renderStats(data) {
+  const total  = data.resources.length;
+  const free   = data.resources.filter(r => r.access === 'free').length;
+  const audit  = data.resources.filter(r => r.access === 'audit_free').length;
+  const prim   = data.resources.filter(r => r.priority === 'primary').length;
+  const secs   = new Set(data.resources.flatMap(r => r.academy_sections)).size;
+
+  return `
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-num" style="color:var(--accent)">${total}</div>
+        <div class="stat-lbl">Resources</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" style="color:var(--green)">${free}</div>
+        <div class="stat-lbl">Completely free</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" style="color:var(--accent)">${audit}</div>
+        <div class="stat-lbl">Free to audit</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" style="color:var(--green)">${prim}</div>
+        <div class="stat-lbl">Primary resources</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" style="color:var(--purple)">${secs}</div>
+        <div class="stat-lbl">Sections covered</div>
+      </div>
+    </div>`;
+}
+
+function renderRoadmapSection() {
+  return `
+    <div class="sec-header">
+      <div class="sec-header-label">Learning Roadmap — 8 Phases</div>
+      <div class="sec-header-line"></div>
+    </div>
+    <div class="roadmap">
+      ${ROADMAP.map(s => `
+        <div class="rm-step">
+          <div class="rm-num" style="border-color:${s.color};color:${s.color}">${s.num}</div>
+          <div class="rm-body">
+            <div class="rm-phase" style="color:${s.color}">${s.phase}</div>
+            <div class="rm-title">${s.title}</div>
+            <div class="rm-desc">${s.desc}</div>
+            <div class="rm-chips">
+              ${s.sections.map(sec => `
+                <span class="chip ${SECTION_COLORS[sec]||'res'}">${SECTION_LABELS[sec]||sec}</span>
+              `).join('')}
+              ${s.resources.map(r => `<span class="chip res">${r}</span>`).join('')}
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
+}
+
+function renderResourcesSection(data) {
+  const priorityOrder = ['primary','secondary','selective','reference'];
+  const sorted = [...data.resources].sort((a,b) =>
+    priorityOrder.indexOf(a.priority) - priorityOrder.indexOf(b.priority)
+  );
+
+  return `
+    <div class="sec-header" style="margin-top:2.5rem">
+      <div class="sec-header-label">All Resources (${data.resources.length})</div>
+      <div class="sec-header-line"></div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><span class="prio-dot primary"></span>Primary — core Watch resource</div>
+      <div class="legend-item"><span class="prio-dot secondary"></span>Secondary — Go Deeper</div>
+      <div class="legend-item"><span class="prio-dot selective"></span>Selective — specific parts only</div>
+      <div class="legend-item"><span class="prio-dot reference"></span>Reference — background reading</div>
+    </div>
+
+    <div class="filter-bar">
+      <button class="fb on" onclick="filter('all',this)">All ${data.resources.length}</button>
+      <button class="fb" onclick="filter('primary',this)">● Primary</button>
+      <button class="fb" onclick="filter('secondary',this)">◎ Secondary</button>
+      <button class="fb" onclick="filter('selective',this)">◇ Selective</button>
+      <button class="fb" onclick="filter('reference',this)">○ Reference</button>
+      ${['math','cv','ml','tdl','robotics','hardware','advanced_robotics','simulation'].map(sec => `
+        <button class="fb" onclick="filterSection('${sec}',this)">${SECTION_LABELS[sec]||sec}</button>
+      `).join('')}
+    </div>
+
+    <div class="res-table" id="res-table">
+      ${sorted.map(r => renderCard(r)).join('')}
+    </div>`;
+}
+
+function renderCard(r) {
+  const icon   = ICONS[r.type] || '📄';
+  const isAudit = r.access === 'audit_free';
+  const sections = r.academy_sections || [];
+
+  return `
+    <div class="res-card" data-priority="${r.priority}" data-sections="${sections.join(',')}">
+      <div class="res-top">
+        <div class="res-icon">${icon}</div>
+        <div class="res-main">
+          <div class="res-title">
+            <span class="prio-dot ${r.priority}"></span>
+            ${r.title}
+          </div>
+          <div class="res-format">${r.format}</div>
+        </div>
+        <div class="res-right">
+          <span class="${isAudit ? 'badge-audit' : 'badge-free'}">${isAudit ? 'AUDIT FREE' : 'FREE'}</span>
+          ${sections.slice(0,3).map(s => `
+            <span class="chip ${SECTION_COLORS[s]||'res'}" style="font-size:10px;padding:1px 7px">${SECTION_LABELS[s]||s}</span>
+          `).join('')}
+        </div>
+      </div>
+      <div class="res-what">${r.what}</div>
+      <div class="res-bottom">
+        <div class="how-used"><strong>Used for:</strong> ${r.how_used}</div>
+        <a href="${r.url}" target="_blank" class="open-link">↗ Open</a>
+      </div>
+    </div>`;
+}
+
+function filter(priority, btn) {
+  document.querySelectorAll('.fb').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  document.querySelectorAll('.res-card').forEach(c => {
+    c.style.display = (priority === 'all' || c.dataset.priority === priority) ? '' : 'none';
+  });
+}
+
+function filterSection(sec, btn) {
+  document.querySelectorAll('.fb').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  document.querySelectorAll('.res-card').forEach(c => {
+    const secs = c.dataset.sections.split(',');
+    c.style.display = secs.includes(sec) ? '' : 'none';
+  });
+}
+
+boot().catch(e => {
+  document.getElementById('root').innerHTML =
+    `<div style="color:#ef5350;padding:2rem">Error: ${e.message}<br>
+    Run: <code>python3 -m http.server 8000</code> and open http://localhost:8000/resources.html</div>`;
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1299 @@
+{
+  "id": "ml",
+  "key": "ml",
+  "icon": "🧠",
+  "title": "AI & ML Foundations",
+  "desc": "The mathematical engine under everything else — concept-first so the math always serves a purpose you can see.",
+  "chapters": [
+    {
+      "id": "ml1",
+      "title": "What is Learning?",
+      "sub": "Supervised learning · Loss · First principles",
+      "units": [
+        {
+          "id": "ml1-1",
+          "title": "The Learning Problem",
+          "meta": "Data, model, loss — the three components",
+          "xp": 80,
+          "watch": {
+            "title": "CS229 Lecture 1 — Introduction (Andrew Ng)",
+            "url": "https://www.youtube.com/watch?v=jGwO_UgTS7I",
+            "focus": "First 40 min. Supervised learning definition, notation (x,y,h,J), three ML components: data, model, loss."
+          },
+          "concept": {
+            "title": "Learning = finding the function that fits",
+            "body": "<p>Every ML problem: <strong>Data</strong> {(x⁽ⁱ⁾,y⁽ⁱ⁾)}, <strong>Model</strong> h_θ(x), <strong>Loss</strong> J(θ). Learning = find θ that minimizes J(θ). Everything in ML is a variation of this.</p>",
+            "analogy": "Learning is calibrating a measuring instrument. Ground truth measurements (data), adjustable formula (model), error score (loss). Adjust parameters to minimize score.",
+            "visual": "Data: {(x⁽¹⁾,y⁽¹⁾),...,(x⁽ⁿ⁾,y⁽ⁿ⁾)}\nModel: h_θ(x) — parameterized function\nLoss: J(θ) = (1/n)·Σ L(h_θ(xⁱ), yⁱ)\nGoal: θ* = argmin_θ J(θ)"
+          },
+          "challenge": {
+            "q": "Training a chest X-ray classifier outputting probability of pneumonia. Most appropriate loss?",
+            "opts": [
+              {
+                "t": "MSE — minimizes difference between predicted and true probability",
+                "c": false
+              },
+              {
+                "t": "Binary cross-entropy — measures how well predicted probability explains the true binary label",
+                "c": true
+              },
+              {
+                "t": "Hinge loss — standard for binary classification",
+                "c": false
+              },
+              {
+                "t": "L1 loss — robust to outliers in medical data",
+                "c": false
+              }
+            ],
+            "hint": "Output is probability (0–1). True label is binary (0 or 1). Which loss is designed for this?",
+            "exp": "Binary cross-entropy: L = -[y·log(p)+(1-y)·log(1-p)]. Derived from maximum likelihood estimation for Bernoulli outcomes. Directly connects to your TDL calibration work."
+          },
+          "project": {
+            "title": "Loss Function Explorer",
+            "desc": "Implement three loss functions from scratch. Visualize what each optimizes.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Implement: MSE, Binary CE, Hinge loss (numpy only)",
+              "Plot loss vs prediction value for y=0 and y=1",
+              "Train logistic regression on 2D dataset with each loss",
+              "Compare: decision boundaries, probability calibration",
+              "README: when to choose each? Connect to your medical imaging work."
+            ],
+            "hint": "numpy only — no PyTorch. Forces understanding of the math."
+          }
+        },
+        {
+          "id": "ml1-2",
+          "title": "Linear Regression",
+          "meta": "Hypothesis, cost, normal equation",
+          "xp": 90,
+          "watch": {
+            "title": "CS229 Lecture 2 — Linear Regression and Gradient Descent",
+            "url": "https://www.youtube.com/watch?v=4b4MUYve_U8",
+            "focus": "Full lecture. Cost function derivation, normal equation θ=(XᵀX)⁻¹Xᵀy, why this matters for deep learning."
+          },
+          "concept": {
+            "title": "The simplest model that teaches everything",
+            "body": "<p>h_θ(x) = θᵀx. Cost: J(θ) = (1/2m)Σ(h-y)². Minimize by ∇J=0 → <strong>normal equation</strong>: θ=(XᵀX)⁻¹Xᵀy. Every neural network layer IS a linear transformation + nonlinearity. Master this and you have the structure of every ML algorithm.</p>",
+            "analogy": "Linear regression is the 'Hello World' of ML. It has everything: model, loss, optimization. Master it and you've mastered the structure of every ML algorithm that follows.",
+            "visual": "h_θ(x) = θᵀx\nJ(θ) = (1/2m)·||Xθ-y||²\nNormal eq: θ = (XᵀX)⁻¹Xᵀy\n\nWhen: n<10,000 features\nGradient descent: n large, iterative"
+          },
+          "challenge": {
+            "q": "X is 1000×500. What computational issue arises with normal equation and what is the alternative?",
+            "opts": [
+              {
+                "t": "XᵀX cannot be computed for n>500",
+                "c": false
+              },
+              {
+                "t": "(XᵀX)⁻¹ requires O(n³) inversion — slow for large n; use gradient descent",
+                "c": true
+              },
+              {
+                "t": "Normal equation only works for 2D",
+                "c": false
+              },
+              {
+                "t": "Requires normalized features",
+                "c": false
+              }
+            ],
+            "hint": "Complexity of inverting a 500×500 matrix? What grows with more features?",
+            "exp": "Matrix inversion is O(n³). n=500: 125M ops. n=10,000 (image pixels): 10¹² ops — infeasible. Gradient descent scales to millions of parameters because each step is O(mn). This is why neural networks use GD, not normal equation."
+          },
+          "project": {
+            "title": "Linear Regression from Scratch",
+            "desc": "Implement both normal equation and gradient descent.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Normal equation: θ=(XᵀX)⁻¹Xᵀy (numpy)",
+              "Gradient descent: θ=θ-α·(1/m)·Xᵀ(Xθ-y)",
+              "Apply both to regression dataset — verify same answer",
+              "Vary learning rate: show convergence vs divergence",
+              "Plot J vs iterations for different α values",
+              "README: why does GD scale to deep learning and normal equation does not?"
+            ],
+            "hint": "np.linalg.inv for normal equation. Manual loop for GD. Synthetic data: y=2x₁+3x₂+noise."
+          }
+        },
+        {
+          "id": "ml1-3",
+          "title": "Classification & Logistic Regression",
+          "meta": "Sigmoid, decision boundary, MLE",
+          "xp": 90,
+          "watch": {
+            "title": "CS229 Lecture 3 — Logistic Regression",
+            "url": "https://www.youtube.com/watch?v=het9HFqo1TQ",
+            "focus": "Why linear fails for classification, sigmoid, log-likelihood derivation of BCE, decision boundary geometry."
+          },
+          "concept": {
+            "title": "From regression to decisions",
+            "body": "<p>For classification: pass linear output through <strong>sigmoid</strong>: σ(z)=1/(1+e⁻ᶻ). h_θ(x)=σ(θᵀx). Trained by maximizing log-likelihood (= minimizing BCE). Decision boundary: θᵀx=0. The final layer of ResNet/DenseNet IS logistic regression on learned features.</p>",
+            "analogy": "Logistic regression: a linear model that outputs confidence. Sigmoid squishes any number into (0,1) — perfect for probability. A smooth threshold.",
+            "visual": "σ(z) = 1/(1+e^{-z})\nP(y=1|x;θ) = σ(θᵀx)\nLoss: -[y·log(σ)+(1-y)·log(1-σ)]\nDecision boundary: θᵀx=0"
+          },
+          "challenge": {
+            "q": "Model outputs 0.48 for patient. Threshold=0.5. Patient has pneumonia. Is threshold choice ML or clinical?",
+            "opts": [
+              {
+                "t": "Pure ML — optimize threshold on validation with F1",
+                "c": false
+              },
+              {
+                "t": "Clinical decision — affects sensitivity/specificity tradeoff, must involve clinical judgment",
+                "c": true
+              },
+              {
+                "t": "Model is wrong — retrain",
+                "c": false
+              },
+              {
+                "t": "Threshold is always 0.5 for medical",
+                "c": false
+              }
+            ],
+            "hint": "False negative (missed pneumonia) vs false positive (unnecessary treatment) have different clinical costs. Who decides?",
+            "exp": "Clinical decision. 0.5 minimizes overall error, but in medicine, false negatives are usually far more costly. Radiologists decide the operating point. ML engineer provides model + PR curve. This IS trustworthy AI."
+          },
+          "project": {
+            "title": "Pneumonia Classifier from Scratch",
+            "desc": "Logistic regression for medical image classification. numpy only.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Extract simple features from chest X-ray (pixel stats, HOG) — no CNN yet",
+              "Logistic regression: sigmoid, BCE, gradient descent (numpy)",
+              "Evaluate: accuracy, AUROC, F1",
+              "Precision-recall curve, clinical threshold at 0.9 sensitivity",
+              "README: explain sensitivity/specificity tradeoff. Who should choose the threshold?"
+            ],
+            "hint": "numpy only for model. sklearn only for evaluation metrics. PIL for image loading."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "ml1-a",
+        "title": "ML Foundations Audit",
+        "xp": 200,
+        "desc": "Build a medical image classifier using only numpy, logistic regression, hand-crafted features.",
+        "deliverables": [
+          "HOG features from chest X-rays (numpy/skimage)",
+          "Logistic regression with gradient descent (numpy, no sklearn)",
+          "Full evaluation: accuracy, AUROC, F1, precision-recall",
+          "Threshold analysis at 0.95 sensitivity",
+          "1-page report: data → features → model → loss → optimization → evaluation (for a medical student)"
+        ],
+        "hint": "Deliberate constraints: no PyTorch, no CNN. Forces understanding every step. The 1-page report is the main deliverable.",
+        "linkedin": "Built a medical image classifier using only numpy. Forces you to understand every step: features, loss, gradient descent, evaluation. The constraints are the lesson. #MachineLearning #MedicalAI"
+      }
+    },
+    {
+      "id": "ml2",
+      "title": "Optimization",
+      "sub": "Gradient descent · Adam · Loss landscape",
+      "units": [
+        {
+          "id": "ml2-1",
+          "title": "Gradient Descent & Variants",
+          "meta": "SGD, mini-batch, momentum",
+          "xp": 100,
+          "watch": {
+            "title": "CS229 Lecture 2 (second half) + CS231N Lecture 7 (first 30 min)",
+            "url": "https://www.youtube.com/watch?v=_JB0AO7QxSA",
+            "focus": "Batch vs SGD intuition (CS229). Momentum, loss landscape, why vanilla GD fails at scale (CS231N)."
+          },
+          "concept": {
+            "title": "Moving downhill in parameter space",
+            "body": "<p>Gradient descent: θ←θ-α·∇J(θ). <strong>Batch GD</strong>: all data, accurate but slow. <strong>SGD</strong>: one sample, noisy but fast. <strong>Mini-batch</strong>: practical compromise (32–256). <strong>Momentum</strong>: accumulate velocity — accelerates in consistent directions, dampens oscillations.</p>",
+            "analogy": "Batch GD: plan perfect direction, take one big step. SGD: glance roughly downhill, quick step, repeat. Mini-batch: look at a handful of signs, take a reasonable step. Momentum: remember which way you've been rolling.",
+            "visual": "SGD: θ ← θ - α·∇J(x⁽ⁱ⁾,θ)\nMomentum: v ← βv+∇J, θ ← θ-α·v\nβ=0.9 (90% previous velocity)\nMini-batch: 32–256 samples per step"
+          },
+          "challenge": {
+            "q": "Training ResNet on chest X-rays. Loss oscillates wildly, α=0.1. Problem and fix?",
+            "opts": [
+              {
+                "t": "Momentum too high — set β=0",
+                "c": false
+              },
+              {
+                "t": "Learning rate too high — reduce α, try 0.001 or use LR finder",
+                "c": true
+              },
+              {
+                "t": "Batch size too small",
+                "c": false
+              },
+              {
+                "t": "SGD is wrong — use full batch GD",
+                "c": false
+              }
+            ],
+            "hint": "Wild oscillation is the classic symptom of what hyperparameter being too large?",
+            "exp": "α=0.1 is far too large for ResNet (typical: 1e-4 to 1e-2). Reduce by 10–100×. LR finder helps identify the right range."
+          },
+          "project": {
+            "title": "Optimizer Comparison",
+            "desc": "Compare SGD, SGD+Momentum, Adam on CNN training.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Train same 3-layer CNN on CIFAR-10: SGD, SGD+momentum(β=0.9), Adam",
+              "Same LR and architecture for fair comparison",
+              "Plot: loss curves and val accuracy on same axes",
+              "Effect of different LRs for each optimizer",
+              "README: what does momentum add? Why does Adam usually converge faster?"
+            ],
+            "hint": "torch.optim.SGD(lr=0.01), SGD(lr=0.01,momentum=0.9), Adam(lr=0.001). Log loss every 10 batches."
+          },
+          "secondary_watch": {
+            "title": "Deep Learning Specialization — Course 2: Practical Aspects of Deep Learning",
+            "url": "https://www.deeplearning.ai/courses/deep-learning-specialization/",
+            "focus": "Course 2 Week 1 (~3 hours). Focus on: regularization techniques, vanishing/exploding gradients, weight initialization, gradient checking. The most practical content in the specialization — bridges CS229 theory with what you actually implement. Free to audit."
+          }
+        },
+        {
+          "id": "ml2-2",
+          "title": "Adam & Modern Optimizers",
+          "meta": "Adaptive LR, weight decay, AdamW",
+          "xp": 100,
+          "watch": {
+            "title": "CS231N Lecture 7 — from 30 min: RMSprop, Adam",
+            "url": "https://www.youtube.com/watch?v=_JB0AO7QxSA",
+            "focus": "RMSprop intuition, Adam = momentum + RMSprop, adaptive LR per parameter. Why Adam is the default."
+          },
+          "concept": {
+            "title": "One learning rate per parameter",
+            "body": "<p><strong>Adam</strong>: combines momentum (direction) with RMSprop (magnitude). Effective LR adapts per parameter. Large gradient parameters get smaller effective LR. <strong>AdamW</strong>: correct L2 regularization — standard for modern training.</p>",
+            "analogy": "Adam is a smart GPS that adjusts speed per road — highway parameters get different speed than alley parameters. Each parameter has its own adaptive step size based on gradient history.",
+            "visual": "Adam:\nm_t = β₁·m_{t-1}+(1-β₁)·g_t  (momentum)\nv_t = β₂·v_{t-1}+(1-β₂)·g_t² (variance)\nθ_t = θ_{t-1}-α·m̂_t/(√v̂_t+ε)\nDefaults: β₁=0.9, β₂=0.999, α=1e-3"
+          },
+          "challenge": {
+            "q": "Switch Adam → SGD+momentum for fine-tuning pretrained ResNet, same LR=0.001. Training unstable. Fix?",
+            "opts": [
+              {
+                "t": "Switch back to Adam — SGD cannot fine-tune pretrained models",
+                "c": false
+              },
+              {
+                "t": "Reduce LR significantly — SGD needs smaller LR than Adam for pretrained models",
+                "c": true
+              },
+              {
+                "t": "Increase batch size",
+                "c": false
+              },
+              {
+                "t": "Remove momentum for fine-tuning",
+                "c": false
+              }
+            ],
+            "hint": "Adam has adaptive per-parameter LRs scaling down large gradients. SGD applies same LR to all. What does this mean for pretrained model gradient variance?",
+            "exp": "In pretrained models, gradient magnitudes vary enormously between layers. SGD lr=0.001 causes large-gradient parameters to take huge steps. Reduce to 1e-4 or 1e-5."
+          },
+          "project": {
+            "title": "LR Finder Implementation",
+            "desc": "Implement the learning rate range test.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "LR range test: increase LR exponentially over 100 batches, log loss",
+              "Plot log(LR) vs loss — find the sweet spot (steepest descent)",
+              "Apply to Adam and SGD+momentum on medical classifier",
+              "Compare convergence and final accuracy with optimal LR",
+              "README: what LR for each optimizer? Why?"
+            ],
+            "hint": "Start at 1e-7, multiply by factor each batch. Optimal LR is steepest loss descent, left of the minimum."
+          }
+        },
+        {
+          "id": "ml2-3",
+          "title": "The Loss Landscape & BatchNorm",
+          "meta": "Saddle points, BatchNorm effect, model.eval()",
+          "xp": 110,
+          "watch": {
+            "title": "CS231N Lecture 7 second half — optimization landscape + BatchNorm",
+            "url": "https://www.youtube.com/watch?v=_JB0AO7QxSA",
+            "focus": "Why local minima are less problematic than saddle points. What BatchNorm does to the loss landscape."
+          },
+          "concept": {
+            "title": "Why deep networks are hard to optimize",
+            "body": "<p><strong>Saddle points</strong> (zero gradient, not minimum) are far more common than local minima in high dimensions. <strong>BatchNorm</strong>: normalize to μ=0, σ=1, learn γ and β. Smooths loss landscape, allows higher LR. Always model.eval() at inference!</p>",
+            "analogy": "A 2D loss landscape has clear valleys. A million-dimensional landscape mostly has saddle points — flat in most directions. BatchNorm flattens the terrain so all directions look similar — much easier to navigate.",
+            "visual": "Saddle point: ∇J=0 but not minimum\nIn high dimensions: most critical points are saddles\n\nBatchNorm: ẑ=(z-μ_B)/σ_B·γ+β\ntrain: use batch stats\neval: use running stats\n→ ALWAYS model.eval() before inference!"
+          },
+          "challenge": {
+            "q": "You add BatchNorm everywhere and forget model.eval(). What goes wrong during inference?",
+            "opts": [
+              {
+                "t": "Nothing — BatchNorm identical in train and eval",
+                "c": false
+              },
+              {
+                "t": "BatchNorm uses current batch stats instead of running stats — predictions inconsistent across batch sizes",
+                "c": true
+              },
+              {
+                "t": "Dropout activates incorrectly",
+                "c": false
+              },
+              {
+                "t": "Gradients computed unnecessarily",
+                "c": false
+              }
+            ],
+            "hint": "Train mode: batch stats. Eval mode: running mean/var from training. What happens with batch_size=1?",
+            "exp": "With batch_size=1 in train mode: mean=that single sample, var=0 → numerical instability. Even larger batches give inconsistent results. Common bug in medical imaging pipelines."
+          },
+          "project": {
+            "title": "BatchNorm Effect Study",
+            "desc": "Systematically study what BatchNorm does to training.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Train same CNN: without BN, with BN after conv, with BN before activation",
+              "Compare: convergence speed, max stable LR, final accuracy",
+              "Visualize gradient magnitudes per layer with and without BN",
+              "Demonstrate: model.train() + batch_size=1 inference instability",
+              "README: explain in plain English why BN helps and what goes wrong without eval mode"
+            ],
+            "hint": "Log gradient norms: for name,p in model.named_parameters(): if p.grad: print(name, p.grad.norm()) after backward."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "ml2-a",
+        "title": "Training Pipeline Audit",
+        "xp": 280,
+        "desc": "Rigorous training pipeline for medical classifier: LR finder, optimizer comparison, BatchNorm analysis.",
+        "deliverables": [
+          "LR range test → optimal LR for your setup",
+          "Train: SGD+momentum, Adam, AdamW — compare convergence and final accuracy",
+          "BatchNorm ablation: with vs without, convergence curves",
+          "Gradient flow visualization: do gradients reach early layers?",
+          "README: justify every training decision as if writing the training section of a paper"
+        ],
+        "hint": "This is your training infrastructure. Once built well, reuse for every future experiment. Treat it like production code.",
+        "linkedin": "Built rigorous ML training infrastructure: LR finder, optimizer benchmarking, BatchNorm ablation, gradient flow analysis. The foundation that makes research reproducible. #MLEngineering #DeepLearning"
+      }
+    },
+    {
+      "id": "ml3",
+      "title": "Probability & Statistical Learning",
+      "sub": "MLE · Bayes · Distributions",
+      "units": [
+        {
+          "id": "ml3-1",
+          "title": "Probability Foundations for ML",
+          "meta": "Distributions, expectation, variance",
+          "xp": 90,
+          "watch": {
+            "title": "CS229 Lecture 6 — Naive Bayes + probability review",
+            "url": "https://www.youtube.com/watch?v=z5UQyCESW64",
+            "focus": "Probability axioms, conditional probability, Bayes theorem, Gaussian distribution. Building blocks of your TDL section."
+          },
+          "concept": {
+            "title": "Probability is the language of uncertainty",
+            "body": "<p><strong>Key distributions</strong>: Bernoulli (binary), Gaussian N(μ,σ²) (appears everywhere via CLT), Categorical (multi-class). <strong>E[X]</strong> = Σx·P(x). <strong>Var[X]</strong> = E[X²]-E[X]².</p><p>Uncertainty decomposition, calibration, conformal prediction — all require fluent probability.</p>",
+            "analogy": "Probability is the grammar of uncertainty. Without it, 'model outputs 0.87' means nothing. With it: 'I expect this correct in 87 of 100 similar cases' — and you can test whether that's true.",
+            "visual": "Gaussian: P(x) = (1/√2πσ²)·exp(-(x-μ)²/2σ²)\nE[X]=μ,  Var[X]=σ²\nBernoulli: P(X=1)=p, E[X]=p, Var[X]=p(1-p)"
+          },
+          "challenge": {
+            "q": "Model outputs P(pneumonia|x)=0.73. Radiologist asks: \"what does 0.73 mean?\" Correct answer?",
+            "opts": [
+              {
+                "t": "\"Model is 73% accurate on cases like this\"",
+                "c": false
+              },
+              {
+                "t": "\"Among cases where model outputs ~0.73, approximately 73% should have pneumonia — if calibrated\"",
+                "c": true
+              },
+              {
+                "t": "\"Image is 73% similar to pneumonia training images\"",
+                "c": false
+              },
+              {
+                "t": "\"73% confidence means it is correct\"",
+                "c": false
+              }
+            ],
+            "hint": "A probability output is a statement about frequency. What frequency, under what assumption?",
+            "exp": "Correct — with crucial condition \"if calibrated.\" This is exactly what ECE measures and why calibration is clinically critical."
+          },
+          "project": {
+            "title": "Probability Calibration Experiment",
+            "desc": "Demonstrate what calibration means empirically.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Train classifier, group test predictions into 10 confidence bins",
+              "For each bin: mean predicted confidence vs actual accuracy",
+              "Plot reliability diagram manually (not using a library)",
+              "Demonstrate artificially miscalibrated model (scale logits) vs calibrated",
+              "README: explain each point on the reliability diagram in plain language. Connect to TDL calibration work."
+            ],
+            "hint": "Bin predictions: 0–0.1, 0.1–0.2, etc. Compute mean confidence and mean accuracy per bin. Plot vs diagonal."
+          }
+        },
+        {
+          "id": "ml3-2",
+          "title": "Maximum Likelihood Estimation",
+          "meta": "MLE, log-likelihood, loss connection",
+          "xp": 100,
+          "watch": {
+            "title": "CS229 Lecture 5 — Generative Learning (first 30 min: MLE)",
+            "url": "https://www.youtube.com/watch?v=nt63k3bfXS0",
+            "focus": "What MLE is, how log-likelihood leads to cross-entropy, why log is used, connection between MLE and standard loss functions."
+          },
+          "concept": {
+            "title": "Your loss function is MLE in disguise",
+            "body": "<p><strong>MLE</strong>: find θ that maximizes P(data|θ). Gaussian model → minimizes MSE. Bernoulli → minimizes BCE. Every standard loss function has a probabilistic interpretation via MLE. Understanding this lets you design new loss functions consciously.</p>",
+            "analogy": "MLE asks: 'which model parameters make the observed data most plausible?' It turns data into a question about model parameters.",
+            "visual": "MLE: θ*=argmax_θ Σ log P(yⁱ|xⁱ;θ)\nBernoulli → binary CE loss\nGaussian → MSE loss\nMultinomial → categorical CE"
+          },
+          "challenge": {
+            "q": "Predicting surgical instrument pose (angle, continuous). MSE or cross-entropy?",
+            "opts": [
+              {
+                "t": "Cross-entropy — always better for neural networks",
+                "c": false
+              },
+              {
+                "t": "MSE — assumes Gaussian noise around the true angle; appropriate for continuous regression",
+                "c": true
+              },
+              {
+                "t": "Hinge loss — standard for robotics",
+                "c": false
+              },
+              {
+                "t": "Dice loss — for localization tasks",
+                "c": false
+              }
+            ],
+            "hint": "Continuous output → Gaussian likelihood → which loss? Binary → Bernoulli → which loss?",
+            "exp": "MSE assumes Gaussian likelihood: minimizing MSE = maximizing Gaussian log-likelihood. For continuous angle prediction, this is correct. Cross-entropy is for discrete class labels."
+          },
+          "project": {
+            "title": "Loss = Likelihood: Verify It",
+            "desc": "Empirically verify that minimizing CE = maximizing log-likelihood.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Implement: binary CE and its log-likelihood derivation — show equivalence",
+              "MSE and Gaussian log-likelihood — show equivalence",
+              "Train logistic regression minimizing CE vs maximizing log-likelihood — same result?",
+              "Plot: log-likelihood vs loss during training (should be mirror images)",
+              "README: what probabilistic model does binary CE assume? Connect to your medical classifier."
+            ],
+            "hint": "L_CE = -[y·log(p)+(1-y)·log(1-p)]. Log-likelihood = Σ[y·log(p)+(1-y)·log(1-p)]. Negatives of each other."
+          }
+        },
+        {
+          "id": "ml3-3",
+          "title": "Bayesian Thinking in ML",
+          "meta": "Prior, posterior, MAP, regularization",
+          "xp": 110,
+          "watch": {
+            "title": "CS229 Lecture 7 — Bayesian intro (last 20 min)",
+            "url": "https://www.youtube.com/watch?v=8NYoQiRANpg",
+            "focus": "Prior, likelihood, posterior. MAP estimation. Why regularization = prior. Foundation of TDL Bayesian section."
+          },
+          "concept": {
+            "title": "Updating beliefs with evidence",
+            "body": "<p>Bayes: P(θ|data) ∝ P(data|θ)·P(θ). <strong>MAP</strong>: find θ maximizing posterior. MAP + Gaussian prior = MLE + L2 regularization. Regularization = prior belief about parameters. Foundation of your TDL section.</p>",
+            "analogy": "Before seeing X-rays, you believe most are normal (prior). After seeing a suspicious shadow (data), you update your belief (posterior). MAP finds the parameter setting that best combines prior + evidence.",
+            "visual": "P(θ|D) ∝ P(D|θ)·P(θ)\nMAP = argmax[log P(D|θ)+log P(θ)]\nGaussian prior → L2 regularization\nLaplace prior → L1 regularization\nStrong prior (high λ) = strong belief about weight size"
+          },
+          "challenge": {
+            "q": "ResNet-A: weight decay 1e-4 (L2 reg). ResNet-B: no regularization. What prior does ResNet-A assume?",
+            "opts": [
+              {
+                "t": "Laplace prior — L2 corresponds to Laplace",
+                "c": false
+              },
+              {
+                "t": "Gaussian prior N(0,σ²) — L2 regularization is MAP with Gaussian prior",
+                "c": true
+              },
+              {
+                "t": "Uniform prior — same as no regularization",
+                "c": false
+              },
+              {
+                "t": "Regularization has no Bayesian interpretation",
+                "c": false
+              }
+            ],
+            "hint": "MAP with Gaussian prior: log P(θ) = -||θ||²/(2σ²). Compare to L2 penalty = λ·||θ||².",
+            "exp": "L2 = MAP with Gaussian prior N(0,1/2λ). ResNet-B assumes uniform (flat) prior = MLE. This connection means you can reason about regularization choices as prior beliefs."
+          },
+          "project": {
+            "title": "Prior Sensitivity & Regularization Study",
+            "desc": "Empirically verify Bayesian interpretation of regularization.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Train logistic regression: no reg, L2(λ=0.01), L2(λ=1.0), L1(λ=0.01)",
+              "Plot weight distributions — does Gaussian prior → Gaussian weights?",
+              "Implement MAP objective manually: log P(D|θ)+log P(θ) — verify = MLE+L2",
+              "Compare accuracy, weight magnitude, calibration",
+              "README: what prior belief does each regularization strength encode?"
+            ],
+            "hint": "Plot torch.cat([p.data.flatten() for p in model.parameters()]) as histogram for each setting."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "ml3-a",
+        "title": "Probabilistic ML System",
+        "xp": 280,
+        "desc": "Build a probabilistic classifier: calibrated probabilities with explicit probabilistic foundations.",
+        "deliverables": [
+          "Logistic regression via explicit MLE (log-likelihood maximization)",
+          "MAP training with Gaussian prior — show equivalence to weight decay",
+          "Calibrated probability output with reliability diagram",
+          "Bayesian model selection via BIC approximation",
+          "1-page report: every probabilistic choice — prior, likelihood, posterior approximation"
+        ],
+        "hint": "Connect to TDL section in the report. This assignment is the probabilistic foundation that makes MC Dropout and ensembles make sense.",
+        "linkedin": "The math behind every DL loss function: MLE in disguise. Thread on how MLE connects to BCE, MSE, and why Bayesian thinking changes loss design. #MLFoundations #BayesianML"
+      }
+    },
+    {
+      "id": "ml4",
+      "title": "Generalization & Bias-Variance",
+      "sub": "Overfitting · Regularization · Evaluation",
+      "units": [
+        {
+          "id": "ml4-1",
+          "title": "Bias, Variance & the Tradeoff",
+          "meta": "Underfitting, overfitting, model complexity",
+          "xp": 110,
+          "watch": {
+            "title": "CS229 Lecture 8 — Bias-Variance Tradeoff",
+            "url": "https://www.youtube.com/watch?v=C4E1nK7GCFo",
+            "focus": "Full lecture. One of the most important in CS229. Bias/variance definitions, model complexity effect, U-shaped test error curve."
+          },
+          "concept": {
+            "title": "Why your model fails on new data",
+            "body": "<p><strong>Bias</strong>: error from wrong assumptions — too-simple model underfits. <strong>Variance</strong>: sensitivity to training data — too-complex model memorizes. Expected test error = Bias² + Variance + Irreducible noise. Reducing bias increases variance and vice versa.</p>",
+            "analogy": "Bias: always aiming left of target regardless of how steady your hand is. Variance: your aim jumps randomly. Low bias + low variance = consistently hitting the target.",
+            "visual": "Test error = Bias² + Variance + σ²_noise\n\nLow complexity → high bias, low variance (underfit)\nHigh complexity → low bias, high variance (overfit)\nMore data → reduces variance, NOT bias"
+          },
+          "challenge": {
+            "q": "ResNet-50: 99% train, 71% test. DenseNet-121: 94% train, 83% test. Same 500 chest X-ray dataset.",
+            "opts": [
+              {
+                "t": "ResNet-50 has lower bias and higher variance — overfitting; DenseNet-121 better regularized",
+                "c": true
+              },
+              {
+                "t": "DenseNet-121 has higher bias — cannot fit training data",
+                "c": false
+              },
+              {
+                "t": "Both underfitting",
+                "c": false
+              },
+              {
+                "t": "Dataset too small to conclude",
+                "c": false
+              }
+            ],
+            "hint": "Which model has large train-test gap? Which has modest gap?",
+            "exp": "ResNet-50: 28pt gap = high variance (overfitting). DenseNet-121: 11pt gap = better variance. Dense connections are a built-in regularizer — each layer accesses all previous features."
+          },
+          "project": {
+            "title": "Bias-Variance Decomposition Experiment",
+            "desc": "Empirically decompose bias and variance for different model complexities.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Train increasing complexity models on small medical dataset",
+              "For each: compute bias² and variance across 10 bootstrap training runs",
+              "Plot: bias², variance, total error vs model complexity (U-curve)",
+              "Show: more data reduces variance — same model, different dataset sizes",
+              "README: sweet spot for your dataset? Architecture choice for small medical datasets?"
+            ],
+            "hint": "Bias² = (mean_predictions - truth)². Variance = variance of predictions across 10 bootstrap runs on held-out test set."
+          }
+        },
+        {
+          "id": "ml4-2",
+          "title": "Regularization Techniques",
+          "meta": "Dropout, weight decay, augmentation",
+          "xp": 100,
+          "watch": {
+            "title": "CS231N Lecture 7 — regularization section (~40–60 min)",
+            "url": "https://www.youtube.com/watch?v=_JB0AO7QxSA",
+            "focus": "L2 intuition, dropout as regularization (training only, different from MC Dropout!), data augmentation as implicit regularization."
+          },
+          "concept": {
+            "title": "Fighting variance without increasing bias",
+            "body": "<p><strong>L2</strong>: penalizes large weights. <strong>Dropout</strong>: random neuron zeroing during training — forces redundant representations. Different from MC Dropout (test-time uncertainty). <strong>Data augmentation</strong>: most effective regularizer for small medical datasets — but requires clinical validation.</p>",
+            "analogy": "L2: hire a minimalist who avoids complexity. Dropout: remove random team members each day — the team learns not to rely on anyone. Augmentation: practice in many conditions so test day has no surprises.",
+            "visual": "Dropout (training): zero each neuron with prob p\nTest (standard): scale outputs by (1-p)\nTest (MC Dropout): keep ON → uncertainty\n\nAugmentation: same image, different appearance → same label"
+          },
+          "challenge": {
+            "q": "You apply horizontal flipping to chest X-rays. A radiologist says this is clinically wrong. Why?",
+            "opts": [
+              {
+                "t": "CNNs cannot learn from flipped images",
+                "c": false
+              },
+              {
+                "t": "Heart is left-sided normally — flipped X-ray shows it right-sided (situs inversus), a real clinical condition. Model learns wrong invariances.",
+                "c": true
+              },
+              {
+                "t": "Augmentation always hurts medical classifiers",
+                "c": false
+              },
+              {
+                "t": "Flipping breaks batch normalization",
+                "c": false
+              }
+            ],
+            "hint": "What does a horizontally flipped chest X-ray look like clinically? Is left-right symmetry valid for chest anatomy?",
+            "exp": "Cardiac anatomy is lateralized. Horizontal flip = situs inversus (rare real condition). If no situs inversus cases in dataset, flipping teaches a false invariance that could cause missing lateralization-based pathologies. Medical augmentation requires clinical validation."
+          },
+          "project": {
+            "title": "Clinically Valid Augmentation Strategy",
+            "desc": "Design and evaluate a clinically valid augmentation strategy for chest X-rays.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Implement valid: random crop, small rotation (±5°), brightness/contrast, Gaussian noise",
+              "Implement invalid: horizontal flip, extreme rotation (negative examples)",
+              "Train with each, compare accuracy and test-set diversity",
+              "Visualize each augmented version — show to simulated radiologist",
+              "README: justify each augmentation clinically, as if for a medical AI journal"
+            ],
+            "hint": "albumentations. ShiftScaleRotate with small angles is safe. RandomBrightnessContrast simulates scanner variation."
+          }
+        },
+        {
+          "id": "ml4-3",
+          "title": "Evaluation & Model Selection",
+          "meta": "Cross-validation, test set discipline, leakage",
+          "xp": 100,
+          "watch": {
+            "title": "CS229 Lecture 8 second half — Model Selection and Cross-Validation",
+            "url": "https://www.youtube.com/watch?v=C4E1nK7GCFo",
+            "focus": "Why you need a separate test set, k-fold CV, danger of peeking at test data, holdout discipline."
+          },
+          "concept": {
+            "title": "Measuring generalization honestly",
+            "body": "<p><strong>Train/val/test split</strong>: never use test for decisions. <strong>K-fold CV</strong>: rotate folds — more reliable estimates for small datasets. <strong>Data leakage</strong>: always split by PATIENT in medical imaging. Same patient in train and test inflates all metrics.</p>",
+            "analogy": "Test set discipline: exam answers in a sealed envelope before the semester. Peeking while studying = meaningless exam score. Leakage = accidentally seeing the answers.",
+            "visual": "Split by PATIENT, not by image:\n❌ Wrong: random image split → patient A in train AND test\n✓ Right: patient-level split → patient A ONLY in train\n\nLeakage symptoms: AUROC >> real-world performance"
+          },
+          "challenge": {
+            "q": "Train on 80% of images, test on 20%. AUROC=0.94. Same patient in both sets. Real concern?",
+            "opts": [
+              {
+                "t": "Model memorized training images",
+                "c": false
+              },
+              {
+                "t": "Model learned patient-specific features (age, bone density) not pathology — AUROC is inflated",
+                "c": true
+              },
+              {
+                "t": "Split too small",
+                "c": false
+              },
+              {
+                "t": "AUROC is the wrong metric",
+                "c": false
+              }
+            ],
+            "hint": "If same patient is in train and test, what patient-specific information might the model use?",
+            "exp": "Patient-level leakage: model learns patient-specific features that help recognize the same patient in the test set. For truly new patients, performance will be much lower. Always split at patient level."
+          },
+          "project": {
+            "title": "Evaluation Audit",
+            "desc": "Audit your medical classifier for data leakage and evaluation bias.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Check current split: any patient IDs shared between train/test?",
+              "Re-split by patient ID, re-evaluate — compare AUROC before/after",
+              "Implement k-fold CV (k=5) at patient level",
+              "Compare: image-level vs patient-level split AUROC (should drop)",
+              "README: what was the leakage? What does correct AUROC tell you about real-world performance?"
+            ],
+            "hint": "Group by patient ID before splitting. sklearn.model_selection.GroupKFold for patient-level CV."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "ml4-a",
+        "title": "Generalization Analysis Report",
+        "xp": 300,
+        "desc": "Complete generalization analysis: bias-variance, regularization ablation, rigorous evaluation with patient-level splits.",
+        "deliverables": [
+          "Bias-variance: training vs val curves across model sizes",
+          "Regularization ablation: no reg, dropout, weight decay, augmentation",
+          "Patient-level k-fold CV with leakage prevention",
+          "Final honest evaluation: mean ± std AUROC across folds",
+          "2-page report: \"Generalization Analysis of [Your Model] for Chest X-ray Classification\" — conference style"
+        ],
+        "hint": "Report: experimental setup, results table (mean±std across folds), discussion. This format appears in every paper you write.",
+        "linkedin": "Rigorous ML evaluation: how to detect and fix data leakage in medical AI. Why patient-level CV gives a 20% more honest AUROC. Lessons from my own audit. #MedicalAI #MLEvaluation"
+      }
+    },
+    {
+      "id": "ml5",
+      "title": "Neural Networks from Scratch",
+      "sub": "Forward pass · Backprop · Architecture design",
+      "units": [
+        {
+          "id": "ml5-1",
+          "title": "The Neuron & Forward Pass",
+          "meta": "Activations, depth, capacity",
+          "xp": 100,
+          "watch": {
+            "title": "CS230 Lecture 1 — Introduction to Deep Learning (Andrew Ng)",
+            "url": "https://www.youtube.com/watch?v=PySo_6S4ZAg",
+            "focus": "Full lecture. What a neural network is, forward pass computation, why depth matters for hierarchical representations."
+          },
+          "concept": {
+            "title": "Composing simple functions into powerful ones",
+            "body": "<p>A neural network: f(x)=f_L(...f₂(f₁(x))). Without nonlinearities, depth adds nothing — collapses to linear. <strong>ReLU</strong>=max(0,z): no vanishing gradient for positive z. <strong>Sigmoid</strong>: squashes to (0,1), vanishing gradient. In practice: ReLU for hidden, sigmoid/softmax for output.</p>",
+            "analogy": "Single neuron: one judge giving a vote. Neural network: committee of committees — lower committees analyze raw evidence, upper committees analyze lower committees' conclusions.",
+            "visual": "ReLU: f(z) = max(0,z)  ← default hidden\nSigmoid: 1/(1+e^{-z})  ← binary output\nSoftmax: e^{z_i}/Σe^{z_j}  ← multi-class\nDead ReLU: z always<0 → gradient=0 → neuron dies"
+          },
+          "challenge": {
+            "q": "30% of neurons in a deep ReLU network always output 0. Cause and fix?",
+            "opts": [
+              {
+                "t": "Network too deep — reduce to 3 layers",
+                "c": false
+              },
+              {
+                "t": "High LR + poor init → neurons permanently negative input, ReLU=0, gradient=0 forever",
+                "c": true
+              },
+              {
+                "t": "ReLU not for deep networks",
+                "c": false
+              },
+              {
+                "t": "Dead neurons are normal",
+                "c": false
+              }
+            ],
+            "hint": "ReLU neuron dies when z is always ≤ 0. When does z become permanently negative?",
+            "exp": "Dead ReLU: large negative gradient update (high LR) pushes weights to always produce z<0. Since ReLU gradient=0 for z≤0, weights never update — permanently dead. Fix: smaller LR, He initialization, or Leaky ReLU."
+          },
+          "project": {
+            "title": "Neural Network from Scratch",
+            "desc": "Build a 2-layer neural network using only numpy.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Implement: linear layer, ReLU, sigmoid, softmax (numpy only)",
+              "Forward pass for 2-layer network",
+              "Train on MNIST or 2D classification dataset",
+              "Plot training loss and accuracy curves",
+              "README: trace one forward pass by hand for a single input. Connect every computation to the math."
+            ],
+            "hint": "No PyTorch. W1,b1,W2,b2 as numpy arrays. Forward: Z1=X@W1+b1, A1=relu(Z1), Z2=A1@W2+b2, out=softmax(Z2)."
+          },
+          "secondary_watch": {
+            "title": "Stanford CS230 — Deep Learning (Andrew Ng) Full Lecture Series",
+            "url": "https://www.youtube.com/watch?v=PySo_6S4ZAg&list=PLoROMvodv4rNRRGdS0rBbXOUGA0wjdh1X",
+            "focus": "Lecture 1 (~70 min). Focus on: full neural network training pipeline, structuring ML projects, and the applied engineering perspective. CS230 is more practical than CS229 — watch this after CS229 Lecture 9 (backprop) to see how theory becomes engineering."
+          }
+        },
+        {
+          "id": "ml5-2",
+          "title": "Backpropagation",
+          "meta": "Chain rule, gradient flow, vanishing gradients",
+          "xp": 130,
+          "watch": {
+            "title": "CS229 Lecture 9 — Backpropagation",
+            "url": "https://www.youtube.com/watch?v=mOmkv5SI9hU",
+            "focus": "Full lecture. Most important algorithm in deep learning. Chain rule, local gradients, efficient computation."
+          },
+          "concept": {
+            "title": "Teaching the network by propagating blame",
+            "body": "<p>Backprop: efficient ∂L/∂θ computation for all parameters via chain rule. δ_l = (W_{l+1}ᵀδ_{l+1})⊙f'(z_l). <strong>Vanishing gradients</strong>: if f'(z) is small (sigmoid in saturation), δ_l shrinks exponentially. Explains why ReLU replaced sigmoid and why skip connections help.</p>",
+            "analogy": "Backprop is blame propagation. Final output wrong. Who is responsible? Last layer takes blame, passes proportional blame backward. Each layer's blame = how much it contributed.",
+            "visual": "Chain rule: ∂L/∂W_l = δ_l · a_{l-1}ᵀ\nδ_l = (W_{l+1}ᵀ δ_{l+1}) ⊙ σ'(z_l)\nVanishing: |σ'|<1 → δ_l→0 exponentially\nReLU: σ'=1 for z>0 → no vanishing (active neurons)"
+          },
+          "challenge": {
+            "q": "10-layer sigmoid network. Gradient layer 1: 10⁻⁸. Layer 9: 10⁻². What is this?",
+            "opts": [
+              {
+                "t": "Exploding gradient — sigmoid amplifies",
+                "c": false
+              },
+              {
+                "t": "Vanishing gradient — sigmoid derivative max=0.25, multiplied 8 times ≈ 10⁻⁵ decay per layer",
+                "c": true
+              },
+              {
+                "t": "Dead neuron problem",
+                "c": false
+              },
+              {
+                "t": "Expected behavior",
+                "c": false
+              }
+            ],
+            "hint": "σ'(z) ≤ 0.25. Multiply together 8 times. What happens?",
+            "exp": "Vanishing gradient. 0.25⁸ ≈ 1.5×10⁻⁵. ReLU derivative = 1 for z>0 → gradients don't shrink through backprop. ResNet skip connections provide a direct gradient highway — explains their breakthrough."
+          },
+          "project": {
+            "title": "Backprop from Scratch",
+            "desc": "Implement backpropagation manually in numpy. Verify with gradient checking.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Add backward pass to your numpy neural network from previous unit",
+              "Compute manually: dL/dW2, dL/db2, dL/dW1, dL/db1",
+              "Gradient checking: compare manual to numerical (f(θ+ε)-f(θ-ε))/(2ε)",
+              "Verify: max difference < 1e-7",
+              "Train network — should match previous unit performance",
+              "README: trace backward pass for one sample. Label each chain rule term."
+            ],
+            "hint": "Gradient check: perturb each parameter by ε=1e-7. All should match to 7 decimal places."
+          }
+        },
+        {
+          "id": "ml5-3",
+          "title": "Architecture Design",
+          "meta": "Width, depth, bottlenecks, tradeoffs",
+          "xp": 120,
+          "watch": {
+            "title": "CS231N Lecture 9 — CNN Architectures (design section)",
+            "url": "https://www.youtube.com/watch?v=DAOcjicFr1Y",
+            "focus": "How to think about architecture design, width vs depth, bottleneck blocks, why skip connections changed everything."
+          },
+          "concept": {
+            "title": "Architecture as a hypothesis about your problem",
+            "body": "<p>Every architectural choice is a prior about problem structure. <strong>Depth</strong>: abstraction levels. <strong>Width</strong>: features per layer. <strong>Bottleneck</strong>: compress → conv → expand (same expressive power, 8× fewer parameters). For your work: ResNet-18 (quick experiments), DenseNet-121 (scarce medical data), EfficientNet (compute-constrained deployment).</p>",
+            "analogy": "Architecture design is designing a factory. Depth = processing stations. Width = workers per station. Bottlenecks = compress materials for transport. Skip connections = express conveyor belts bypassing intermediate stations.",
+            "visual": "ResNet bottleneck: 256→1×1(64)→3×3(64)→1×1(256)\nParams: ~70K vs plain 3×3: ~590K (8.5× more)\n\nEfficientNet: scale depth+width+resolution together\nDenseNet: layer n receives features from ALL prior layers"
+          },
+          "challenge": {
+            "q": "50ms latency constraint. ResNet-50: 45ms AUROC=0.91. ResNet-18: 12ms AUROC=0.87. EfficientNet-B0: 18ms AUROC=0.89. Which to deploy?",
+            "opts": [
+              {
+                "t": "ResNet-50 — highest accuracy always wins in medical AI",
+                "c": false
+              },
+              {
+                "t": "ResNet-18 — fastest and meets constraint",
+                "c": false
+              },
+              {
+                "t": "EfficientNet-B0 — best accuracy within the 50ms constraint",
+                "c": true
+              },
+              {
+                "t": "None — 50ms is too tight",
+                "c": false
+              }
+            ],
+            "hint": "Which models meet <50ms? Among those, which has highest AUROC?",
+            "exp": "EfficientNet-B0 meets constraint (18ms) and achieves highest AUROC (0.89) among compliant models. ResNet-50 could spike above 50ms. The 2% AUROC difference may be clinically significant."
+          },
+          "project": {
+            "title": "Architecture Design Study",
+            "desc": "Systematically study how architectural choices affect accuracy, speed, and efficiency.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Benchmark: ResNet-18, ResNet-50, DenseNet-121, EfficientNet-B0 on medical dataset",
+              "Measure: AUROC, inference time (CPU+GPU), parameter count, memory",
+              "Pareto frontier plot: accuracy vs latency",
+              "README: choose architecture for (a) research, (b) clinical server, (c) edge device. Justify each."
+            ],
+            "hint": "timm has all architectures. time.perf_counter() for latency. sum(p.numel() for p in model.parameters()) for param count."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "ml5-a",
+        "title": "Neural Network: Scratch to Production",
+        "xp": 400,
+        "desc": "Complete neural network pipeline: manual backprop + PyTorch production training.",
+        "deliverables": [
+          "numpy: 2-layer network with manual backprop + gradient check",
+          "PyTorch: same architecture, same dataset — verify matching results",
+          "Full training pipeline: LR finder, optimizer, BatchNorm, early stopping, checkpointing",
+          "Medical image classification: full training run with all components",
+          "2-page technical report: backprop derivation, training choices, results"
+        ],
+        "hint": "numpy version proves you understand the math. PyTorch version is your production template. The report connects them.",
+        "linkedin": "From scratch to production: built the same neural network twice — pure numpy (to understand backprop) and PyTorch (for production). The gap between these two is where real ML engineering lives. #DeepLearning"
+      }
+    },
+    {
+      "id": "ml6",
+      "title": "Deep Learning in Practice",
+      "sub": "BatchNorm · Initialization · Training infrastructure",
+      "units": [
+        {
+          "id": "ml6-1",
+          "title": "Normalization & Initialization",
+          "meta": "BatchNorm, LayerNorm, He init",
+          "xp": 100,
+          "watch": {
+            "title": "deeplearning.ai Course 2 — Week 1: Practical Aspects of Deep Learning",
+            "url": "https://www.deeplearning.ai/courses/deep-learning-specialization/",
+            "focus": "Normalizing inputs, weight initialization, vanishing/exploding gradients. ~2 hours, essential practical content."
+          },
+          "concept": {
+            "title": "Starting right and staying stable",
+            "body": "<p><strong>He initialization</strong>: W~N(0,2/fan_in) for ReLU — keeps variance stable across layers. Too small → vanishing. Too large → exploding. <strong>BatchNorm</strong>: normalize to μ=0, σ=1, learn γ and β. <strong>LayerNorm</strong>: normalize per sample — used in Transformers/ViT.</p>",
+            "analogy": "He init: right amount of fuel — not too little (stalls), not too much (floods). BatchNorm: automatic transmission — adjusts internally so you don't manually manage gradients through layers.",
+            "visual": "He init: W~N(0, 2/fan_in) for ReLU\nXavier: W~N(0, 1/fan_in) for tanh/sigmoid\nBatchNorm: ẑ=(z-μ_B)/σ_B·γ+β\nLayerNorm: normalize per sample (not batch)"
+          },
+          "challenge": {
+            "q": "Initialize all weights to same constant W=0.01. 5 layers. Fundamental problem?",
+            "opts": [
+              {
+                "t": "Cannot learn — symmetry breaking fails when all weights identical",
+                "c": true
+              },
+              {
+                "t": "Small weights cause vanishing gradients",
+                "c": false
+              },
+              {
+                "t": "Requires different optimizer",
+                "c": false
+              },
+              {
+                "t": "Correct initialization for stable training",
+                "c": false
+              }
+            ],
+            "hint": "If all weights identical, what do all neurons in the same layer compute? How does backprop update them?",
+            "exp": "Symmetry breaking failure: all neurons compute the same output → same gradient → identical updates → effectively one neuron per layer. Cannot learn diverse features. Random init breaks symmetry."
+          },
+          "project": {
+            "title": "Initialization & Normalization Study",
+            "desc": "Empirically demonstrate effect of initialization and normalization on training dynamics.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Train same network: constant init, small random, large random, He init",
+              "Gradient norms per layer at initialization — shows vanishing/exploding",
+              "Add BatchNorm: compare convergence with and without for each init",
+              "Demonstrate forgetting model.eval(): prediction instability with batch_size=1",
+              "README: which init + norm combination is your default and why?"
+            ],
+            "hint": "Log gradient norms after first backward. For name,p in model.named_parameters(): if p.grad: print(name, p.grad.norm())."
+          },
+          "secondary_watch": {
+            "title": "Dive into Deep Learning (D2L) — Chapter 5: Deep Learning Computation",
+            "url": "https://d2l.ai/chapter_deep-learning-computation/index.html",
+            "focus": "Sections 5.1 (Layers and Modules), 5.4 (Custom Layers). Then Chapter 8.8 (Numerical Stability and Initialization). Focus on: why weight initialization matters, what happens with all-zero init, and how BatchNorm stabilizes gradients. All code is runnable PyTorch notebooks."
+          }
+        },
+        {
+          "id": "ml6-2",
+          "title": "Production Training Infrastructure",
+          "meta": "Mixed precision, checkpointing, monitoring",
+          "xp": 110,
+          "watch": {
+            "title": "MIT 15.773 Hands-On Deep Learning — Practical DL session",
+            "url": "https://handsondl.mit.edu/",
+            "focus": "Mixed precision training, gradient accumulation, model checkpointing, experiment tracking. Production skills."
+          },
+          "concept": {
+            "title": "Training that actually finishes",
+            "body": "<p><strong>Mixed precision</strong> (FP16 forward + FP32 backward via GradScaler): 2× speed. <strong>Gradient accumulation</strong>: simulate large batch on small GPU. <strong>Checkpointing</strong>: save model+optimizer+epoch → resume interrupted training. <strong>Early stopping</strong>: stop when val loss plateaus.</p>",
+            "analogy": "Mixed precision: rough calculator for most steps (fast), precise for final rounding (accurate). Gradient accumulation: save receipts across many batches before submitting expenses in one go.",
+            "visual": "Mixed precision:\nforward: FP16 → loss: FP32\nGradScaler.scale(loss).backward()\nGradScaler.step(optimizer)\n\nGradient accumulation:\nloss = model(batch)/N; loss.backward()\nif (i+1)%N==0: optimizer.step(); zero_grad()"
+          },
+          "challenge": {
+            "q": "Medical training crashes at epoch 47/100, losing all progress. What infrastructure prevents this?",
+            "opts": [
+              {
+                "t": "Use a smaller model",
+                "c": false
+              },
+              {
+                "t": "Checkpoint every K epochs: save model weights + optimizer state + epoch number",
+                "c": true
+              },
+              {
+                "t": "More stable optimizer",
+                "c": false
+              },
+              {
+                "t": "Increase batch size",
+                "c": false
+              }
+            ],
+            "hint": "What information would you need to resume training exactly from where it stopped?",
+            "exp": "Proper checkpointing: save {model_state_dict, optimizer_state_dict, epoch, val_loss, scheduler_state_dict} every K epochs. Keep best checkpoint separately. This is production infrastructure."
+          },
+          "project": {
+            "title": "Production Training Pipeline",
+            "desc": "Build a reusable, robust training pipeline with all production features.",
+            "format": "GitHub repo (Python package) + README",
+            "deliverables": [
+              "Trainer class: train loop, val loop, checkpoint save/load",
+              "Mixed precision with torch.cuda.amp.autocast()",
+              "Early stopping with patience parameter",
+              "Experiment tracking: log to CSV + optional wandb",
+              "Gradient accumulation option",
+              "Demo: train medical classifier, simulate crash, resume from checkpoint"
+            ],
+            "hint": "class Trainer: train(n_epochs), save_checkpoint(path), load_checkpoint(path). This becomes your permanent research infrastructure."
+          }
+        },
+        {
+          "id": "ml6-3",
+          "title": "Physical Modeling & ML",
+          "meta": "Multibody systems, simulation, learning + physics",
+          "xp": 120,
+          "watch": {
+            "title": "UCLouvain — Modeling and Simulation of Multibody Systems Part I (edX, audit free)",
+            "url": "https://www.edx.org/learn/mechanics/universite-catholique-de-louvain-modeling-and-simulation-of-multibody-systems-part-i",
+            "focus": "Week 1-3: kinematics and dynamics of multibody systems. Focus on: how physical constraints translate into equations of motion, Newton-Euler dynamics, and the ROBOTRAN symbolic tool that generates Python code from your model. Directly applicable to your robot dynamics work."
+          },
+          "concept": {
+            "title": "When physics meets learning",
+            "body": "<p>Intelligent physical systems require both <strong>learning</strong> and <strong>dynamics</strong>. A robot arm has physical constraints that a neural network must respect. <strong>Physics-informed ML</strong>: incorporate known physical equations as loss terms. <strong>Sim-to-real transfer</strong>: train in simulation, deploy on real hardware.</p>",
+            "analogy": "Standard ML: learn any function from data. Physics-informed ML: learn a function that also respects what we already know (Newton's laws, conservation, geometric constraints). Prior knowledge = less data needed.",
+            "visual": "Physics-informed loss:\nL = L_data + λ·L_physics\nL_physics = ||NN(x) - f_physics(x)||²\nf_physics = known differential equation\nResult: model respects physical constraints"
+          },
+          "challenge": {
+            "q": "Neural network predicts robot arm end-effector position, one ignoring kinematics, one incorporating FK as a loss term. Same dataset. Which generalizes better to new joint configurations?",
+            "opts": [
+              {
+                "t": "Pure data-driven — more flexible, better generalization",
+                "c": false
+              },
+              {
+                "t": "Physics-informed — kinematics constraint prevents learning physically impossible configurations",
+                "c": true
+              },
+              {
+                "t": "Both generalize identically",
+                "c": false
+              },
+              {
+                "t": "Physics-informed overfits to kinematic model",
+                "c": false
+              }
+            ],
+            "hint": "Kinematics equations are exact — they describe all valid configurations. What does adding this knowledge do to the function class?",
+            "exp": "Physics-informed generalizes better. Kinematics constrains the function to physically valid configurations — the model cannot predict impossible arm positions. This reduces the effective function class, requiring less data."
+          },
+          "project": {
+            "title": "Physics-Informed ML Experiment",
+            "desc": "Compare pure data-driven vs physics-informed neural network for a simple physical system.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Choose: pendulum, spring-mass, or 2-DOF robot arm",
+              "Generate training data from simulation",
+              "Train: pure NN, and physics-informed NN (physics loss term)",
+              "Compare: generalization to out-of-distribution initial conditions",
+              "README: when does physics constraint help most? Connect to your robotics + medical goals."
+            ],
+            "hint": "Simple pendulum: θ'' = -(g/L)·sin(θ). Physics loss: ||NN_acceleration - -(g/L)·sin(NN_angle)||². Compare prediction on longer time horizons."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "ml6-a",
+        "title": "Full ML Research Infrastructure",
+        "xp": 350,
+        "desc": "Combine everything into a reusable ML research infrastructure package.",
+        "deliverables": [
+          "Complete Trainer class: mixed precision, gradient accumulation, checkpointing, early stopping",
+          "Experiment config system: YAML configs for reproducible experiments",
+          "Evaluation module: accuracy, AUROC, ECE, F1, reliability diagram — all reusable",
+          "Clinically valid augmentation pipeline with documentation",
+          "Physics-informed training demo: one experiment showing physics loss benefit",
+          "README + usage guide — as if open-sourcing for other medical AI researchers"
+        ],
+        "hint": "Structure: /src/trainer.py, /src/metrics.py, /src/augmentation.py, /configs/default.yaml. Code you proudly show on GitHub.",
+        "linkedin": "Just open-sourced my ML research infrastructure: Trainer class, metrics module (ECE+AUROC), clinically valid augmentation pipeline. Built for medical AI research. #OpenSource #MLEngineering"
+      }
+    },
+    {
+      "id": "ml7",
+      "title": "Linear Algebra for ML",
+      "sub": "Vectors · Matrices · SVD · PCA",
+      "units": [
+        {
+          "id": "ml7-1",
+          "title": "Vectors, Matrices & Linear Transformations",
+          "meta": "Geometry of data, column space, rank",
+          "xp": 100,
+          "watch": {
+            "title": "MIT 18.06 Linear Algebra — Lecture 1 (Gilbert Strang)",
+            "url": "https://www.youtube.com/watch?v=ZK3O402wf1c",
+            "focus": "First 30 min. What a matrix does geometrically (transforms space), column space, why this matters for neural network layers."
+          },
+          "concept": {
+            "title": "Every neural network layer is a linear transformation",
+            "body": "<p>A matrix A transforms vectors: y = Ax. Geometrically: rotates, scales, projects. Every FC layer in your network IS matrix multiplication. <strong>Column space</strong>: all possible outputs of Ax. <strong>Rank</strong>: dimension of column space. <strong>Null space</strong>: lost information.</p>",
+            "analogy": "A matrix is a machine that transforms space. Feed it a vector (a point in space), it outputs a new vector (the point transformed). Neural network layers are stacked transformation machines.",
+            "visual": "y = Ax\nA is n×m: maps R^m → R^n\nRank(A) = dim(column space) ≤ min(n,m)\nLow-rank: bottleneck — information compression\nFull-rank: no information loss"
+          },
+          "challenge": {
+            "q": "FC layer maps 512-dim input to 64-dim output (matrix A is 64×512). What does this say about information?",
+            "opts": [
+              {
+                "t": "No information lost — 512 dimensions preserved in 64 outputs",
+                "c": false
+              },
+              {
+                "t": "Information necessarily compressed — rank at most 64, from 512-dimensional input",
+                "c": true
+              },
+              {
+                "t": "Information increases — 64 outputs more efficient",
+                "c": false
+              },
+              {
+                "t": "Rank determines nothing about information",
+                "c": false
+              }
+            ],
+            "hint": "Output is 64-dimensional. Can 64 numbers fully represent 512-dimensional input?",
+            "exp": "Rank(A) ≤ 64. A 512-dim input is mapped to at most a 64-dim subspace — compression is forced. This is exactly what bottleneck layers do intentionally: compress to salient features, discard redundant ones."
+          },
+          "project": {
+            "title": "Linear Transformations in Neural Networks",
+            "desc": "Visualize what each linear layer does geometrically.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "2D examples: visualize 2×2 matrices transforming a grid (rotation, scaling, shear, projection)",
+              "Extract weight matrices from trained FC layer",
+              "Compute SVD: visualize singular values — how much information preserved?",
+              "Visualize: input space → transformed space for first layer",
+              "README: what does the weight matrix of a trained layer look like geometrically?"
+            ],
+            "hint": "numpy.linalg.svd. plt.imshow for weight matrix as image. Scatter plot of transformed 2D grid points."
+          }
+        },
+        {
+          "id": "ml7-2",
+          "title": "Eigenvalues, SVD & PCA",
+          "meta": "Decomposition, dimensionality reduction",
+          "xp": 110,
+          "watch": {
+            "title": "MIT 18.06 Lecture 21 — Eigenvalues + Lecture 29 — SVD",
+            "url": "https://www.youtube.com/watch?v=cdZnhQjJu4I",
+            "focus": "Eigenvalue meaning (directions that don't rotate), SVD decomposition, how PCA uses SVD."
+          },
+          "concept": {
+            "title": "Finding the most important directions",
+            "body": "<p><strong>Eigenvalues/vectors</strong>: Av = λv. Directions that only scale under A. <strong>SVD</strong>: A = UΣVᵀ. Any matrix = rotation × scale × rotation. <strong>PCA</strong>: find directions of maximum variance (eigenvectors of covariance matrix). Project onto top-k directions → dimensionality reduction.</p>",
+            "analogy": "Eigenvectors are the 'grain' of a transformation — directions along which it acts most cleanly. SVD finds the grain of any matrix. PCA finds the grain of your data.",
+            "visual": "SVD: A = U·Σ·Vᵀ\nU: output rotation\nΣ: singular values (scale)\nVᵀ: input rotation\n\nPCA: project onto top k columns of U\nVariance explained = σᵢ²/Σσⱼ²"
+          },
+          "challenge": {
+            "q": "PCA on chest X-ray features. Top 50 principal components explain 89% of variance. What does this tell you?",
+            "opts": [
+              {
+                "t": "89% of X-rays are normal",
+                "c": false
+              },
+              {
+                "t": "Feature space has strong structure — 50 directions capture most variation, rest is noise or redundancy",
+                "c": true
+              },
+              {
+                "t": "Use 100 components to be safe",
+                "c": false
+              },
+              {
+                "t": "PCA should not be used on image features",
+                "c": false
+              }
+            ],
+            "hint": "Variance explained by k components = how much structure is captured in k dimensions.",
+            "exp": "89% variance in 50 components means strong feature space structure — most variation lies in 50 directions. The remaining 11% is likely noise. Enables compression: train classifier on 50 features instead of 512+ with minimal information loss."
+          },
+          "project": {
+            "title": "PCA on Medical Image Features",
+            "desc": "Apply PCA to features from your medical classifier.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Extract penultimate layer features for all test images (forward hook)",
+              "Apply PCA: compute explained variance ratio per component",
+              "Plot: cumulative explained variance vs number of components",
+              "2D PCA scatter plot: color by class label — are classes separable?",
+              "README: what does PCA reveal about your feature space? How many dimensions truly needed?"
+            ],
+            "hint": "sklearn.decomposition.PCA. Extract features with a forward hook. sns.scatterplot(x=pc1, y=pc2, hue=labels)."
+          }
+        },
+        {
+          "id": "ml7-3",
+          "title": "Matrix Operations in Deep Learning",
+          "meta": "Attention, Gram matrices, gradient computation",
+          "xp": 100,
+          "watch": {
+            "title": "MIT 18.06 Lecture 9 — Independence, Basis, Dimension",
+            "url": "https://www.youtube.com/watch?v=yjBerM9jjL0",
+            "focus": "Column space, linear independence, basis — and how these appear in attention mechanisms and gradient computation."
+          },
+          "concept": {
+            "title": "Linear algebra as the language of deep learning",
+            "body": "<p>Every DL operation is linear algebra: <strong>Self-attention</strong>: softmax(QKᵀ/√d)V — matrix multiplications. <strong>Gram matrix</strong>: XXᵀ — feature correlations. <strong>Gradient</strong>: ∂L/∂W = δ·aᵀ — outer product. Understanding in linear algebra terms lets you reason about complexity, parallelism, and numerical stability.</p>",
+            "analogy": "Self-attention: 'how similar is each query to each key?' (dot product = similarity). Weight values by similarities. All matrix operations — linear algebra is the language.",
+            "visual": "Self-attention:\nQ,K,V = XW_Q, XW_K, XW_V\nAttention = softmax(QKᵀ/√d_k)·V\nComplexity: O(n²d) where n=sequence length\n\nGram: G = XXᵀ (n×n covariance)"
+          },
+          "challenge": {
+            "q": "ViT processes 196 patches (14×14 from 224×224). A medical video has 1000 frames as tokens. Computational challenge?",
+            "opts": [
+              {
+                "t": "No challenge — attention equally efficient for all lengths",
+                "c": false
+              },
+              {
+                "t": "Quadratic: 1000 tokens = 1M attention pairs vs 196²=38K. 26× more compute for 5× more tokens.",
+                "c": true
+              },
+              {
+                "t": "Attention cannot process more than 196 tokens",
+                "c": false
+              },
+              {
+                "t": "Only memory, not compute, scales with n",
+                "c": false
+              }
+            ],
+            "hint": "O(n²): double the tokens → 4× the compute.",
+            "exp": "1000²=1M vs 196²=38K = 26× more attention pairs. This is why video transformers need efficient attention (linear attention, local attention) — standard self-attention is too expensive for long sequences like medical videos."
+          },
+          "project": {
+            "title": "Attention from Scratch",
+            "desc": "Implement self-attention in numpy. Verify it matches PyTorch. Visualize attention patterns.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Implement: Q,K,V projections, scaled dot-product attention (numpy)",
+              "Verify: matches torch.nn.MultiheadAttention on same inputs",
+              "Visualize attention weights as heatmap for a sample input",
+              "Apply to sequence data: plot which tokens attend to which",
+              "README: connect attention to linear algebra. What is QKᵀ computing geometrically?"
+            ],
+            "hint": "attention = softmax(Q@K.T / sqrt(d_k)) @ V. All numpy. Compare to PyTorch as gradient check."
+          },
+          "secondary_watch": {
+            "title": "Dive into Deep Learning (D2L) — Chapter 11: Attention Mechanisms and Transformers",
+            "url": "https://d2l.ai/chapter_attention-mechanisms-and-transformers/index.html",
+            "focus": "Sections 11.1 (Queries, Keys, Values) and 11.3 (Attention Scoring Functions). Focus on: dot-product attention QKᵀ/√d as a matrix operation, why √d scaling matters, and multi-head attention. Interactive notebooks let you run and modify the attention computation."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "ml7-a",
+        "title": "Linear Algebra in ML — Applied Study",
+        "xp": 280,
+        "desc": "Connect linear algebra to every component of your ML pipeline.",
+        "deliverables": [
+          "PCA on medical image features: explained variance, 2D visualization, compression analysis",
+          "SVD of weight matrices: what do singular values reveal about trained layers?",
+          "Implement self-attention from scratch and verify against PyTorch",
+          "Gram matrix analysis: compute feature correlations in your classifier",
+          "1-page report: \"The Linear Algebra of My Medical Classifier\" — trace one forward pass as pure matrix operations"
+        ],
+        "hint": "The report should read like a mathematical appendix of a paper. Every layer as a matrix equation, every operation named.",
+        "linkedin": "Linear algebra is not a prerequisite for ML — it IS ML. Thread on how SVD, PCA, and matrix decompositions appear in every layer of my medical image classifier. #LinearAlgebra #DeepLearning"
+      }
+    }
+  ]
+}

@@ -1,0 +1,421 @@
+{
+  "id": "advanced_robotics",
+  "key": "advanced_robotics",
+  "icon": "🦾",
+  "title": "Advanced Robotics",
+  "desc": "Robot manipulation, grasping, underactuated systems, and modern kinematics using screw theory. Picks up where the Robotics & Physical Systems section ends. Prerequisites: complete Sections 1-4.",
+  "chapters": [
+    {
+      "id": "adv1",
+      "title": "Robot Manipulation and Grasping",
+      "sub": "Geometric perception · Grasp planning · Drake · MIT Tedrake",
+      "units": [
+        {
+          "id": "adv1-1",
+          "title": "Geometric Perception for Grasping",
+          "meta": "Point clouds, pose estimation, object detection in 3D — MIT 6.832",
+          "xp": 150,
+          "watch": {
+            "title": "MIT 6.832 Robotic Manipulation — Lecture 1: Introduction + Lecture 3: Geometric Perception",
+            "url": "https://www.youtube.com/playlist?list=PLkx8KyIQkMfWr191lqbN8WfV08j-ui8WX",
+            "focus": "Watch Lecture 1 (Introduction to Manipulation, ~60 min) and Lecture 3 (Geometric Perception, ~60 min). Focus on: what makes manipulation hard vs navigation, why 6-DOF pose estimation matters, how depth cameras generate point clouds, and the role of ICP (Iterative Closest Point) for object pose estimation. Also read the companion textbook chapter at manipulation.csail.mit.edu/pose.html."
+          },
+          "concept": {
+            "title": "From 2D detection to 3D grasping — the perception gap",
+            "body": "<p>Your CV section taught 2D detection: bounding boxes and segmentation masks in image space. Manipulation requires <strong>6-DOF object pose estimation</strong>: where is the object in 3D space AND how is it oriented? A bounding box that says 'cup at (200,150)' is useless for a robot arm — it needs 'cup center at (0.3, 0.1, 0.8)m in world frame, rotated 45° around z-axis.'</p><p><strong>Depth cameras</strong> (Intel RealSense, Azure Kinect) give you an RGB-D image — RGB plus depth per pixel. From depth + camera intrinsics you reconstruct a <strong>point cloud</strong>: a set of 3D points P ∈ R^(N×3). Object pose estimation: given a known 3D model of the object and a point cloud, find the rigid body transform T ∈ SE(3) that aligns them.</p><p><strong>ICP (Iterative Closest Point)</strong>: alternates between (1) finding nearest-neighbor correspondences between model and scene points, and (2) solving for the optimal rigid transform that minimizes point-to-point distance. Converges to local minimum — initialization matters.</p>",
+            "analogy": "2D detection is like recognizing a face in a photo. 6-DOF pose estimation is like figuring out exactly where that person is standing in a room, which direction they are facing, and whether their head is tilted — all from the photo. The depth camera gives you the extra dimension that makes the 3D problem solvable.",
+            "visual": "2D detection output:\n  box=[x,y,w,h], class='cup', score=0.94\n\n6-DOF pose estimation output:\n  T = [[R|t]] ∈ SE(3)\n  position: [0.31, 0.08, 0.74] m (world frame)\n  orientation: quaternion [0.0, 0.0, 0.707, 0.707]\n               = 90° rotation around z-axis\n\nICP algorithm:\n  repeat until convergence:\n    1. For each model point m_i:\n       find nearest scene point s_j\n    2. Solve: min Σ ||R·m_i + t - s_j||²\n       (closed-form via SVD)\n    3. Apply T = [R|t], update model points\n  return T"
+          },
+          "challenge": {
+            "q": "ICP converges to a wrong pose — the cup model aligns to the table instead of the cup. What is the most likely cause and fix?",
+            "opts": [
+              {"t": "ICP has a bug — it should never converge to a wrong pose", "c": false},
+              {"t": "Bad initialization: ICP found a local minimum. Fix: segment the point cloud first (remove table plane), then run ICP on the object cluster only", "c": true},
+              {"t": "The depth camera has too much noise — need a better sensor", "c": false},
+              {"t": "ICP cannot handle symmetric objects like cups", "c": false}
+            ],
+            "hint": "ICP minimizes point-to-point distance — it will converge to whatever local minimum is closest to the initialization. What determines initialization quality?",
+            "exp": "ICP is a local optimizer — it converges to the nearest local minimum from the initialization. If the initial pose estimate places the model near the table, ICP will align it to the table (which has many points and a good fit). The fix: segment the scene first using RANSAC plane fitting to remove the dominant plane (table), then cluster remaining points to isolate the object, then run ICP initialized from the cluster centroid. This is the standard manipulation perception pipeline: segment → cluster → pose estimate."
+          },
+          "project": {
+            "title": "6-DOF Object Pose Estimator",
+            "desc": "Build an ICP-based object pose estimator. Test on synthetic depth data, then on a real object if you have an RGB-D camera.",
+            "format": "Python script + Jupyter notebook + README",
+            "deliverables": [
+              "Generate synthetic point cloud of a known 3D shape (box or sphere) with added noise",
+              "Implement ICP from scratch: nearest neighbors (KDTree), SVD-based transform estimation, iteration loop",
+              "Test: random initial pose, run ICP, measure final rotation and translation error vs ground truth",
+              "Add RANSAC plane segmentation to remove table plane before ICP",
+              "Optional hardware: if you have a RealSense or Azure Kinect, run on a real object",
+              "README: how many ICP iterations to converge? How does initialization quality affect final error?"
+            ],
+            "hint": "scipy.spatial.KDTree for nearest neighbors. SVD for optimal transform: compute H = Σ(m_i - m̄)(s_i - s̄)ᵀ, then SVD(H) = UΣVᵀ, R = VUᵀ. open3d library has ICP built in — implement from scratch first, then verify with open3d."
+          }
+        },
+        {
+          "id": "adv1-2",
+          "title": "Grasp Planning and Execution",
+          "meta": "Grasp quality metrics, antipodal grasps, motion planning for pick-and-place",
+          "xp": 150,
+          "watch": {
+            "title": "MIT 6.832 Robotic Manipulation — Lecture 4: Geometric Grasp Planning",
+            "url": "https://www.youtube.com/playlist?list=PLkx8KyIQkMfWr191lqbN8WfV08j-ui8WX",
+            "focus": "Watch Lecture 4 (Geometric Grasp Planning, ~60 min). Focus on: the force-closure condition for stable grasps, antipodal grasp detection from point clouds, GraspNet and other learning-based grasp planners, and the full pick-and-place pipeline: detect → estimate pose → plan grasp → plan trajectory → execute. Also read manipulation.csail.mit.edu/pick.html."
+          },
+          "concept": {
+            "title": "What makes a grasp stable — and how to find one",
+            "body": "<p>A grasp is <strong>force-closure</strong> if the fingers can resist arbitrary external forces and torques applied to the object. For a parallel-jaw gripper: the simplest stable grasp is <strong>antipodal</strong> — contact points on opposite sides, contact normals pointing toward each other along the same line.</p><p><strong>Antipodal grasp detection from point cloud:</strong> for each pair of surface points (p₁, p₂), check if (1) the line p₁→p₂ is within friction cone of both surface normals, (2) the gripper width |p₁-p₂| ≤ max_width, (3) no collision between gripper and scene. Score by grasp quality metric.</p><p><strong>GraspNet and learning-based approaches:</strong> train a network on millions of simulated grasps to predict grasp quality directly from point cloud without explicit geometric reasoning. Faster at test time, generalizes to unseen objects.</p>",
+            "analogy": "Think of picking up a pen. You instinctively find two sides of the pen that your fingers can press against each other — that is an antipodal grasp. The friction cone condition ensures your fingers do not slip. Force closure means you can wiggle the pen in any direction and your grip holds.",
+            "visual": "Antipodal grasp conditions:\n1. p₁, p₂ on object surface\n2. n₁ · (p₂-p₁)/|p₂-p₁| ≥ cos(α)  (friction cone)\n3. n₂ · (p₁-p₂)/|p₁-p₂| ≥ cos(α)  (friction cone)\n4. |p₁-p₂| ≤ gripper_max_width\n5. No collision with scene\n\nFull pick-and-place pipeline:\nRGB-D → segment → pose estimate → grasp plan\n→ IK to pre-grasp pose → approach → close gripper\n→ lift → transport → place → open gripper"
+          },
+          "challenge": {
+            "q": "Your grasp planner finds 200 antipodal grasp candidates on a detected object. How do you select the best one to execute?",
+            "opts": [
+              {"t": "Pick the first one — all antipodal grasps are equally stable", "c": false},
+              {"t": "Score each grasp by: grasp quality (force closure margin) + IK reachability + collision clearance. Execute the highest scoring reachable grasp.", "c": true},
+              {"t": "Pick the grasp with the shortest approach trajectory to minimize time", "c": false},
+              {"t": "Use the grasp closest to the object centroid", "c": false}
+            ],
+            "hint": "Multiple criteria matter: stability, reachability, and safety. Which option considers all three?",
+            "exp": "Grasp selection is a multi-criteria ranking problem. Force closure margin tells you stability. IK reachability filters out grasps the arm cannot reach in its current configuration. Collision clearance ensures approach and close motions do not hit the scene. In practice: compute all three scores, filter by hard constraints (reachable + collision-free), rank by combined quality score. GraspNet outputs a single quality score from the point cloud directly, which implicitly combines these factors."
+          },
+          "project": {
+            "title": "Pick-and-Place Pipeline Simulation",
+            "desc": "Build a complete simulated pick-and-place system using PyBullet — from object detection to grasping and placing.",
+            "format": "Python script + README + demo video",
+            "deliverables": [
+              "PyBullet scene: table + object (use a URDF box or cylinder as target)",
+              "Antipodal grasp detection: for the known object shape, generate and score grasp candidates",
+              "IK solver: compute joint angles to reach each grasp pose (use pybullet.calculateInverseKinematics)",
+              "Execute: approach → grasp → lift → transport → place sequence in simulation",
+              "Evaluate: success rate over 20 trials with randomized object placement (± 10cm, ± 30° rotation)",
+              "README: what was the main failure mode? How did you handle IK failures?"
+            ],
+            "hint": "pybullet.createConstraint() to simulate gripper close. pybullet.calculateInverseKinematics() for arm IK. Start with a known object at a fixed pose before adding randomization."
+          }
+        },
+        {
+          "id": "adv1-3",
+          "title": "Learning-Based Manipulation",
+          "meta": "Imitation learning, diffusion policies, sim-to-real for manipulation",
+          "xp": 160,
+          "watch": {
+            "title": "MIT 6.832 Robotic Manipulation — Lectures on Learning for Manipulation",
+            "url": "https://www.youtube.com/playlist?list=PLkx8KyIQkMfWr191lqbN8WfV08j-ui8WX",
+            "focus": "Watch Lectures 8-10 (Learning for Manipulation). Focus on: behavior cloning for manipulation (collecting demonstrations via teleoperation), why manipulation is harder than navigation for imitation learning (contact-rich, high-precision, multimodal), diffusion policies for manipulation, and the sim-to-real gap for contact-rich tasks. Also read manipulation.csail.mit.edu/imitation.html."
+          },
+          "concept": {
+            "title": "Why manipulation is the hardest imitation learning problem",
+            "body": "<p>In navigation, small errors (robot 5cm off path) are recoverable. In manipulation, small errors (gripper 2mm off target) cause complete failure — the grasp misses. This makes manipulation imitation learning fundamentally harder than navigation imitation learning.</p><p><strong>Behavior cloning for manipulation:</strong> collect demonstrations via teleoperation (human controls robot remotely), record (observation, action) pairs, train a policy π(a|o) via supervised learning. The problem: <strong>covariate shift</strong> — the policy makes small errors, enters states not in the training data, and errors compound. DAgger solves this by iteratively collecting demonstrations at states the policy visits.</p><p><strong>Diffusion policies</strong> (Chi et al., 2023): model the action distribution as a diffusion process. At execution time, denoise random noise into a high-quality action sequence conditioned on observation. Outperforms behavior cloning on multimodal manipulation tasks — can represent multiple valid strategies, not just the mode.</p>",
+            "analogy": "Teaching a child to tie their shoes by letting them watch you once (behavior cloning) works poorly — they cannot recover when their fingers slip. Teaching by guiding their hands through the motion at the states where they struggle (DAgger) works better. Diffusion policies are like giving the child a range of valid approaches and letting them select the one that fits their current hand position.",
+            "visual": "Behavior cloning pipeline:\nTeleoperation → (obs, action) pairs → supervised learning\nπ(a|o) → deploy → compound errors at test time\n\nDAgger fix:\n1. Train π on D\n2. Run π, query human expert at visited states\n3. Add (state, expert_action) to D\n4. Repeat → policy sees its own error states\n\nDiffusion policy:\naction_T ~ N(0,I)  (pure noise)\nfor t = T → 0:\n  action_{t-1} = denoise(action_t, obs, t)\naction_0 = final action sequence"
+          },
+          "challenge": {
+            "q": "Your behavior cloning policy achieves 90% success on training demonstrations but only 40% on new object positions at test time. What is the diagnosis and the correct fix?",
+            "opts": [
+              {"t": "Overfitting — reduce model size or add dropout", "c": false},
+              {"t": "Covariate shift: policy enters states not in training data and errors compound. Fix: DAgger — collect demonstrations at the policy's failure states.", "c": true},
+              {"t": "Not enough training data — collect 10x more demonstrations at the same positions", "c": false},
+              {"t": "The sim-to-real gap — train in the real environment only", "c": false}
+            ],
+            "hint": "90% train success means the model learned the demonstrations well. The gap to 40% test success is a distribution mismatch problem, not a capacity problem.",
+            "exp": "Covariate shift: the policy was trained on states generated by the expert. At test time, the policy makes small errors → enters states the expert never visited → no training signal for recovery → errors compound. More data at the same training states does not fix this — the issue is the distribution of states at test time differs from training. DAgger iteratively adds demonstrations at the states the policy actually visits, closing the distribution gap. Diffusion policies also help by modeling the full distribution of valid actions rather than just the mean."
+          },
+          "project": {
+            "title": "Behavior Cloning for Manipulation",
+            "desc": "Train a behavior cloning policy for a simple PyBullet manipulation task. Evaluate covariate shift and implement a DAgger-style improvement.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "PyBullet task: push a block to a target position using a robot arm",
+              "Collect 100 demonstrations using a scripted expert policy (proportional controller)",
+              "Train behavior cloning policy: MLP mapping (block_pos, arm_pos, target_pos) → action",
+              "Evaluate: success rate at in-distribution positions vs out-of-distribution positions",
+              "DAgger iteration: run policy, collect expert labels at failure states, retrain",
+              "Compare: behavior cloning vs DAgger success rates on out-of-distribution positions",
+              "README: how many DAgger iterations were needed? What was the covariate shift gap?"
+            ],
+            "hint": "Scripted expert: proportional controller pushing block toward target. BC policy: 3-layer MLP, MSE loss on actions. DAgger: run policy for N episodes, identify failure states (block far from target), query expert for action at those states, add to dataset."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "adv1-a",
+        "title": "Complete Manipulation System",
+        "xp": 500,
+        "desc": "Build a complete manipulation system: perceive → plan grasp → execute → learn from failure. This is Module 4 from your research roadmap.",
+        "deliverables": [
+          "PyBullet scene with RGB-D camera, robot arm (use Franka Panda URDF from pybullet_data), and multiple objects",
+          "Perception pipeline: point cloud from depth, RANSAC plane removal, object cluster extraction, ICP pose estimation",
+          "Grasp planning: antipodal grasp detection, IK filtering, quality ranking",
+          "Behavior cloning policy trained on 200 demonstrations for one object class",
+          "DAgger improvement: 3 iterations of online correction",
+          "Evaluation: success rate on 50 trials with randomized object poses for both scripted and learned policy",
+          "Research writeup (2 pages): architecture, evaluation protocol, failure analysis, what the learned policy does differently from the scripted one"
+        ],
+        "hint": "Build layers: scene first, then perception, then scripted policy, then learning. Each layer should work before adding the next. The Franka Panda URDF is in pybullet_data — use it directly.",
+        "linkedin": "Completed my most complex robotics project: a full manipulation system with 6-DOF pose estimation, antipodal grasp planning, and behavior cloning with DAgger improvement. Built entirely in PyBullet. The gap between scripted and learned policy performance was the most instructive finding. #Robotics #Manipulation #ImitationLearning"
+      }
+    },
+    {
+      "id": "adv2",
+      "title": "Underactuated Systems and Dynamic Control",
+      "sub": "Lyapunov stability · LQR · Trajectory optimization · MIT Tedrake",
+      "units": [
+        {
+          "id": "adv2-1",
+          "title": "Lyapunov Stability and Energy-Based Control",
+          "meta": "Stability theory, energy shaping, passivity — MIT Underactuated Robotics",
+          "xp": 140,
+          "watch": {
+            "title": "MIT Underactuated Robotics Spring 2024 — Lectures 1-3: Introduction and Simple Pendulum",
+            "url": "https://www.youtube.com/playlist?list=PLkx8KyIQkMfU5szP43GlE_S1QGSPQfL9s",
+            "focus": "Watch Lectures 1 (Introduction to Underactuated Robotics) and 2-3 (The Simple Pendulum). Focus on: what underactuated means (fewer actuators than DOF), why the simple pendulum is the canonical example, the energy landscape view of control, and Lyapunov stability — how to prove a system is stable without solving the ODE. Also read underactuated.mit.edu Chapter 1-2."
+          },
+          "concept": {
+            "title": "Why underactuated systems require different control thinking",
+            "body": "<p>A <strong>fully actuated</strong> robot has as many motors as degrees of freedom — it can instantaneously command any acceleration. A <strong>underactuated</strong> system has fewer actuators: a compass biped has 5 DOF but only 2 actuators (hip joints), the legs fall under gravity. The swing phase is passive — you cannot directly control it.</p><p><strong>Lyapunov stability</strong>: prove stability without solving the dynamics. Find a Lyapunov function V(x) ≥ 0 (energy-like) such that dV/dt ≤ 0 (energy decreasing). If V = 0 only at the equilibrium and dV/dt < 0 everywhere else, the system is asymptotically stable.</p><p><strong>Energy shaping</strong>: for underactuated systems, design a controller that makes the closed-loop system behave as if it had a different (shaped) energy function with the desired equilibrium. Classic example: swinging up a pendulum by pumping energy at the right moment.</p>",
+            "analogy": "A fully actuated system is like a car with power steering — you can go anywhere. An underactuated system is like a bicycle — you cannot directly control lean angle, only steer and pedal. But with the right strategy (leaning into turns), you still reach your destination. Energy shaping is like knowing exactly when to pedal harder to naturally arrive at the equilibrium you want.",
+            "visual": "Underactuated: DOF > number of actuators\nExample: pendulum on cart\n  State: [cart_x, pendulum_θ, ẋ, θ̇]  (4 DOF)\n  Actuator: cart motor only  (1 actuator)\n\nLyapunov stability:\n  Find V(x) such that:\n    V(x) ≥ 0  (positive definite)\n    V(x) = 0 only at x* (equilibrium)\n    dV/dt = ∇V·f(x) ≤ 0  (non-increasing)\n  → system is stable (energy cannot grow)\n\nEnergy shaping for pendulum swing-up:\n  E_desired = E(top) = mgl (energy at top)\n  u = -k·θ̇·(E_current - E_desired)\n  → pumps energy when below E_desired\n  → removes energy when above E_desired"
+          },
+          "challenge": {
+            "q": "A pendulum at the bottom equilibrium has V = (1/2)ml²θ̇² + mgl(1-cosθ). Is this a valid Lyapunov function for proving stability at θ=0, θ̇=0?",
+            "opts": [
+              {"t": "No — V is not differentiable at θ=0", "c": false},
+              {"t": "Yes — V ≥ 0 everywhere, V=0 only at (0,0), and dV/dt = 0 (energy conserved for unforced pendulum — Lyapunov stable but not asymptotically stable)", "c": true},
+              {"t": "No — V must be quadratic to be a valid Lyapunov function", "c": false},
+              {"t": "Yes — and it proves asymptotic stability because the pendulum naturally returns to the bottom", "c": false}
+            ],
+            "hint": "Check all three conditions: V ≥ 0, V = 0 only at equilibrium, and dV/dt. What is dV/dt for an ideal (no friction) pendulum?",
+            "exp": "V = KE + PE is the total mechanical energy. V ≥ 0 ✓. V = 0 only at θ=0, θ̇=0 ✓. But for an ideal pendulum with no friction: dV/dt = 0 (energy is conserved — it swings forever). So Lyapunov's theorem gives us Lyapunov stability (trajectories stay bounded) but NOT asymptotic stability (does not converge to equilibrium). Add damping: dV/dt = -bθ̇² < 0 for θ̇ ≠ 0, giving asymptotic stability. This is why damping (friction) matters for stability."
+          },
+          "project": {
+            "title": "Pendulum Swing-Up and Balance",
+            "desc": "Implement energy-shaping swing-up and LQR balancing for an inverted pendulum — the canonical underactuated control demo.",
+            "format": "Python simulation + animated visualization + README",
+            "deliverables": [
+              "Simulate pendulum-on-cart dynamics using scipy.integrate.odeint",
+              "Energy shaping swing-up: implement u = -k·θ̇·(E - E_desired), tune k",
+              "Switch to LQR balance at top when |θ - π| < threshold",
+              "LQR: linearize dynamics at top, solve Riccati equation (scipy.linalg.solve_continuous_are)",
+              "Animation: show pendulum swinging up and balancing at top using matplotlib.animation",
+              "README: what k value worked for swing-up? How sensitive is the LQR to the switch threshold?"
+            ],
+            "hint": "Linearize at top: θ = π + δ, state = [x, δ, ẋ, δ̇]. A matrix: compute analytically or numerically. scipy.linalg.solve_continuous_are(A, B, Q, R) returns the optimal P matrix. LQR gain: K = R⁻¹BᵀP."
+          }
+        },
+        {
+          "id": "adv2-2",
+          "title": "Trajectory Optimization",
+          "meta": "Direct collocation, iLQR, MPC — planning optimal robot motions",
+          "xp": 150,
+          "watch": {
+            "title": "MIT Underactuated Robotics — Lectures on Trajectory Optimization",
+            "url": "https://www.youtube.com/playlist?list=PLkx8KyIQkMfU5szP43GlE_S1QGSPQfL9s",
+            "focus": "Watch Lectures 6-8 (Trajectory Optimization). Focus on: direct collocation as a nonlinear programming problem, iterative LQR (iLQR) as a dynamic programming approach, and Model Predictive Control (MPC) as receding-horizon trajectory optimization. Read underactuated.mit.edu Chapter 9-10. The Drake toolbox has Python bindings for all these solvers."
+          },
+          "concept": {
+            "title": "Finding optimal robot trajectories through constrained optimization",
+            "body": "<p><strong>Trajectory optimization</strong>: find a sequence of states and controls (x₀, u₀, x₁, u₁, ..., x_N) that minimizes a cost function subject to: dynamics constraints (x_{k+1} = f(x_k, u_k)), input limits (u_min ≤ u_k ≤ u_max), and state constraints (obstacles, joint limits).</p><p><strong>Direct collocation</strong>: transcribe the continuous optimization into a finite-dimensional NLP. Parameterize trajectory as polynomial splines at collocation points. Hand to IPOPT or SNOPT. Handles complex costs and constraints directly.</p><p><strong>iLQR</strong>: iterative Linear Quadratic Regulator. Linearize dynamics around the current trajectory, solve the LQR problem locally, update trajectory. Repeat until convergence. Faster than direct collocation, no constraint handling, but good for smooth trajectory refinement.</p><p><strong>MPC</strong>: solve trajectory optimization at every timestep, apply first action, re-plan. Handles disturbances and model errors by re-planning constantly. The standard industrial motion controller.</p>",
+            "analogy": "Direct collocation is like planning your whole road trip at once, accounting for every traffic light. iLQR is like iteratively improving a rough route until it is smooth. MPC is like using Google Maps — re-plan every few seconds as conditions change. All three find optimal trajectories, but with different speed-constraint-robustness tradeoffs.",
+            "visual": "Direct collocation NLP:\nmin Σ cost(x_k, u_k)\ns.t. x_{k+1} = f(x_k, u_k)  [dynamics]\n     u_min ≤ u_k ≤ u_max    [input limits]\n     h(x_k) ≤ 0              [obstacles]\nSolve with IPOPT/SNOPT → (x*, u*)\n\niLQR:\n1. Forward pass: simulate trajectory with u_k\n2. Backward pass: linearize, solve Riccati\n3. Update: u_k ← u_k + δu_k (line search)\n4. Repeat until ||δu|| < ε\n\nMPC receding horizon:\nAt each t: solve traj. opt. over [t, t+H]\nApply u_t*, discard rest\nRe-solve at t+1"
+          },
+          "challenge": {
+            "q": "Your MPC controller for a robot arm runs at 10Hz but re-planning takes 200ms. What is the consequence and the engineering fix?",
+            "opts": [
+              {"t": "No issue — 200ms is fast enough for a 10Hz controller", "c": false},
+              {"t": "The controller applies a stale plan: at 10Hz the period is 100ms, but planning takes 200ms — you apply the plan from 200ms ago. Fix: shorten planning horizon, warm-start from previous solution, or use a faster solver.", "c": true},
+              {"t": "The robot will stop and wait for the new plan before moving", "c": false},
+              {"t": "Run MPC at 5Hz instead to match the planning time", "c": false}
+            ],
+            "hint": "MPC period = 1/frequency = 100ms. Planning time = 200ms. What happens when planning takes longer than one control period?",
+            "exp": "At 10Hz, each control period is 100ms. If planning takes 200ms, by the time the new plan is ready, 2 control periods have passed — the robot has moved from where the plan assumed it started. The applied plan is always 2 steps stale. Fix: warm-starting (initialize solver from previous solution — typically converges in fewer iterations), reducing the horizon N, or using a faster but approximate solver. In practice: warm-starting alone often reduces solve time from 200ms to under 50ms."
+          },
+          "project": {
+            "title": "iLQR Trajectory Optimization",
+            "desc": "Implement iLQR for a cartpole system. Generate smooth swing-up trajectories and compare to energy-shaping.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Cartpole dynamics: implement f(x, u) and linearization A=∂f/∂x, B=∂f/∂u",
+              "iLQR: implement forward pass (simulate), backward pass (Riccati recursion), line search",
+              "Cost function: quadratic state cost + control effort penalty",
+              "Generate swing-up trajectory: initial state at bottom, target at top",
+              "Compare: iLQR trajectory vs energy-shaping — time to swing up, control effort used",
+              "MPC simulation: apply iLQR in receding-horizon fashion with 10-step lookahead",
+              "README: how many iLQR iterations to converge? What happens when you reduce the control penalty?"
+            ],
+            "hint": "Cartpole state: [x, θ, ẋ, θ̇]. Linearize numerically: A ≈ (f(x+ε·eᵢ) - f(x))/ε per column. Backward pass: solve Riccati recursion backward from terminal cost. Forward pass: simulate with updated controls. Line search: α ∈ {1, 0.5, 0.25, ...} until cost decreases."
+          }
+        },
+        {
+          "id": "adv2-3",
+          "title": "Reinforcement Learning for Control",
+          "meta": "Policy gradient, PPO, model-based RL for physical systems",
+          "xp": 150,
+          "watch": {
+            "title": "MIT Underactuated Robotics — Lectures on Reinforcement Learning + Stanford AA289 Seminars",
+            "url": "https://www.youtube.com/playlist?list=PLkx8KyIQkMfU5szP43GlE_S1QGSPQfL9s",
+            "focus": "Watch Lectures 14-16 (Reinforcement Learning for Control) from MIT Underactuated. Focus on: policy gradient methods (REINFORCE), why standard RL is sample-inefficient for physical systems, model-based RL as the solution, and the connection between trajectory optimization and RL. Also watch 2-3 Stanford AA289 talks on learning-based control from active researchers."
+          },
+          "concept": {
+            "title": "When to use RL for control — and when not to",
+            "body": "<p>RL learns a policy by maximizing expected reward through trial and error. For physical robots: the sample efficiency problem — a real robot cannot do millions of trials. Solutions: (1) train in simulation, transfer to hardware (sim-to-real), (2) model-based RL (learn a model of dynamics, plan with it), (3) start from a good initialization (imitation learning first, then RL fine-tuning).</p><p><strong>PPO (Proximal Policy Optimization)</strong>: the standard model-free RL algorithm for continuous control. Clips policy update size to prevent large destructive updates. Works well in simulation with enough data.</p><p><strong>Model-based RL</strong>: learn f̂(x, u) ≈ f(x, u) from data, then use trajectory optimization (iLQR, MPC) with the learned model. Sample-efficient because you can do planning in the learned model without real rollouts. Key challenge: model errors compound — the learned model is only reliable near the training data distribution.</p>",
+            "analogy": "Model-free RL is trial and error until you accidentally succeed. Model-based RL is: after a few trials, build a mental model of how the system behaves, then plan using that mental model. Humans use model-based RL — we do not blindly try millions of golf swings, we build a model of how the club interacts with the ball and reason about what to change.",
+            "visual": "Model-free RL (PPO) loop:\nπ_θ → rollout in env → compute rewards\n→ policy gradient update → repeat (millions of steps)\n\nModel-based RL loop:\nπ_init → few rollouts → fit f̂ to data\n→ plan with f̂ (iLQR/MPC) → rollout real env\n→ add data → refit f̂ → repeat (hundreds of steps)\n\nSim-to-real pipeline:\nTrain PPO in PyBullet (millions of steps)\n→ Domain randomization (vary mass, friction, delays)\n→ Transfer to hardware (hope Δ_model is small)\n→ Fine-tune on hardware with few real steps"
+          },
+          "challenge": {
+            "q": "Your PPO policy achieves 95% success in PyBullet simulation but only 20% on the real robot. Beyond standard sim-to-real gap, what specific physical effects were most likely not modeled?",
+            "opts": [
+              {"t": "The real robot is slower — increase simulation timestep", "c": false},
+              {"t": "Actuator dynamics (motor latency, torque limits, backlash), contact friction variation, and sensor noise/delays — all absent or simplified in PyBullet default settings", "c": true},
+              {"t": "The policy network is too small for real hardware", "c": false},
+              {"t": "PPO is not suitable for real hardware — use a different RL algorithm", "c": false}
+            ],
+            "hint": "PyBullet by default uses ideal actuators (instant torque, no latency) and simplified friction. What does real hardware add?",
+            "exp": "The biggest sim-to-real gaps: (1) actuator dynamics — real motors have latency (10-50ms), torque saturation, and backlash (dead zone); (2) contact friction — PyBullet friction coefficients rarely match real surfaces; (3) sensor delays — real encoders and cameras have latency that compound with control loop delays. Domain randomization fixes: vary motor latency, friction coefficients, and sensor noise during training. The policy must learn to be robust to this variation to transfer."
+          },
+          "project": {
+            "title": "PPO for Continuous Control",
+            "desc": "Train a PPO policy on a continuous control task in PyBullet. Apply domain randomization and evaluate sim-to-real readiness.",
+            "format": "Python script + Jupyter notebook + README",
+            "deliverables": [
+              "PyBullet environment: balance task (inverted pendulum or hopper from pybullet_envs)",
+              "PPO implementation using stable-baselines3 (pip install stable-baselines3)",
+              "Train to 90%+ success rate — plot learning curve, episode reward vs steps",
+              "Domain randomization: vary link mass (±20%), joint friction (±50%), motor latency (0-30ms)",
+              "Evaluate: success rate with vs without domain randomization at different randomization levels",
+              "Sim-to-real analysis: identify the top 3 physical effects not modeled by your simulation",
+              "README: how did domain randomization affect training stability and final performance?"
+            ],
+            "hint": "stable-baselines3: from stable_baselines3 import PPO; model = PPO('MlpPolicy', env); model.learn(total_timesteps=1_000_000). Domain randomization: wrap your env in a class that randomizes parameters at each episode reset."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "adv2-a",
+        "title": "Dynamic Robot Control System",
+        "xp": 500,
+        "desc": "Build a complete dynamic control system: Lyapunov stability analysis, trajectory optimization, and RL policy — applied to the same physical system.",
+        "deliverables": [
+          "Physical system: inverted pendulum on cart (simulation)",
+          "Energy-shaping swing-up + LQR balance (from adv2-1)",
+          "iLQR trajectory optimization for swing-up (from adv2-2)",
+          "PPO policy trained with domain randomization (from adv2-3)",
+          "Comparative evaluation: energy-shaping vs iLQR vs PPO — time to swing up, control effort, robustness to disturbances",
+          "Stability proof: show the LQR balance region of attraction using Lyapunov analysis",
+          "Research writeup (2 pages): when would you choose each approach for a real system?"
+        ],
+        "hint": "Use the same simulation for all three approaches so comparison is fair. Disturbance test: apply a random impulse at a random time, measure recovery time for each controller.",
+        "linkedin": "Implemented three different control strategies for the same underactuated system — energy shaping, trajectory optimization (iLQR), and PPO with domain randomization. The comparison revealed when classical control outperforms learning and vice versa. #ControlTheory #ReinforcementLearning #Robotics"
+      }
+    },
+    {
+      "id": "adv3",
+      "title": "Modern Kinematics with Screw Theory",
+      "sub": "Product of exponentials · Screw motions · Lynch & Park",
+      "units": [
+        {
+          "id": "adv3-1",
+          "title": "Lie Groups and Screw Theory",
+          "meta": "SO(3), SE(3), exponential coordinates — Modern Robotics Lynch & Park",
+          "xp": 140,
+          "watch": {
+            "title": "Modern Robotics — Northwestern Robotics YouTube (97 lectures) + free PDF textbook",
+            "url": "https://www.youtube.com/playlist?list=PLggLP4f-rq02vX0OQQ5vrCxbJrzamYDfx",
+            "focus": "Watch Chapter 3 lectures (Rigid Body Motions). Focus on: SO(3) as the rotation group, SE(3) as the rigid body motion group, exponential coordinates for rotation (axis-angle), the matrix exponential e^[ω]θ = I + sin(θ)[ω] + (1-cos(θ))[ω]², and screws as a unified representation of rotation and translation. Free PDF: hades.mech.northwestern.edu/images/7/7f/MR.pdf Chapter 3."
+          },
+          "concept": {
+            "title": "Screw theory — the modern language of robot kinematics",
+            "body": "<p>Your Robotics section used <strong>DH parameters</strong> — a 4-parameter convention for describing joint transforms. DH is standard in industry but has numerical issues and is hard to interpret geometrically. <strong>Screw theory</strong> (Lynch & Park) is the modern alternative.</p><p><strong>SO(3)</strong>: the Lie group of 3D rotations — all 3×3 rotation matrices R with det(R)=1. Closed under multiplication and inversion. <strong>SE(3)</strong>: the Lie group of rigid body motions — 4×4 homogeneous matrices T = [[R,p],[0,1]].</p><p><strong>Exponential coordinates</strong>: any rotation can be written as e^([ω]θ) where ω is a unit rotation axis and θ is the angle. [ω] is the 3×3 skew-symmetric matrix of ω. This is the <strong>matrix exponential</strong> — connects the Lie algebra to the Lie group.</p><p><strong>Screw motion</strong>: a general rigid body motion = rotation about an axis + translation along the same axis. Every SE(3) element is a screw motion. The <strong>product of exponentials</strong> (PoE) formula computes forward kinematics by composing screw motions — cleaner than DH chains.</p>",
+            "analogy": "DH parameters are like GPS coordinates — they work, but they hide the geometry. Screw theory is like describing motion as 'rotate 45° around this axis while translating 10cm along it' — physically intuitive and numerically well-behaved. The exponential map is the bridge between infinitesimal motion (Lie algebra) and finite motion (Lie group).",
+            "visual": "SO(3) → SE(3):\nSO(3): {R ∈ R^{3×3} | RᵀR=I, det(R)=1}\nSE(3): {T = [[R,p],[0,1]] | R∈SO(3), p∈R³}\n\nMatrix exponential (rotation):\nR = e^{[ω]θ} = I + sin(θ)[ω] + (1-cosθ)[ω]²\nwhere [ω] = [[0,-ω₃,ω₂],[ω₃,0,-ω₁],[-ω₂,ω₁,0]]\n\nProduct of Exponentials (FK):\nT = e^{[S₁]θ₁} · e^{[S₂]θ₂} · ... · e^{[Sₙ]θₙ} · M\nwhere Sᵢ = screw axis of joint i, M = home config\n← cleaner than DH parameter chains"
+          },
+          "challenge": {
+            "q": "Why does the product of exponentials formula for FK avoid the DH parameter singularity problem?",
+            "opts": [
+              {"t": "PoE uses quaternions internally, which have no singularities", "c": false},
+              {"t": "DH parameters use local frames that become undefined when consecutive joint axes are parallel. PoE uses global frame screw axes — fixed at robot's zero configuration, no local frame assignment needed.", "c": true},
+              {"t": "PoE is numerically equivalent to DH but with better software implementation", "c": false},
+              {"t": "PoE avoids singularities by using 6-DOF screw axes instead of 4-DOF DH parameters", "c": false}
+            ],
+            "hint": "Think about where DH parameters are defined — in local frames attached to each link. What problem arises when links are nearly parallel?",
+            "exp": "DH parameters assign coordinate frames at each joint using the Hartenberg-Denavit convention. When consecutive joint axes are parallel or nearly parallel, the frame assignment becomes numerically ill-conditioned (the x-axis of the DH frame is along the common normal, which is undefined for parallel axes). PoE uses screw axes defined in the global (space) frame at the robot's zero configuration — these are fixed geometric properties of the robot, not dependent on the current configuration. No frame assignment issues, no singularities from frame definitions."
+          },
+          "project": {
+            "title": "Forward Kinematics via Product of Exponentials",
+            "desc": "Implement FK for a 6-DOF robot arm using the product of exponentials formula. Compare to your DH-based implementation from Robotics Section.",
+            "format": "Python script + README",
+            "deliverables": [
+              "Implement: skew(ω) → [ω] skew-symmetric matrix",
+              "Implement: matrix_exp(S, theta) → 4×4 SE(3) element using the closed-form formula",
+              "Implement: PoE_FK(S_list, M, theta_list) → end-effector T",
+              "Test on UR5 robot: define screw axes from the UR5 zero configuration, verify against known FK values",
+              "Compare: PoE vs DH FK for 100 random configurations — verify they give same end-effector pose",
+              "README: which implementation was easier to write? Which is more numerically stable near singular configurations?"
+            ],
+            "hint": "Use Modern Robotics textbook Appendix for UR5 screw axes. pip install modern_robotics (Lynch & Park's official Python library). Verify: mr.FKinSpace(M, Slist, thetalist). matrix exponential: use scipy.linalg.expm or the closed-form Rodrigues formula."
+          }
+        },
+        {
+          "id": "adv3-2",
+          "title": "Velocity Kinematics and the Space Jacobian",
+          "meta": "Space Jacobian, body Jacobian, singularities — Modern Robotics",
+          "xp": 130,
+          "watch": {
+            "title": "Modern Robotics — Chapter 5: Velocity Kinematics and Statics",
+            "url": "https://www.youtube.com/playlist?list=PLggLP4f-rq02vX0OQQ5vrCxbJrzamYDfx",
+            "focus": "Watch Chapter 5 lectures (Velocity Kinematics). Focus on: the space Jacobian Js mapping joint velocities θ̇ to end-effector twist V_s, the body Jacobian Jb in the body frame, how to detect kinematic singularities via Jacobian rank, and the manipulability ellipsoid — a visualization of how easily the robot can move in each direction at a given configuration."
+          },
+          "concept": {
+            "title": "The Jacobian in screw theory — a cleaner formulation",
+            "body": "<p>In your Robotics section you computed the Jacobian numerically (perturb each joint, measure FK change). Screw theory gives you the <strong>analytical space Jacobian</strong> directly from the screw axes.</p><p><strong>Space Jacobian</strong>: Js = [S₁, Ad_{e^{S₁θ₁}}(S₂), Ad_{e^{S₁θ₁}e^{S₂θ₂}}(S₃), ...]. Each column is the screw axis of joint i, transformed into the space frame accounting for all previous joint rotations. End-effector twist: V_s = Js·θ̇.</p><p><strong>Manipulability ellipsoid</strong>: w = sqrt(det(Js·Jsᵀ)). Near zero → near singularity. The ellipsoid eigenvectors show which directions the robot can move easily vs with difficulty.</p>",
+            "analogy": "The Jacobian is the local linear map from joint space to end-effector space. The manipulability ellipsoid is a visualization of this map's shape — a fat ellipsoid means the robot can move freely in all directions; a flat ellipsoid means it is nearly singular in some direction. You want to avoid configurations where the ellipsoid is very flat.",
+            "visual": "Space Jacobian column i:\nJsi = Ad_{T_{0,i-1}}(Si)\nwhere T_{0,i-1} = e^{S₁θ₁}···e^{S_{i-1}θ_{i-1}}\n\nEnd-effector twist from joint velocities:\nVs = Js(θ) · θ̇  ∈ R^6 (twist = [ω, v])\n\nManipulability:\nw(θ) = sqrt(det(Js · Jsᵀ))\nw → 0 at singular configurations\n\nSingularity condition:\nrank(Js) < 6 → cannot achieve some twists"
+          },
+          "challenge": {
+            "q": "Your 6-DOF arm is near a wrist singularity — joints 4, 5, 6 are aligned. The space Jacobian has rank 5. What does this mean operationally?",
+            "opts": [
+              {"t": "The arm cannot move at all — it is stuck", "c": false},
+              {"t": "One direction of end-effector twist cannot be achieved regardless of joint velocities. Motion near this direction requires very large joint velocities — damped least squares is needed.", "c": true},
+              {"t": "The arm can move normally — rank 5 is sufficient for 3D motion", "c": false},
+              {"t": "The problem is the IK solver, not the kinematics", "c": false}
+            ],
+            "hint": "Rank 5 means one direction in the 6D twist space cannot be produced. What happens to Js⁺ near rank-deficiency?",
+            "exp": "Rank 5 means one combination of end-effector twist (one direction in R^6) cannot be produced by any joint velocity combination — a lost degree of freedom. Near singularity, the pseudo-inverse Js⁺ = Jsᵀ(JsJsᵀ)⁻¹ has entries → ∞ because one singular value → 0. This means achieving even small motion in the near-singular direction requires arbitrarily large joint velocities. Damped least squares: Js⁺ = Jsᵀ(JsJsᵀ + λI)⁻¹ regularizes the solution at the cost of tracking accuracy near singularities."
+          },
+          "project": {
+            "title": "Space Jacobian and Singularity Analysis",
+            "desc": "Implement the analytical space Jacobian using screw theory. Visualize the manipulability ellipsoid and identify singular configurations.",
+            "format": "Python script + 3D visualization + README",
+            "deliverables": [
+              "Implement space_jacobian(Slist, thetalist) → Js ∈ R^(6×n) using the adjoint formula",
+              "Implement manipulability(Js) → scalar w = sqrt(det(Js@Js.T))",
+              "Visualize: manipulability ellipsoid at 10 different configurations of a 3-DOF planar arm",
+              "Singularity sweep: compute w for θ₁ ∈ [0, 2π], θ₂ ∈ [0, 2π] (2D heatmap), identify zero-manipulability configurations",
+              "Damped IK: implement damped least squares IK and show it handles near-singular configurations that pseudo-inverse cannot",
+              "README: which joint configurations are singular? Do they correspond to fully extended or folded arm?"
+            ],
+            "hint": "Adjoint map: Ad_T([ω,v]) = [Rω, p×Rω + Rv] where T=[[R,p],[0,1]]. Manipulability heatmap: use plt.pcolormesh on a 2D grid of (θ₁, θ₂). mr.JacobianSpace() from modern_robotics library to verify."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "adv3-a",
+        "title": "Modern Kinematics Library",
+        "xp": 450,
+        "desc": "Build a complete modern kinematics library using screw theory — FK, IK, Jacobian, singularity analysis — and compare it to your DH-based library from the Robotics Section.",
+        "deliverables": [
+          "Full PoE FK implementation for any n-DOF open chain",
+          "Analytical space and body Jacobians",
+          "Newton-Raphson IK using the body Jacobian (from Modern Robotics Chapter 6)",
+          "Manipulability ellipsoid visualization (3D matplotlib ellipsoid at arm configuration)",
+          "Singularity map: heatmap of manipulability for 2-DOF arm over full joint range",
+          "Side-by-side comparison: your DH FK vs PoE FK — verify agreement on 100 random configs",
+          "Performance benchmark: DH vs PoE FK computation time for 10,000 configurations",
+          "README + 1-page writeup: when would you choose screw theory over DH in a real robot system?"
+        ],
+        "hint": "Newton-Raphson IK: θ ← θ + J⁺·(V_desired). Body Jacobian IK is numerically more stable than space Jacobian IK near singularities. pip install modern_robotics to verify all implementations against the reference.",
+        "linkedin": "Rebuilt my robot kinematics library using screw theory and product of exponentials. Compared DH parameters vs PoE FK, implemented the space Jacobian analytically, and built a manipulability ellipsoid visualizer. The geometric clarity of Lie groups vs DH parameters is striking. #Robotics #ModernRobotics #Kinematics"
+      }
+    }
+  ]
+}

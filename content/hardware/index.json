@@ -1,0 +1,1446 @@
+{
+  "id": "hardware",
+  "key": "hardware",
+  "icon": "🔧",
+  "title": "Hands-On Hardware & Projects",
+  "desc": "From simulation to real hardware — Raspberry Pi, Arduino, sensors, and actuators. Build real systems that sense, think, and act.",
+  "chapters": [
+    {
+      "id": "hw1",
+      "title": "Simulation First",
+      "sub": "PyBullet · Gazebo · Synthetic sensors · Sim mindset",
+      "units": [
+        {
+          "id": "hw1-1",
+          "title": "Why Simulate First?",
+          "meta": "Sim-to-real philosophy, debugging without hardware",
+          "xp": 80,
+          "watch": {
+            "title": "PyBullet Quickstart Guide — Official Documentation",
+            "url": "https://github.com/bulletphysics/bullet3/blob/master/docs/pybullet_quickstart_guide/PyBulletQuickstartGuide.md.html",
+            "focus": "Read: Hello PyBullet World, loadURDF, setGravity, getCameraImage, rayTest. Focus on: how to load a robot URDF, simulate a camera (getCameraImage), and cast rays for simulated distance sensors (rayTest). These are the primitives for all your simulation projects."
+          },
+          "concept": {
+            "title": "Simulation is the safest place to be wrong",
+            "body": "<p>Every hardware bug costs time: wrong wiring, sensor calibration, latency spikes, unexpected physical behavior. Simulation lets you be wrong <strong>for free</strong>.</p><p><strong>PyBullet</strong>: Python-native physics simulation. Easy to set up, good for robot arm and sensor simulation. <strong>Gazebo</strong>: full ROS-integrated simulator, higher fidelity. <strong>Synthetic sensors</strong>: simulate HC-SR04 distance, camera, IMU — perfect data first, then add noise.</p><p>Workflow: build in simulation → verify it works → port to hardware → debug only the gap.</p>",
+            "analogy": "Simulation is like a flight simulator for pilots. No real consequences for mistakes, unlimited resets, full observability. You do not let a trainee pilot a real plane before mastering the simulator.",
+            "visual": "Sim workflow:\n1. Build in simulation (perfect sensors)\n2. Add sensor noise (realistic simulation)\n3. Verify system still works\n4. Port to hardware\n5. Debug only the sim-to-real gap\n\nPyBullet: pip install pybullet\nGazebo: comes with ROS (ros-noetic-gazebo)"
+          },
+          "challenge": {
+            "q": "You skip simulation and wire your Pi + Arduino system directly. It does not work. What is the hardest part of debugging?",
+            "opts": [
+              {
+                "t": "The code is probably wrong — rewrite it",
+                "c": false
+              },
+              {
+                "t": "You cannot isolate whether the bug is in software, wiring, sensor calibration, or communication — simulation isolates software first",
+                "c": true
+              },
+              {
+                "t": "Hardware always works — the problem must be the algorithm",
+                "c": false
+              },
+              {
+                "t": "Debug from the Arduino side first",
+                "c": false
+              }
+            ],
+            "hint": "When everything is connected at once, how do you know which layer is failing?",
+            "exp": "Without simulation, you face a multi-layer debugging problem: is it the Python code? Serial communication? Sensor wiring? Calibration? Simulation eliminates all hardware layers — if it works in simulation, the algorithm is correct. Then you only debug the hardware-software interface."
+          },
+          "project": {
+            "title": "PyBullet Environment Setup",
+            "desc": "Set up a PyBullet simulation environment. Simulate your future hardware projects before touching a wire.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Install PyBullet, load a simple robot URDF",
+              "Simulate a distance sensor: ray cast to measure distance to obstacle",
+              "Add Gaussian noise to simulated sensor readings (realistic simulation)",
+              "Simulate a camera: render image from robot viewpoint",
+              "README: what does each simulated sensor correspond to in your real hardware kit?"
+            ],
+            "hint": "import pybullet as p. p.connect(p.GUI). p.loadURDF(\"plane.urdf\"). p.rayTest() for distance. p.getCameraImage() for camera."
+          }
+        },
+        {
+          "id": "hw1-2",
+          "title": "Simulating Your CV Pipeline",
+          "meta": "Running trained models in simulation",
+          "xp": 100,
+          "watch": {
+            "title": "PyBullet + OpenCV Robot Simulation Tutorial — YouTube",
+            "url": "https://www.youtube.com/watch?v=PmpXsN4nn8o",
+            "focus": "Full walkthrough: load robot URDF, attach virtual camera, extract RGB frames, feed to PyTorch model. Focus on: the getCameraImage() call and how to convert the output to a numpy array that OpenCV and PyTorch can use."
+          },
+          "concept": {
+            "title": "Your CV models meet the physical world — in simulation",
+            "body": "<p>In simulation you can: render camera images from any viewpoint, feed them to your trained CV models, measure inference time, and test your perception pipeline under controlled conditions.</p><p>This is your research roadmap Modules 3 and 4 — perception to decisions — testable in simulation before any hardware.</p>",
+            "analogy": "A rehearsal where you control everything: the lighting, camera angle, object position, even sensor noise level. Perfect for finding algorithm bugs before hardware adds its own chaos.",
+            "visual": "PyBullet simulation pipeline:\nSimulated scene (objects, lighting)\n→ p.getCameraImage() → RGB array\n→ your trained CV model (PyTorch)\n→ detection / segmentation / depth\n→ simulated robot response\n→ measure: latency, accuracy, failure modes"
+          },
+          "challenge": {
+            "q": "Your object detector achieves 94% mAP on your test dataset but only 61% mAP on simulated camera images. Most likely cause?",
+            "opts": [
+              {
+                "t": "PyBullet camera is broken — use Gazebo",
+                "c": false
+              },
+              {
+                "t": "Domain gap: your model was trained on real images; simulated images have different texture, lighting, and rendering style",
+                "c": true
+              },
+              {
+                "t": "Model too large to run in simulation",
+                "c": false
+              },
+              {
+                "t": "mAP is the wrong metric for simulated environments",
+                "c": false
+              }
+            ],
+            "hint": "What is different about images rendered by a physics simulator vs real photographs?",
+            "exp": "Domain gap between rendered simulation images and real photographs. Simulated images have perfect geometry but unrealistic textures, lighting, and no lens effects. Fix: domain randomization (vary simulated lighting, textures) or use simulation only for testing logic, not model accuracy."
+          },
+          "project": {
+            "title": "CV Pipeline in Simulation",
+            "desc": "Run your trained CV models on simulated camera input. Measure the domain gap.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Set up PyBullet scene with objects",
+              "Render camera images from simulated viewpoint",
+              "Run your trained object detector on simulated images",
+              "Measure: detection rate, confidence distribution vs real image performance",
+              "Apply domain randomization: vary lighting, object color, camera angle",
+              "README: quantify the sim-to-real gap. What would you need to close it?"
+            ],
+            "hint": "p.getCameraImage(width, height, viewMatrix, projectionMatrix) returns rgba array. Convert: np.array(rgba)[:,:,:3] for RGB."
+          }
+        },
+        {
+          "id": "hw1-3",
+          "title": "Simulating Sensors & Noise",
+          "meta": "HC-SR04, IR, light, temperature in simulation",
+          "xp": 90,
+          "watch": {
+            "title": "NU ME495 Probability Review — Sensor Noise Models",
+            "url": "https://nu-msr.github.io/navigation/lectures/probability.html",
+            "focus": "Review the Gaussian random variable section. Focus on: how to model sensor noise as N(μ, σ²), what process noise Q and measurement noise R mean physically, and how to generate realistic noisy sensor readings using numpy.random.normal()."
+          },
+          "concept": {
+            "title": "Sensors are not perfect — simulate the imperfection",
+            "body": "<p>Real sensors have: <strong>Gaussian noise</strong> (random measurement variation), <strong>dropout</strong> (occasional missed readings), <strong>range limits</strong> (HC-SR04 works 2cm–400cm, fails outside), <strong>interference</strong> (ultrasonic echoes off multiple surfaces).</p><p>Simulating these before connecting hardware means you design algorithms to handle realistic sensor behavior from the start.</p>",
+            "analogy": "A perfectly accurate simulated sensor is like a weather forecast that is always 100% correct. Useful for testing logic, but your real-world algorithm needs to handle uncertainty. Simulate the uncertainty before you encounter it in hardware.",
+            "visual": "HC-SR04 noise model:\ndistance_real + N(0, 0.5cm) → measured\n+ dropout(p=0.02)  # 2% chance of missed reading\n+ clip(2cm, 400cm) # range limits\n\nIR sensor:\nbinary_output = 1 if distance < threshold else 0\n+ false positive noise (p=0.05)"
+          },
+          "challenge": {
+            "q": "Your simulated HC-SR04 always reads exactly the correct distance. You port to hardware and the system fails. What did the simulation not capture?",
+            "opts": [
+              {
+                "t": "The simulation was running too fast — slow it down",
+                "c": false
+              },
+              {
+                "t": "Real HC-SR04 has noise, range limits, false echoes, and temperature-dependent speed of sound — none simulated",
+                "c": true
+              },
+              {
+                "t": "HC-SR04 is incompatible with Raspberry Pi",
+                "c": false
+              },
+              {
+                "t": "The sensor needs calibration before simulation matches",
+                "c": false
+              }
+            ],
+            "hint": "What real-world physical effects does an ultrasonic sensor experience that a perfect simulation ignores?",
+            "exp": "Real HC-SR04 has: Gaussian noise (±3mm typical), false echoes from nearby surfaces, temperature-dependent speed of sound, 15° cone angle, and 60ms minimum cycle time. A perfect simulation hides all of these. Simulating noise and dropout would have prepared your algorithm for the real sensor."
+          },
+          "project": {
+            "title": "Sensor Noise Simulator",
+            "desc": "Build a realistic sensor simulation for your hardware kit.",
+            "format": "Python script + README",
+            "deliverables": [
+              "Implement realistic noise models for: HC-SR04, IR, light, temperature",
+              "Simulate: Gaussian noise, dropout, range limits, quantization",
+              "Run your algorithms (Kalman filter, threshold detection) against noisy vs perfect data",
+              "Plot: algorithm performance vs noise level for each sensor",
+              "README: which sensor is most affected by noise? How did you design for it?"
+            ],
+            "hint": "np.random.normal(reading, sigma) for Gaussian. np.random.random() < p for dropout. np.clip(reading, min_range, max_range) for range limits."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "hw1-a",
+        "title": "Full Simulation of Your Hardware System",
+        "xp": 250,
+        "desc": "Before touching any wire, simulate your complete hardware system: sensors, camera, actuator, and CV models — all running together.",
+        "deliverables": [
+          "PyBullet scene with simulated HC-SR04, camera, and motor",
+          "Your trained CV model running on simulated camera input",
+          "Simulated sensor fusion: combine camera detections + distance sensor readings",
+          "Simulated actuation: motor responds to perception + sensor decisions",
+          "Noise injection: test system robustness to sensor dropout and measurement errors",
+          "README + demo video of simulation: your pre-flight check before hardware"
+        ],
+        "hint": "This simulation becomes your reference implementation. When hardware behaves differently, compare to this to isolate the hardware-specific bug.",
+        "linkedin": "Built a complete simulation of my hardware system before touching a single wire: camera perception + sensor fusion + motor control — all in PyBullet. This is the engineering discipline that separates demos from deployed systems. #Robotics #Simulation #EmbeddedAI"
+      }
+    },
+    {
+      "id": "hw2",
+      "title": "Raspberry Pi as a Vision System",
+      "sub": "Pi setup · Camera calibration · Real-time detection · Latency",
+      "units": [
+        {
+          "id": "hw2-1",
+          "title": "Setting Up the Pi for AI",
+          "meta": "OS, Python, PyTorch, camera driver",
+          "xp": 90,
+          "watch": {
+            "title": "Raspberry Pi + YOLOv8 Object Detection — Ultralytics Official Guide",
+            "url": "https://docs.ultralytics.com/guides/raspberry-pi/",
+            "focus": "Follow: installation on Raspberry Pi, running YOLOv8n with picamera2, measuring fps. Focus on: INT8 quantization for speed, NCNN export for maximum Pi performance, and the inference pipeline: capture → preprocess → infer → postprocess."
+          },
+          "concept": {
+            "title": "The Pi as your edge AI device",
+            "body": "<p>The Raspberry Pi is not a GPU workstation — it is an <strong>edge device</strong>. This forces you to think about model efficiency, inference speed, and resource constraints you never encounter in a Colab notebook.</p><p><strong>Key constraints</strong>: Pi 4 has ~4GB RAM, no dedicated GPU, ~6W power. Real-time CV requires: model quantization (INT8), smaller architectures (MobileNet, EfficientNet-Lite), or hardware accelerators (Google Coral USB).</p>",
+            "analogy": "Running your CV model on a Pi is like running a marathon in hiking boots. The algorithm is the same — but now efficiency, weight, and endurance matter in ways that never came up on the track (your laptop).",
+            "visual": "Pi inference times (approximate):\nMobileNetV2 INT8: ~80ms (12fps)\nResNet-18 FP32: ~300ms (3fps)\nYOLOv8n FP32: ~200ms (5fps)\nYOLOv8n INT8: ~120ms (8fps)\n\nOptimization options:\n1. Smaller architecture\n2. INT8 quantization\n3. Reduce input resolution\n4. Frame skipping"
+          },
+          "challenge": {
+            "q": "Your ResNet-50 runs at 30fps on your laptop GPU. On Pi 4 it runs at 0.5fps. Most effective fix without buying new hardware?",
+            "opts": [
+              {
+                "t": "Overclock the Pi CPU to 2.0GHz",
+                "c": false
+              },
+              {
+                "t": "Switch to MobileNetV2 or EfficientNet-Lite and apply INT8 quantization — 10-20× faster inference",
+                "c": true
+              },
+              {
+                "t": "Reduce image resolution to 10×10 pixels",
+                "c": false
+              },
+              {
+                "t": "Use a faster SD card",
+                "c": false
+              }
+            ],
+            "hint": "The bottleneck is model size and compute. What architectural changes reduce inference cost?",
+            "exp": "Model optimization is the right answer. MobileNetV2 at INT8 quantization runs ~80ms on Pi 4 vs ~2000ms for ResNet-50. Techniques: (1) smaller architecture, (2) INT8 quantization (4× memory, 2-4× speed), (3) reduce input resolution, (4) skip frames. Overclocking gives ~10% improvement — marginal."
+          },
+          "project": {
+            "title": "Pi Vision System Setup",
+            "desc": "Set up your Raspberry Pi as a functioning AI inference system.",
+            "format": "Python scripts + README",
+            "deliverables": [
+              "Install Raspberry Pi OS, Python 3.9+, picamera2, PyTorch ARM build",
+              "Capture live frames from Pi Camera, display in real time",
+              "Run MobileNetV2 classifier on live feed — measure fps",
+              "Run YOLOv8n detector on Pi — measure fps and accuracy vs laptop",
+              "Apply INT8 quantization to your model, measure speedup",
+              "README: fps before and after optimization. What is the inference bottleneck?"
+            ],
+            "hint": "pip install torch torchvision (ARM wheels available). picamera2 for camera. torch.quantization.quantize_dynamic() for INT8. time.perf_counter() for latency measurement."
+          }
+        },
+        {
+          "id": "hw2-2",
+          "title": "Camera Calibration on Real Hardware",
+          "meta": "Real lens distortion, intrinsics, Pi Camera specifics",
+          "xp": 100,
+          "watch": {
+            "title": "Camera Calibration with OpenCV — Official Documentation",
+            "url": "https://docs.opencv.org/4.x/dc/dbb/tutorial_py_calibration.html",
+            "focus": "Read the full tutorial. Focus on: chessboard corner detection, running cv2.calibrateCamera() on 20+ images, what the output K matrix and distortion coefficients mean, and how to apply cv2.undistort() to every live frame."
+          },
+          "concept": {
+            "title": "Real cameras are not pinhole cameras",
+            "body": "<p>Your Pi Camera has real <strong>lens distortion</strong>: radial distortion (barrel/pincushion) and tangential distortion. Without calibration, your 3D measurements, stereo depth, and visual odometry will all be wrong.</p><p>Calibration gives you: intrinsic matrix K and distortion coefficients (k1, k2, p1, p2, k3). After calibration, cv2.undistort() removes distortion from every frame.</p>",
+            "analogy": "Calibration is measuring the exact personality of your specific camera. Two identical Pi Camera modules from the same factory will have slightly different distortion coefficients. Calibration measures YOUR camera, not the average.",
+            "visual": "Pi Camera distortion:\nBarrel distortion: straight lines appear curved outward\n\nCalibration output:\nK = [[fx, 0, cx], [0, fy, cy], [0, 0, 1]]\ndist = [k1, k2, p1, p2, k3]\n\nReprojection error < 0.5px = good calibration"
+          },
+          "challenge": {
+            "q": "After calibrating your Pi Camera, reprojection error = 3.2 pixels. Is this good and what does it mean?",
+            "opts": [
+              {
+                "t": "Excellent — any value below 5 is perfect",
+                "c": false
+              },
+              {
+                "t": "Poor — good calibration should achieve < 0.5px. Need more calibration frames or better coverage.",
+                "c": true
+              },
+              {
+                "t": "Reprojection error does not measure calibration quality",
+                "c": false
+              },
+              {
+                "t": "Good for Pi Camera — they have lower quality optics",
+                "c": false
+              }
+            ],
+            "hint": "Reprojection error = how far projected 3D calibration points are from their detected 2D positions. What does 3.2px error mean for downstream 3D measurements?",
+            "exp": "3.2px is too high. Good calibration achieves < 0.5px. 3.2px suggests: too few calibration images (need 20+), poor chessboard coverage, motion blur, or poor corner detection. Fix: capture 30+ frames at varied angles, ensure chessboard fills frame from multiple orientations."
+          },
+          "project": {
+            "title": "Pi Camera Calibration",
+            "desc": "Calibrate your Raspberry Pi Camera. Verify quality. Apply undistortion.",
+            "format": "Python script + calibration YAML + README",
+            "deliverables": [
+              "Print or display a chessboard pattern (7×9 or 8×6 inner corners)",
+              "Capture 30+ calibration frames with varied angles using picamera2",
+              "Run cv2.calibrateCamera(), save K and distortion to YAML file",
+              "Measure reprojection error — iterate until < 0.5px",
+              "Apply undistortion to live camera feed, visualize before vs after",
+              "README: your reprojection error, what changed visually after undistortion"
+            ],
+            "hint": "cv2.findChessboardCorners() to detect pattern. cv2.calibrateCamera() to compute K and dist. Save with yaml.dump(). Load this YAML in ALL future projects."
+          }
+        },
+        {
+          "id": "hw2-3",
+          "title": "Real-Time Detection on Pi",
+          "meta": "Optimized inference, fps measurement, latency breakdown",
+          "xp": 110,
+          "watch": {
+            "title": "YOLO Object Detection on Raspberry Pi — Ultralytics Docs",
+            "url": "https://docs.ultralytics.com/guides/raspberry-pi/",
+            "focus": "Full setup: installing Ultralytics on Pi, running YOLOv8n on live Pi Camera feed, measuring fps. Focus on: the inference pipeline latency at each stage, INT8 quantization speedup, and using picamera2 instead of cv2.VideoCapture() on Pi."
+          },
+          "concept": {
+            "title": "Real-time means every millisecond counts",
+            "body": "<p>On a Pi, real-time is a constraint, not a given. 200ms inference = 5fps — barely real-time. 500ms = 2fps — not real-time. Measure and optimize every stage.</p><p><strong>Latency breakdown</strong>: frame capture (~10ms), preprocessing (~5ms), inference (~80-300ms), postprocessing (~5ms), display (~10ms). Inference dominates — optimize there first.</p><p>Your RGB LED becomes real-time feedback: green = confident detection, yellow = medium confidence, red = no detection or OOD.</p>",
+            "analogy": "Real-time detection on a Pi is like cooking a meal for guests already at the table. Every step must be fast enough that the next frame is ready before the previous one is stale. Optimize the slowest step — always inference.",
+            "visual": "Pipeline latency breakdown (Pi 4):\nCapture: ~10ms\nPreprocess (resize, normalize): ~5ms\nInference (YOLOv8n): ~200ms  ← optimize here\nPostprocess (NMS, draw boxes): ~10ms\nDisplay: ~10ms\nTotal: ~235ms → ~4fps\n\nWith INT8 quantization: ~120ms → ~7fps"
+          },
+          "challenge": {
+            "q": "Pi detection pipeline runs at 4fps. A moving object moves 15cm between frames. What problem does this cause for tracking?",
+            "opts": [
+              {
+                "t": "No problem — 4fps is sufficient for most robotics",
+                "c": false
+              },
+              {
+                "t": "Object displacement between frames is too large for IoU-based tracking — objects appear to teleport, causing frequent identity switches",
+                "c": true
+              },
+              {
+                "t": "The RGB LED cannot update fast enough at 4fps",
+                "c": false
+              },
+              {
+                "t": "4fps will cause the Pi to overheat",
+                "c": false
+              }
+            ],
+            "hint": "SORT tracking relies on IoU between consecutive frames. What happens when objects move significantly between frames?",
+            "exp": "At 4fps with a fast-moving object, the displacement between frames is large. IoU between predicted and detected bounding box drops below the matching threshold — the tracker sees it as a new object. This causes the identity switch problem from CV Section Chapter 3. Fix: increase fps (smaller model, quantization) or use an appearance-based tracker less sensitive to large displacements."
+          },
+          "project": {
+            "title": "Real-Time Detection Pipeline on Pi",
+            "desc": "Build a fully optimized real-time detection pipeline on your Raspberry Pi. Add RGB LED feedback.",
+            "format": "Python script + README + demo video",
+            "deliverables": [
+              "Capture live Pi Camera frames using picamera2",
+              "Run YOLOv8n with INT8 quantization on live feed",
+              "Measure latency breakdown per stage: capture, preprocess, inference, postprocess",
+              "Display: bounding boxes overlaid on live feed (HDMI or VNC)",
+              "RGB LED feedback: green (conf>0.8), yellow (0.5–0.8), red (<0.5 or no detection)",
+              "Demo video: Pi detecting objects in real-time with LED feedback",
+              "README: fps achieved, latency breakdown, what limits further optimization?"
+            ],
+            "hint": "GPIO.output(RED_PIN, ...) for LED control. picamera2 for camera. Profile with time.perf_counter() before and after each stage. Connect LED through 330Ω resistor."
+          }
+        },
+        {
+          "id": "hw2-4",
+          "title": "Uncertainty on the Edge",
+          "meta": "MC Dropout on Pi, LCD display, trust feedback",
+          "xp": 110,
+          "watch": {
+            "title": "TinyML and Efficient Deep Learning — MIT 6.5940",
+            "url": "https://efficientml.ai/",
+            "focus": "Lecture on efficient inference and quantization. Focus on: why FP32 → INT8 quantization works without major accuracy loss, how to apply torch.quantization.quantize_dynamic(), and the latency vs accuracy tradeoff for common models on embedded hardware."
+          },
+          "concept": {
+            "title": "Trustworthy AI on resource-constrained hardware",
+            "body": "<p>MC Dropout requires T forward passes per frame — T=50 on a laptop is fine. T=50 on a Pi at 200ms per pass = 10 seconds per frame. Too slow. Solutions: reduce T (T=5–10 gives useful estimates), use a lightweight model, or run uncertainty only on a subset of frames.</p><p>The <strong>LCD display</strong> shows: detected class, confidence, uncertainty estimate. Your AI's \"voice\" — telling you not just what it sees but how confident it is.</p>",
+            "analogy": "Running uncertainty estimation on a Pi is like doing a full medical panel instead of a quick test — more informative, but takes longer. Decide: run the quick test at 5fps, or the full panel at 0.5fps, based on what the situation demands.",
+            "visual": "Uncertainty on Pi:\nT=50 passes × 200ms = 10s → not real-time\nT=10 passes × 200ms = 2s → usable for static scenes\nT=5 passes × 200ms = 1s → borderline real-time\n\nLCD output per frame:\nClass: Instrument\nConf: 0.84\nUncert: low ✓\n\nLED: Green=confident, Yellow=uncertain, Red=OOD"
+          },
+          "challenge": {
+            "q": "You need uncertainty at 2fps on Pi (T=10, 200ms/pass). Surgeon asks for faster feedback. Most practical solution?",
+            "opts": [
+              {
+                "t": "Buy a faster Raspberry Pi",
+                "c": false
+              },
+              {
+                "t": "Run inference at full fps for detection, run uncertainty only when confidence < 0.7 — triggered uncertainty, not always-on",
+                "c": true
+              },
+              {
+                "t": "Reduce T to 1 — single pass is fine for uncertainty",
+                "c": false
+              },
+              {
+                "t": "Uncertainty estimation cannot run on Pi — use laptop",
+                "c": false
+              }
+            ],
+            "hint": "When does the surgeon most need uncertainty information? Only when the model is unsure — not when it is very confident.",
+            "exp": "Triggered uncertainty estimation: run fast single-pass inference at 5fps for confident detections. Only trigger T=10 MC Dropout when confidence < 0.7. This gives fast feedback most of the time, and deep uncertainty analysis exactly when needed. This is how real deployed medical AI systems handle resource constraints."
+          },
+          "project": {
+            "title": "Uncertainty Display System",
+            "desc": "Build an uncertainty-aware display system on Pi + LCD + RGB LED.",
+            "format": "Python script + README + demo video",
+            "deliverables": [
+              "Run MC Dropout (T=10) on Pi Camera frames (accept lower fps)",
+              "LCD: detected class, confidence, uncertainty level (low/medium/high)",
+              "RGB LED: green (low uncertainty), yellow (medium), red (high or OOD)",
+              "Triggered uncertainty: run MC Dropout only when single-pass confidence < 0.7",
+              "Buzzer: beep when uncertainty is high (alert the operator)",
+              "Demo video: hold different objects in front of camera, show uncertainty-aware feedback"
+            ],
+            "hint": "I2C LCD library: RPLCD or lcd_i2c. T=10 MC Dropout: model.train() for all 10 passes. GPIO for LED and buzzer. Wire buzzer through transistor for sufficient current."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "hw2-a",
+        "title": "Pi Vision System — Complete",
+        "xp": 320,
+        "desc": "A fully functioning, optimized, uncertainty-aware vision system running on your Raspberry Pi.",
+        "deliverables": [
+          "Calibrated Pi Camera (reprojection error < 0.5px, calibration YAML saved)",
+          "Real-time YOLOv8n detection at optimized fps with INT8 quantization",
+          "Latency breakdown analysis: identify and optimize the bottleneck",
+          "Uncertainty estimation with triggered MC Dropout",
+          "LCD: class + confidence + uncertainty level per detection",
+          "RGB LED: real-time confidence indicator",
+          "Buzzer: audio alert on high uncertainty or OOD detection",
+          "Demo video: full system running — README with fps numbers and design decisions"
+        ],
+        "hint": "This is a real deployed AI system on real hardware. Demo video is your first hardware portfolio piece.",
+        "linkedin": "Just deployed my trustworthy CV system on a Raspberry Pi: real-time detection + MC Dropout uncertainty + LCD display + RGB LED confidence indicator. The gap between a Colab notebook and a deployed system is massive — and educational. #EdgeAI #RaspberryPi #TrustworthyAI"
+      }
+    },
+    {
+      "id": "hw3",
+      "title": "Arduino + Sensors",
+      "sub": "Real sensor data · Noise filtering · Serial communication",
+      "units": [
+        {
+          "id": "hw3-1",
+          "title": "Reading Real Sensors",
+          "meta": "HC-SR04, IR, light, temperature — Arduino basics",
+          "xp": 90,
+          "watch": {
+            "title": "Arduino Sensor Tutorials — Official Arduino Documentation",
+            "url": "https://docs.arduino.cc/built-in-examples/",
+            "focus": "Find: AnalogInput (potentiometer/light sensor) and HC-SR04 ultrasonic example. Focus on: the exact timing for HC-SR04 (10μs HIGH trigger, measure echo pulse width), analog vs digital reading, and how Serial.print() sends data to Python over USB."
+          },
+          "concept": {
+            "title": "Real sensors behave differently from simulation",
+            "body": "<p>Your simulated sensors were perfect (plus added noise). Real sensors have: <strong>timing constraints</strong> (HC-SR04 requires exact 10μs trigger pulse), <strong>analog-to-digital conversion</strong> (potentiometer reads 0–1023 on 10-bit ADC), <strong>power requirements</strong> (some sensors need 5V, Pi GPIO is 3.3V — need voltage divider), <strong>interference</strong> (ultrasonic echoes, IR sensitivity to sunlight).</p>",
+            "analogy": "Real sensors are like temperamental musicians. Your simulated sensor plays whatever note you ask. A real HC-SR04 needs exactly the right cue at exactly the right time, in the right environment, or it plays the wrong note or nothing at all.",
+            "visual": "HC-SR04 wiring:\nVCC → 5V, GND → GND\nTrig → Arduino pin (10μs HIGH pulse)\nEcho → Arduino pin (measure pulse width)\ndistance_cm = pulse_duration_μs / 58.0\n\nADC (potentiometer):\nAnalog pin reads 0–1023 (10-bit)\nvoltage = (reading / 1023.0) × 5.0V"
+          },
+          "challenge": {
+            "q": "Your HC-SR04 reads 0cm consistently even when an object is 30cm away. Most likely cause?",
+            "opts": [
+              {
+                "t": "The sensor is broken — replace it",
+                "c": false
+              },
+              {
+                "t": "The Trig pulse is not exactly 10μs — check delayMicroseconds() timing in Arduino code",
+                "c": true
+              },
+              {
+                "t": "HC-SR04 cannot detect objects closer than 50cm",
+                "c": false
+              },
+              {
+                "t": "VCC is connected to 3.3V instead of 5V",
+                "c": false
+              }
+            ],
+            "hint": "HC-SR04 requires a very specific trigger pulse timing. What does your Arduino code send?",
+            "exp": "Most common HC-SR04 failure: the trigger pulse timing is wrong. The sensor needs exactly 10μs HIGH, then it sends 8 ultrasonic pulses and waits for the echo. Check: Echo pin is wired correctly and the sensor is not pointed at a soft or angled surface that absorbs ultrasonic waves."
+          },
+          "project": {
+            "title": "Multi-Sensor Arduino System",
+            "desc": "Wire and code all your sensors. Read and display data simultaneously.",
+            "format": "Arduino sketch + Python serial reader + README",
+            "deliverables": [
+              "Wire: HC-SR04, IR, light sensor, temperature sensor, potentiometer",
+              "Arduino sketch: read all sensors at 10Hz, output JSON over Serial",
+              "Python on laptop: read Serial, parse JSON, plot all sensor readings in real-time",
+              "LCD: display HC-SR04 distance and light level",
+              "RGB LED: green when object detected (IR), red when not",
+              "README: wiring diagram, sensor specifications, what each reading means"
+            ],
+            "hint": "Arduino Serial: Serial.println(\"{\\\"dist\\\":\"+String(dist)+\",\\\"ir\\\":\"+String(ir)+\"}\"). Python: serial.Serial, json.loads() to parse."
+          },
+          "secondary_watch": {
+            "title": "DelftX — Building Robots Course 2: Sensors and Data Acquisition (edX, audit free)",
+            "url": "https://www.edx.org/certificates/professional-certificate/delftx-building-robots-from-mechatronic-components-to-robotics",
+            "focus": "Course 2: sensor signal conditioning, analog-to-digital conversion (exactly what your potentiometer and light sensor use), sensor calibration fundamentals, and noise filtering. The electrical engineering depth behind what you build in this chapter. Audit is free."
+          }
+        },
+        {
+          "id": "hw3-2",
+          "title": "Noise Filtering",
+          "meta": "Kalman filter on real sensors, median filter, outlier rejection",
+          "xp": 100,
+          "watch": {
+            "title": "Kalman Filter Explained — Michel van Biezen YouTube Series",
+            "url": "https://www.youtube.com/watch?v=CaCcOwJPytQ",
+            "focus": "Watch lectures 1-4. Focus on: the 1D predict-update cycle, how Q and R are chosen from physical sensor characteristics, and how to implement a simple 1D Kalman filter in 10 lines of Python. Most approachable Kalman filter video series available."
+          },
+          "concept": {
+            "title": "Real data is messy — filter it",
+            "body": "<p>Your HC-SR04 does not read exactly 30.0cm every time — it might read 28.7, 31.2, 30.1, 29.8. This noise affects downstream decisions. Filtering options:</p><p><strong>Moving average</strong>: simple, adds latency. <strong>Median filter</strong>: great for outlier spikes. <strong>Kalman filter</strong>: optimal for Gaussian noise, tracks dynamic targets. <strong>Exponential moving average (EMA)</strong>: fast to compute, tunable with α.</p>",
+            "analogy": "Raw sensor data is like hearing someone speak in a noisy room — you understand most but some words are garbled. Filtering is like noise-canceling headphones — it uses knowledge of what the signal should look like to clean up the noise.",
+            "visual": "Kalman filter (1D):\nPredict: x̂ = x̂_prev + u\n         P = P_prev + Q\nUpdate:  K = P/(P+R)\n         x̂ = x̂ + K·(z - x̂)\n         P = (1-K)·P\nQ: process noise, R: measurement noise\n\nMedian filter: sort last N readings, return middle"
+          },
+          "challenge": {
+            "q": "Your HC-SR04 occasionally reads 0cm or 400cm (clearly wrong) mixed with valid readings. Which filter handles this best?",
+            "opts": [
+              {
+                "t": "Kalman filter — optimal for all sensor noise types",
+                "c": false
+              },
+              {
+                "t": "Median filter — removes outlier spikes without affecting valid readings",
+                "c": true
+              },
+              {
+                "t": "Moving average — averages out the outliers over time",
+                "c": false
+              },
+              {
+                "t": "No filter needed — outliers are rare enough to ignore",
+                "c": false
+              }
+            ],
+            "hint": "Outlier spikes (0cm, 400cm) are very different from Gaussian noise. Which filter is specifically designed to remove isolated extreme values?",
+            "exp": "Median filter is correct. Kalman filter assumes Gaussian noise — extreme outliers violate this assumption. Median filter takes the median of the last N readings — a single outlier does not affect the median. Moving average would pull the average toward the outlier. Always median-filter before Kalman for sensors with occasional dropout."
+          },
+          "project": {
+            "title": "Sensor Fusion with Filtering",
+            "desc": "Apply appropriate filters to all your sensors. Combine them into a fused environment model.",
+            "format": "Arduino sketch + Python notebook + README",
+            "deliverables": [
+              "Arduino: median filter for HC-SR04, EMA for light sensor, moving average for temperature",
+              "Python on Pi: 1D Kalman filter for HC-SR04 distance tracking",
+              "Compare: raw vs filtered data plots for each sensor",
+              "Implement simple sensor fusion: combine HC-SR04 + IR into \"obstacle confidence\" score",
+              "Display fused confidence on LCD, RGB LED shows obstacle level (green/yellow/red)",
+              "README: which filter helped most? What noise was removed?"
+            ],
+            "hint": "Kalman in Python: filterpy.kalman.KalmanFilter or implement manually (10 lines). Median filter in Arduino: sort last 5 readings, return middle value."
+          }
+        },
+        {
+          "id": "hw3-3",
+          "title": "Serial Communication Pi ↔ Arduino",
+          "meta": "Protocols, latency, reliable communication",
+          "xp": 90,
+          "watch": {
+            "title": "Raspberry Pi to Arduino Serial Communication — Real Python",
+            "url": "https://realpython.com/arduino-python/",
+            "focus": "Read the pyserial section. Focus on: serial.Serial() setup, readline() for reading JSON from Arduino, write() for sending commands, and flush() to clear the buffer. Baud rate must match on both Arduino and Pi (use 115200)."
+          },
+          "concept": {
+            "title": "Two computers talking to each other",
+            "body": "<p>The Pi runs Python and your CV models. The Arduino reads sensors and controls actuators. They must communicate reliably and quickly.</p><p><strong>Serial UART</strong>: connect Pi GPIO TX→Arduino RX, Pi GPIO RX→Arduino TX (or use USB cable — simpler). <strong>Protocol design</strong>: define a message format (JSON), add checksums for error detection. <strong>Baud rate</strong>: 115200 is fast enough for sensor data.</p>",
+            "analogy": "Pi and Arduino are like two specialists in an operating room. The Pi is the surgeon (sees, decides). The Arduino is the scrub nurse (monitors vitals, hands instruments). They need a reliable communication protocol — miscommunication has consequences.",
+            "visual": "Communication protocol:\nArduino → Pi (sensor data, 10Hz):\n  '{\"dist\":30.2,\"ir\":1,\"light\":512,\"temp\":24.3}'\n\nPi → Arduino (commands):\n  'CMD:LED:GREEN'\n  'CMD:BUZZ:100'  (buzz 100ms)\n  'CMD:MOTOR:90'  (motor to 90°)\n\nBaud rate: 115200"
+          },
+          "challenge": {
+            "q": "Your Pi sends motor commands to Arduino at 10Hz. Sometimes commands are lost (serial buffer overflow). Correct fix?",
+            "opts": [
+              {
+                "t": "Reduce baud rate to 9600 — slower is more reliable",
+                "c": false
+              },
+              {
+                "t": "Implement message acknowledgment: Arduino sends ACK, Pi retransmits if no ACK within timeout",
+                "c": true
+              },
+              {
+                "t": "Send the same command 10 times to ensure delivery",
+                "c": false
+              },
+              {
+                "t": "Use WiFi instead of serial",
+                "c": false
+              }
+            ],
+            "hint": "Serial buffer overflow means the receiver cannot process messages fast enough. What guarantees delivery in unreliable communication channels?",
+            "exp": "ACK-based protocol with retransmission is the correct engineering solution. Reducing baud rate does not solve buffer overflow (the problem is processing speed, not transmission speed). Sending duplicates wastes bandwidth and causes duplicate actions. ACK+retransmit is the standard solution for reliable serial communication."
+          },
+          "project": {
+            "title": "Pi-Arduino Communication System",
+            "desc": "Build a reliable, bidirectional Pi-Arduino communication system with error handling.",
+            "format": "Arduino sketch + Python module + README",
+            "deliverables": [
+              "Arduino: read all sensors at 10Hz, send JSON over Serial at 115200 baud",
+              "Python module on Pi: read and parse sensor JSON, provide clean API (sensors.get_distance() etc.)",
+              "Pi → Arduino commands: LED control, buzzer trigger, motor angle",
+              "Implement ACK protocol: Arduino confirms receipt of each command",
+              "Latency measurement: timestamp sent, measure time until ACK received",
+              "README: latency measurements, any dropped messages, protocol description"
+            ],
+            "hint": "arduino.py module: ser = serial.Serial(\"/dev/ttyAMA0\", 115200, timeout=1). Read: ser.readline().decode(\"utf-8\"). Write: ser.write(b\"CMD:LED:GREEN\\n\")."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "hw3-a",
+        "title": "Complete Sensor System",
+        "xp": 280,
+        "desc": "A fully wired, filtered, and communicating sensor array — the sensing layer of your intelligent physical system.",
+        "deliverables": [
+          "All sensors wired and reading: HC-SR04, IR, light, temperature, potentiometer",
+          "Noise filtering: median filter for distance, EMA for temperature/light, Kalman for distance tracking",
+          "LCD: real-time display of all sensor readings",
+          "RGB LED: green=all good, yellow=obstacle nearby, red=obstacle close",
+          "Buzzer: alert when obstacle < 20cm",
+          "Pi-Arduino serial communication with ACK protocol and latency < 50ms",
+          "Python sensor API: clean interface hiding hardware details from the perception layer",
+          "README + wiring diagram — someone else could rebuild your system from this"
+        ],
+        "hint": "The wiring diagram is as important as the code. Draw it clearly — yours will fail in ways you did not expect and you need to debug it systematically.",
+        "linkedin": "Built a complete multi-sensor system on Arduino + Raspberry Pi: HC-SR04 distance, IR, light, temperature — all filtered and communicating over serial. The sensing layer of an intelligent physical system. Wiring diagram and code on GitHub. #Arduino #RaspberryPi #EmbeddedSystems"
+      }
+    },
+    {
+      "id": "hw4",
+      "title": "Pi + Arduino Together",
+      "sub": "Perception → decision → action on real hardware",
+      "units": [
+        {
+          "id": "hw4-1",
+          "title": "The Perception-Action Loop on Hardware",
+          "meta": "Connecting CV output to physical actuation",
+          "xp": 110,
+          "watch": {
+            "title": "Raspberry Pi GPIO — Official Raspberry Pi Documentation",
+            "url": "https://www.raspberrypi.com/documentation/computers/raspberry-pi.html",
+            "focus": "Read the GPIO section and Python RPi.GPIO guide. Focus on: GPIO pins for LED and buzzer output, BCM vs BOARD pin numbering, and how to structure your Pi code to run CV inference AND send serial commands to Arduino without blocking."
+          },
+          "concept": {
+            "title": "Vision sees, Arduino acts — Pi decides",
+            "body": "<p>The full hardware loop: <strong>Pi Camera</strong> captures frame → <strong>Pi CV model</strong> detects → <strong>Pi decision layer</strong> decides what to do → <strong>serial command to Arduino</strong> → <strong>Arduino actuator</strong> moves.</p><p>The decision layer is where your intelligence lives: if object detected AND distance < 30cm AND confidence > 0.7 → activate motor. If uncertainty is high → activate buzzer → wait for human input.</p>",
+            "analogy": "The Pi is the brain, the Arduino is the spinal cord and muscles. The brain perceives through the camera, makes decisions, and sends nerve signals (serial) to the muscles (motors, LEDs, buzzer).",
+            "visual": "Hardware perception-action loop:\nPi Camera (30ms)\n→ CV model inference (200ms)\n→ decision layer (1ms)\n→ serial command to Arduino (5ms)\n→ Arduino actuation (1ms)\nTotal: ~237ms from capture to action\n\nUncertainty modulation:\nHigh confidence → fast action\nLow confidence → slow + buzzer alert"
+          },
+          "challenge": {
+            "q": "Your Pi detects an object and sends a motor command to Arduino. Total latency = 237ms. Object moves 5cm in that time. What system design change most reduces this latency?",
+            "opts": [
+              {
+                "t": "Use a faster Arduino (Due instead of Uno)",
+                "c": false
+              },
+              {
+                "t": "Move simple reflexive responses to Arduino: Pi sends a threshold, Arduino acts immediately when sensor crosses it — no round-trip needed",
+                "c": true
+              },
+              {
+                "t": "Increase serial baud rate to 1Mbaud",
+                "c": false
+              },
+              {
+                "t": "Use threading on the Pi to overlap capture and inference",
+                "c": false
+              }
+            ],
+            "hint": "The 237ms is dominated by CV inference (~200ms). For fast reflexive responses, does the action need to go through the full CV pipeline?",
+            "exp": "Split the control hierarchy: fast reflexive responses (obstacle avoidance, emergency stop) go directly to Arduino based on sensor thresholds — no CV needed, latency < 5ms. Slow deliberate responses (object manipulation, classification-based decisions) go through the full CV pipeline. This is how real robot systems are designed."
+          },
+          "project": {
+            "title": "Perception-Action Integration",
+            "desc": "Wire your Pi CV pipeline to your Arduino sensor+actuator system. Build a complete loop.",
+            "format": "Python (Pi) + Arduino sketch + README + demo video",
+            "deliverables": [
+              "Pi: run CV model on camera, extract detection results + confidence + uncertainty",
+              "Pi decision layer: rules mapping perception output + sensor data → action commands",
+              "Serial: send action commands to Arduino (LED color, buzzer, motor angle)",
+              "Arduino: receive commands, actuate immediately, send ACK",
+              "Demonstrate: object detected → LED green + motor responds; OOD input → LED red + buzzer alert",
+              "Demo video: full loop running on real hardware",
+              "README: system architecture diagram + latency measurements per stage"
+            ],
+            "hint": "Decision layer: if detection.confidence > 0.8 and sensors.distance > 30: serial.send(\"CMD:LED:GREEN\") elif uncertainty > 0.4: serial.send(\"CMD:BUZZ:500\"); serial.send(\"CMD:LED:RED\")"
+          }
+        },
+        {
+          "id": "hw4-2",
+          "title": "Motor Control with Vision",
+          "meta": "Pan/tilt tracking, visual servoing on hardware",
+          "xp": 120,
+          "watch": {
+            "title": "Object Tracking with Pi Camera — Core Electronics Tutorial",
+            "url": "https://core-electronics.com.au/guides/getting-started-with-yolo-object-and-animal-recognition-on-the-raspberry-pi/",
+            "focus": "Focus on detection + tracking sections. Key concept: compute error between frame center and detected bounding box center, feed to PID controller, output motor angle command. Use RPi.GPIO.PWM for servo control or serial to Arduino for DC motor."
+          },
+          "concept": {
+            "title": "Building a camera that follows what it sees",
+            "body": "<p>Mount your motor as a pan axis (left-right rotation). Pi Camera detects the target object. Error = frame center - detection center. PID controller converts error to motor command. Motor moves camera toward target.</p><p>This is <strong>visual servoing</strong> on real hardware — the same concept you implemented in simulation in the Robotics section, now with a real camera and real motor.</p>",
+            "analogy": "Your eye-head coordination works exactly this way. Your eye detects something interesting at the periphery (error from center). Your brain sends a motor command. Your neck moves your head until the target is centered. You just built this system from scratch.",
+            "visual": "Visual servoing loop (hardware):\nPi Camera → detect target → bounding box center (x,y)\nerror_x = frame_center_x - box_center_x\n\nPID controller:\ncommand = Kp·error + Ki·∫error + Kd·Δerror\nmotor_angle = current_angle + command\nSerial: 'CMD:MOTOR:{angle}'"
+          },
+          "challenge": {
+            "q": "Your visual tracking system oscillates: motor overshoots the target, then overshoots the other way, repeatedly. Which PID term is most likely too high?",
+            "opts": [
+              {
+                "t": "Ki — integral is causing windup",
+                "c": false
+              },
+              {
+                "t": "Kp — proportional gain too high causes overshoot and oscillation",
+                "c": true
+              },
+              {
+                "t": "Kd — derivative is amplifying noise",
+                "c": false
+              },
+              {
+                "t": "All three need to be increased",
+                "c": false
+              }
+            ],
+            "hint": "Oscillation around the target is the classic symptom of which PID term being too large?",
+            "exp": "Kp too high. High proportional gain causes the motor to over-correct at every step — it overshoots, then the error is in the opposite direction, so it over-corrects again. Classic oscillation. Fix: reduce Kp until oscillation stops, then carefully add Kd to dampen the remaining oscillation."
+          },
+          "project": {
+            "title": "Visual Tracking System",
+            "desc": "Build a motor-driven camera tracking system that follows a detected object.",
+            "format": "Python (Pi) + Arduino sketch + README + demo video",
+            "deliverables": [
+              "Mount motor as pan axis (tape, stand, or simple mount — be creative)",
+              "Pi: detect target object (specific color, a face, or a hand)",
+              "Pi: compute tracking error (frame center - detection center)",
+              "Pi: PID controller output → motor angle command → serial to Arduino",
+              "Arduino: receive motor angle, drive motor to that angle",
+              "Tune PID: reduce Kp until smooth, add Kd to dampen",
+              "Demo video: camera smoothly tracking a moving object",
+              "README: PID values chosen, why, what happened with wrong values"
+            ],
+            "hint": "Start with Kp=0.1, Ki=0, Kd=0. Increase Kp until system responds, reduce when oscillation appears. Add Kd=0.01 to dampen. Color detection: cv2.inRange() in HSV is fast for real-time tracking."
+          }
+        },
+        {
+          "id": "hw4-3",
+          "title": "Relay & Conditional Actuation",
+          "meta": "AI-triggered physical switching with hysteresis",
+          "xp": 90,
+          "watch": {
+            "title": "Arduino Relay Module Tutorial — Arduino Project Hub",
+            "url": "https://projecthub.arduino.cc/samanfern/turning-on-and-off-relay-with-arduino-a93b22",
+            "focus": "Focus on: wiring the relay module (IN, VCC, GND), using digitalWrite(RELAY_PIN, HIGH/LOW) to switch it, NO vs NC terminals. Safety: only connect 5V DC devices — not mains voltage."
+          },
+          "concept": {
+            "title": "AI that controls the physical world",
+            "body": "<p>A <strong>relay</strong> is an electrically controlled switch. Your Arduino (3.3V/5V logic) controls a relay that can switch higher-voltage devices — a lamp, a fan, a solenoid.</p><p>Use case: your Pi camera detects someone entering → relay turns on the light. Temperature exceeds threshold → relay activates cooling fan. Medical classifier detects critical finding → relay triggers an alarm.</p>",
+            "analogy": "The relay is your AI's hand reaching into the physical world. Your model runs in the digital domain. The relay is the bridge to the physical domain — it takes a tiny digital signal (0 or 1) and uses it to control real electrical devices.",
+            "visual": "Relay wiring:\nArduino digital pin → IN pin on relay module\nRelay module: VCC→5V, GND→GND\nDevice connected to NO (Normally Open) terminal\nIN=HIGH: relay closes → device ON\nIN=LOW: relay opens → device OFF\n\nSafety: always use relay module with optoisolation"
+          },
+          "challenge": {
+            "q": "Your AI turns on a relay-controlled light when confidence > 0.8. The light flickers because confidence alternates between 0.78 and 0.83. How do you fix this?",
+            "opts": [
+              {
+                "t": "Replace the relay — it is faulty",
+                "c": false
+              },
+              {
+                "t": "Add hysteresis: turn ON at confidence > 0.85, turn OFF only when confidence < 0.60 — prevents flickering around the threshold",
+                "c": true
+              },
+              {
+                "t": "Increase confidence threshold to 0.95",
+                "c": false
+              },
+              {
+                "t": "Run the model faster to reduce oscillation",
+                "c": false
+              }
+            ],
+            "hint": "The confidence is oscillating right around the threshold. What engineering technique prevents on-off oscillation?",
+            "exp": "Hysteresis: use different thresholds for turning ON vs turning OFF. ON when confidence > 0.85, OFF when confidence < 0.60. Confidence must drop significantly before the relay switches — preventing flickering. This is a fundamental control engineering technique used everywhere: thermostats, motor controllers, power supplies."
+          },
+          "project": {
+            "title": "AI-Triggered Relay System",
+            "desc": "Build a system where your AI model controls a real physical device via relay.",
+            "format": "Python (Pi) + Arduino sketch + README + demo video",
+            "deliverables": [
+              "Wire relay module to Arduino (optoisolated module for safety)",
+              "Connect a safe low-voltage device to relay (LED strip, small fan, or DC motor)",
+              "Pi AI model makes detection decision → serial command → Arduino → relay ON/OFF",
+              "Implement hysteresis: different ON/OFF thresholds to prevent flickering",
+              "Add uncertainty check: high uncertainty → relay stays OFF, buzzer alerts instead",
+              "Demo video: AI detection triggering physical relay action",
+              "README: what device did you control? What was your hysteresis window?"
+            ],
+            "hint": "Use a 5V relay module with optoisolation. digitalWrite(RELAY_PIN, HIGH) to activate. Use only 5V or 12V DC devices for safety — avoid mains voltage (240V) without proper training."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "hw4-a",
+        "title": "Complete Perception-Action System",
+        "xp": 420,
+        "desc": "A fully integrated Pi + Arduino perception-action system: camera sees, model decides, hardware acts.",
+        "deliverables": [
+          "Pi Camera: live detection with confidence + uncertainty (MC Dropout triggered)",
+          "HC-SR04 + IR: distance and proximity sensing, filtered and fused",
+          "Decision layer: rules combining CV output + sensor data → action commands",
+          "Motor: visual tracking (PID-controlled pan axis)",
+          "Relay: AI-triggered conditional switching with hysteresis",
+          "RGB LED: real-time confidence/uncertainty indicator",
+          "Buzzer: audio alerts for high uncertainty or obstacle proximity",
+          "LCD: current detection class, confidence, uncertainty, distance",
+          "Full demo video: the complete system running end-to-end",
+          "README: full system architecture diagram, latency analysis, failure modes observed"
+        ],
+        "hint": "This is your first complete intelligent physical system on real hardware. Every component should appear in the demo video. This is a portfolio piece.",
+        "linkedin": "Built my first complete intelligent physical system on real hardware: Pi Camera + CV model + uncertainty estimation + Arduino sensors + motor tracking + relay control — all integrated. The gap between a notebook and a deployed system is now real to me. #EmbeddedAI #RaspberryPi #Arduino #IntelligentSystems"
+      }
+    },
+    {
+      "id": "hw5",
+      "title": "Capstone Hardware Projects",
+      "sub": "Complete integrated systems — your engineering identity made physical",
+      "units": [
+        {
+          "id": "hw5-1",
+          "title": "Smart Obstacle-Aware Camera System",
+          "meta": "HC-SR04 + IR + camera + motor tracking + safety stop",
+          "xp": 180,
+          "watch": {
+            "title": "MIT Robotic Manipulation — manipulation.csail.mit.edu",
+            "url": "https://manipulation.csail.mit.edu/intro.html",
+            "focus": "Read the introduction chapter. Focus on: what makes a complete robot system (perception, planning, control), how PyBullet simulation connects to real hardware, and the sim-to-real gap analysis. Your reference for building complete robot systems."
+          },
+          "concept": {
+            "title": "A camera system that knows when it cannot see safely",
+            "body": "<p>This project combines: visual tracking (motor follows object), obstacle awareness (HC-SR04 + IR stops motor when obstacle too close), uncertainty-aware behavior (MC Dropout + RGB LED + buzzer), and relay-triggered alert (when critical detection occurs).</p><p>Use case: a smart camera mount for a workshop, laboratory, or medical setting that tracks the main subject, avoids collisions, and alerts when perception is uncertain.</p>",
+            "analogy": "This is the physical embodiment of your engineering identity: a system that combines AI, computer vision, and trustworthy ML into something that moves and acts in the real world — and knows its own limitations.",
+            "visual": "System components:\nPi Camera → YOLOv8n detection\n→ PID tracking → motor pan\n\nHC-SR04 → distance measurement\nIR → proximity\n→ safety stop if obstacle < 15cm\n\nMC Dropout (T=5, triggered)\n→ RGB LED confidence display\n→ Buzzer on high uncertainty\n→ Relay alert on critical detection\n\nLCD: class + confidence + distance"
+          },
+          "challenge": {
+            "q": "Your smart camera tracks a surgical instrument but stops every time the surgeon's hand enters the frame. How do you redesign the decision layer?",
+            "opts": [
+              {
+                "t": "Remove obstacle detection — it causes too many stops",
+                "c": false
+              },
+              {
+                "t": "Add class-based filter: stop motor only when HC-SR04 distance < 15cm (physical obstacle), not on visual detection of hand",
+                "c": true
+              },
+              {
+                "t": "Increase obstacle distance threshold to 5cm",
+                "c": false
+              },
+              {
+                "t": "Switch to a slower motor",
+                "c": false
+              }
+            ],
+            "hint": "The system is treating visual detections and physical proximity the same. How do you distinguish between a hand in the visual field vs a physical collision obstacle?",
+            "exp": "Fuse visual classification with physical distance. Physical obstacle = HC-SR04 reads < 15cm (something is physically close to the motor). A hand in the visual field does not mean physical collision. Design: use HC-SR04 for physical safety stop, use visual detection only for tracking target selection. This is the system-level thinking that separates a research prototype from a deployed system."
+          },
+          "project": {
+            "title": "Smart Obstacle-Aware Camera System",
+            "desc": "Build a complete, polished smart camera system as a portfolio capstone.",
+            "format": "GitHub repo + 2-min demo video + README",
+            "deliverables": [
+              "All components integrated: camera, model, motor tracking, HC-SR04, IR, RGB LED, buzzer, relay, LCD",
+              "Decision layer: tracking mode + safety stop + uncertainty alert + relay trigger",
+              "PID tuned for smooth tracking",
+              "HC-SR04 safety stop: motor stops if distance < 15cm regardless of tracking target",
+              "Uncertainty modulation: slow tracking speed when uncertainty high",
+              "LCD: real-time status (tracking target, distance, confidence, uncertainty)",
+              "2-minute demo video: show all modes — tracking, safety stop, uncertainty alert",
+              "README: architecture diagram, component list, wiring diagram, performance metrics"
+            ],
+            "hint": "Build in stages: tracking first → add safety stop → add uncertainty → add relay. Test each stage before adding the next. A staged build is how real systems are developed."
+          }
+        },
+        {
+          "id": "hw5-2",
+          "title": "Medical Imaging Edge Device",
+          "meta": "Chest X-ray classifier on Pi with full trust interface",
+          "xp": 180,
+          "watch": {
+            "title": "TinyML and Efficient Deep Learning for Edge AI — MIT 6.5940",
+            "url": "https://efficientml.ai/",
+            "focus": "Lectures on quantization and edge deployment. Focus on: INT8 quantization for medical classifiers, how to export a PyTorch model for Pi (ONNX → NCNN), and the accuracy vs latency tradeoff for clinical edge devices."
+          },
+          "concept": {
+            "title": "Your PhD research on real medical hardware",
+            "body": "<p>Take your chest X-ray classifier from ML Section Chapter 2. Optimize for Pi with INT8 quantization. Add the full trustworthy AI interface: confidence on LCD, uncertainty from MC Dropout via RGB LED, conformal prediction sets, abstention policy.</p><p>The Pi Camera is not a medical X-ray scanner — use a phone displaying X-ray images as your input source. This lets you test the system without medical hardware.</p>",
+            "analogy": "This is what your PhD research looks like as a physical device. Not a paper, not a notebook — a box with a camera, a screen showing results, LEDs indicating confidence, and a buzzer alerting when the model is uncertain. This is what you are building toward.",
+            "visual": "Medical edge device:\nPi Camera → captures X-ray from display\n→ INT8 quantized classifier\n→ prediction + confidence\n→ MC Dropout (T=5) when conf < 0.7\n→ Conformal prediction set\n\nOutput:\nLCD: class + confidence + conformal set\nRGB: green/yellow/red (trust level)\nBuzzer: alert if set size > 1 (ambiguous)\nRelay: trigger review request"
+          },
+          "challenge": {
+            "q": "Your medical edge device outputs conformal set {pneumonia, pleural effusion}. The doctor asks: \"which one is it?\" What is the correct system response?",
+            "opts": [
+              {
+                "t": "Output the higher-probability class — that is the best answer",
+                "c": false
+              },
+              {
+                "t": "Maintain the set — both diagnoses are plausible at 90% coverage, flag for specialist review",
+                "c": true
+              },
+              {
+                "t": "Increase T in MC Dropout to get a more certain answer",
+                "c": false
+              },
+              {
+                "t": "The system has failed — retrain the model",
+                "c": false
+              }
+            ],
+            "hint": "What is the purpose of conformal prediction sets? What does it mean for the true label to be in the set with 90% probability?",
+            "exp": "Maintain the set. The conformal guarantee says the true diagnosis is in {pneumonia, pleural effusion} with 90% probability — that IS the correct output. Picking one would be overclaiming certainty the model does not have. The correct clinical response: flag for specialist review, report both possibilities. This is exactly the trustworthy AI interface your PhD research is building."
+          },
+          "project": {
+            "title": "Medical Imaging Edge Device",
+            "desc": "Deploy your medical classifier on Pi with a full clinical trust interface.",
+            "format": "GitHub repo + demo video + README",
+            "deliverables": [
+              "INT8 quantized medical classifier running on Pi (measure fps)",
+              "Input: Pi Camera captures from phone/monitor displaying X-ray images",
+              "MC Dropout (T=5) triggered when single-pass confidence < 0.7",
+              "Conformal prediction sets (q̂ computed offline on calibration set)",
+              "LCD: predicted class + confidence + conformal set + uncertainty level",
+              "RGB LED: green (singleton, high confidence), yellow (size-2 set), red (size 3+ or high uncertainty)",
+              "Buzzer: alert when prediction set size > 1 (ambiguous — needs specialist)",
+              "Demo video: confident normal case, confident pneumonia, ambiguous case (multi-set), OOD input",
+              "README: clinical interpretation guide — what each output means and what the doctor should do"
+            ],
+            "hint": "Load calibration thresholds (q̂ values) from a JSON file computed offline. Conformal set at test time: include all classes where 1-softmax[class] ≤ q̂. Run everything in a while loop with try/except for graceful camera error handling."
+          }
+        },
+        {
+          "id": "hw5-3",
+          "title": "Autonomous Sensing Station",
+          "meta": "Environmental monitoring with AI anomaly detection",
+          "xp": 160,
+          "watch": {
+            "title": "Anomaly Detection — scikit-learn Official Documentation",
+            "url": "https://scikit-learn.org/stable/modules/outlier_detection.html",
+            "focus": "Read the Isolation Forest section. Focus on: fitting IsolationForest on normal sensor data, predicting anomalies (returns -1 for anomaly, 1 for normal), and the contamination parameter. Also read One-Class SVM as an alternative."
+          },
+          "concept": {
+            "title": "AI anomaly detection without a camera",
+            "body": "<p>Collect time-series data from all your sensors. Train a simple anomaly detection model (autoencoder or isolation forest) on \"normal\" readings. Deploy on Pi to detect when sensor patterns deviate from normal — an anomaly in temperature, light, proximity patterns that could indicate an event.</p><p>This demonstrates that ML is not only for images — it applies to any structured data, including physical sensor readings.</p>",
+            "analogy": "Your sensors are like a hospital's vital signs monitors. Normal readings form a pattern. An anomaly (sudden temperature spike, unusual proximity reading) is like an alarm — something has changed from what is expected.",
+            "visual": "Anomaly detection pipeline:\nSensor array (10Hz): [distance, light, temp, IR]\n→ feature extraction (mean, std, rate of change)\n→ Isolation Forest or Autoencoder\n→ anomaly score\n\nNormal: low score → LED green\nAnomaly: high score → LED red + buzzer\n→ LCD: 'ANOMALY: temp spike'\n→ Relay: trigger alert device"
+          },
+          "challenge": {
+            "q": "Your anomaly detector triggers frequently in the evening even though nothing unusual is happening. You realize light levels drop at sunset. Most likely problem and fix?",
+            "opts": [
+              {
+                "t": "Model is broken — retrain from scratch",
+                "c": false
+              },
+              {
+                "t": "Concept drift: normal light levels change with time of day — training data did not include all conditions. Retrain with data from all times of day.",
+                "c": true
+              },
+              {
+                "t": "Light sensor is faulty — replace it",
+                "c": false
+              },
+              {
+                "t": "Reduce anomaly detection sensitivity threshold",
+                "c": false
+              }
+            ],
+            "hint": "What did your training data look like? Did it include all times of day and all normal environmental conditions?",
+            "exp": "Concept drift — the normal distribution of sensor readings changes with time of day. Your model was trained on a subset of normal conditions. Fix: collect training data across all normal operating conditions (morning, afternoon, evening, night). This is the same distribution shift problem from your TDL section, now experienced physically on your own hardware."
+          },
+          "project": {
+            "title": "Autonomous Sensing Station",
+            "desc": "Build an environmental monitoring station with ML-based anomaly detection.",
+            "format": "GitHub repo + demo video + README",
+            "deliverables": [
+              "Collect 30 minutes of normal sensor data from all sensors at 10Hz",
+              "Train anomaly detector offline (sklearn IsolationForest) on laptop",
+              "Deploy model on Pi (joblib pickle or ONNX)",
+              "Pi: read sensors → extract features → compute anomaly score in real-time",
+              "LCD: real-time sensor readings + anomaly score + status (NORMAL/ANOMALY)",
+              "RGB LED: green (normal), red (anomaly detected)",
+              "Buzzer: alert on sustained anomaly (> 3 consecutive seconds)",
+              "Relay: trigger external device on anomaly",
+              "Demo video: induce an anomaly (block sensor, apply heat, cover light) — watch system respond",
+              "README: what constitutes \"normal\" in your environment? What anomalies did you test?"
+            ],
+            "hint": "sklearn IsolationForest: fit on normal data. Predict: -1=anomaly, 1=normal. Export with joblib.dump(). On Pi: joblib.load(). Runs fast enough for 10Hz inference. Collect data with all sensors while environment is undisturbed."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "hw5-a",
+        "title": "Hardware Capstone — Your Choice",
+        "xp": 600,
+        "desc": "Complete one capstone project end-to-end. Polish it. Document it. This is your flagship hardware portfolio piece.",
+        "deliverables": [
+          "Choose: Smart Camera System, Medical Edge Device, or Autonomous Sensing Station (or combine elements)",
+          "Complete all deliverables for your chosen project",
+          "Write a comprehensive README that a stranger could follow to rebuild your system",
+          "Record a 3–5 minute demo video showing all features and failure modes",
+          "FMEA: document the top 5 failure modes you encountered and how you handled them",
+          "GitHub repo: clean code, requirements.txt, wiring diagram, calibration files, model files",
+          "LinkedIn post: share what you built, what you learned, what surprised you"
+        ],
+        "hint": "Quality over speed here. A polished capstone with good documentation is worth more than three rushed ones. Take the time to document it properly.",
+        "linkedin": "Just completed my hardware capstone: a full intelligent physical system built from scratch on Raspberry Pi + Arduino. Combining computer vision, trustworthy AI, and physical sensing into one real deployed system. Thread on what I built and what I learned the hard way. #EmbeddedAI #Robotics #RaspberryPi #Arduino #IntelligentSystems"
+      }
+    },
+    {
+      "id": "hw6",
+      "title": "Hands-On Projects",
+      "sub": "Sim → Hardware · Six real projects · Your portfolio",
+      "units": [],
+      "assignment": {
+        "id": "hw6-a",
+        "title": "Portfolio Review — All Six Projects",
+        "xp": 300,
+        "desc": "Step back and review all six projects. Write a portfolio summary that presents your hardware work as a coherent body of evidence for your engineering identity.",
+        "deliverables": [
+          "GitHub portfolio page: link all six project repos with one-line descriptions",
+          "Skills demonstrated table: list each project and which competencies it proves (CV, ML, Robotics, TDL, Hardware)",
+          "Technical growth document: one paragraph per project on what you learned that surprised you",
+          "Demo video compilation: 2-minute highlight reel combining the best moments from all six projects",
+          "LinkedIn series: six posts (one per project) posted over six weeks as you complete them",
+          "Engineering identity check: compare your projects to your original engineering identity document — how much closer are you?"
+        ],
+        "hint": "Your portfolio is the evidence that your engineering identity is not aspirational — it is real. Each project is a proof point. Present it that way.",
+        "linkedin": "Completed all six hands-on hardware projects in my engineering curriculum: real-time vision, sensor fusion, perception-action, visual tracking, autonomous navigation sensing, and medical AI on the edge — all on Raspberry Pi + Arduino. Thread on the journey from simulation to real hardware. #EmbeddedAI #Robotics #RaspberryPi #MedicalAI #AppliedAI"
+      },
+      "projects": [
+        {
+          "id": "hw6-1",
+          "title": "Project 1: Real-Time Vision System",
+          "meta": "Sim: webcam + models → Hardware: Pi Camera live",
+          "xp": 300,
+          "watch": {
+            "title": "Real-time vision system design — sim to hardware",
+            "url": "https://www.youtube.com/results?search_query=real+time+object+detection+webcam+python+optimization",
+            "focus": "How to design a real-time vision pipeline that works on both laptop (sim) and Pi (hardware). Latency optimization strategies."
+          },
+          "concept": {
+            "title": "The sim version IS the foundation",
+            "body": "<p><strong>Sim version</strong> (laptop/webcam): build the complete pipeline — detection, uncertainty, OOD alert — on your laptop first. Get it right. Get it fast. Document it. Push to GitHub. This is a real portfolio piece even before touching hardware.</p><p><strong>Hardware version</strong> (Pi): port the same pipeline. The gap between laptop fps and Pi fps is your first hardware lesson. Optimize to minimize it.</p>",
+            "analogy": "The sim version is your recipe. The hardware version is cooking it in a real kitchen with real equipment. The recipe should be perfect before you deal with kitchen variables.",
+            "visual": "Sim version → Hardware version:\nSim: cv2.VideoCapture(0) → YOLO → display\nHardware: picamera2 → YOLO INT8 → display\n\nKey differences:\n- picamera2 vs cv2.VideoCapture\n- INT8 quantization needed for fps\n- GPIO for LED/buzzer output\n- No GUI display — use VNC or HDMI"
+          },
+          "challenge": {
+            "q": "Your sim version runs at 25fps on your laptop. After porting to Pi, it runs at 3fps. You apply INT8 quantization and get 7fps. What is the next optimization to try?",
+            "opts": [
+              {
+                "t": "Buy a Coral USB accelerator",
+                "c": false
+              },
+              {
+                "t": "Reduce input resolution: try 320×240 instead of 640×480 — inference time scales with resolution squared",
+                "c": true
+              },
+              {
+                "t": "Rewrite the code in C++",
+                "c": false
+              },
+              {
+                "t": "7fps is sufficient — stop optimizing",
+                "c": false
+              }
+            ],
+            "hint": "Inference time scales with input resolution. What is the relationship between resolution and compute for a convolutional network?",
+            "exp": "Reduce resolution. Inference time for a CNN scales roughly with the number of pixels (H×W). Going from 640×480 to 320×240 reduces pixels by 4× → inference time reduces by ~4×. This alone might take you from 7fps to ~20fps. The cost: slightly lower detection accuracy on small objects. For most practical Pi applications, 320×240 is sufficient."
+          },
+          "sim": {
+            "title": "Simulation Version — Project 1: Real-Time Vision System",
+            "desc": "Build complete real-time vision system. Sim version first, then hardware version.",
+            "deliverables": [
+              "YOLOv8n on webcam + MC Dropout uncertainty (T=10 triggered) + OOD detection (energy score)",
+              "real-time dashboard showing detection, confidence, uncertainty per frame",
+              "demo video — show detection, uncertainty, OOD alert on laptop"
+            ],
+            "hint": "Create two branches: sim/ and hardware/. Same model, same logic, different camera and output code. This structure makes the sim-to-hardware gap explicit and documentable."
+          },
+          "hw": {
+            "title": "Hardware Version — Project 1: Real-Time Vision System",
+            "desc": "Build complete real-time vision system. Sim version first, then hardware version.",
+            "deliverables": [
+              "port to Pi + Pi Camera — apply INT8 quantization + resolution reduction",
+              "RGB LED (confidence), LCD (class + fps + uncertainty), Buzzer (OOD alert)",
+              "measure and document fps, latency, accuracy vs laptop version",
+              "demo video — Pi detecting objects live with hardware feedback"
+            ],
+            "hint": "Create two branches: sim/ and hardware/. Same model, same logic, different camera and output code. This structure makes the sim-to-hardware gap explicit and documentable."
+          },
+          "readme_deliverables": [
+            "README: fps numbers, optimization steps taken, sim-to-hardware gap analysis"
+          ],
+          "linkedin": ""
+        },
+        {
+          "id": "hw6-2",
+          "title": "Project 2: Sensor Fusion System",
+          "meta": "Sim: synthetic data + Kalman → Hardware: Arduino sensors → Pi",
+          "xp": 320,
+          "watch": {
+            "title": "Multi-sensor fusion system design",
+            "url": "https://www.youtube.com/results?search_query=sensor+fusion+kalman+filter+robotics+python",
+            "focus": "How to design a multi-sensor fusion system that degrades gracefully when individual sensors fail. Sensor fusion architecture."
+          },
+          "concept": {
+            "title": "Fusion makes each sensor more reliable",
+            "body": "<p>No single sensor is reliable enough for a safety-critical system. Sensor fusion combines multiple imperfect sensors into a more reliable estimate than any individual sensor. <strong>HC-SR04 + IR + light</strong>: an obstacle might not be detected by one sensor due to angle or material — but is almost certainly detected by at least one of three.</p><p>Fusion also provides <strong>graceful degradation</strong>: if one sensor fails, the system still functions (with reduced confidence) instead of crashing entirely.</p>",
+            "analogy": "Three witnesses to an event are more reliable than one — even if each has imperfect memory. Sensor fusion is the engineering version of getting multiple witness accounts and combining them optimally.",
+            "visual": "Sensor fusion:\nHC-SR04: accurate but has dropouts\nIR: binary (obstacle/no obstacle) but reliable\nLight: detects shadows, less direct\n\nFused obstacle confidence:\nif HC-SR04 < 30cm: +0.6\nif IR triggered: +0.3\nif light drop > 20%: +0.1\n→ confidence > 0.7: obstacle detected\n→ confidence > 0.5: obstacle likely"
+          },
+          "challenge": {
+            "q": "Your HC-SR04 fails (reads 0cm constantly due to hardware fault). Your fused system still detects an obstacle at 40% confidence from IR alone. What should the system do?",
+            "opts": [
+              {
+                "t": "Ignore the fused reading — a failed sensor invalidates the whole system",
+                "c": false
+              },
+              {
+                "t": "Report obstacle with low confidence, flag HC-SR04 failure, increase safety margins — graceful degradation",
+                "c": true
+              },
+              {
+                "t": "Replace the HC-SR04 before continuing",
+                "c": false
+              },
+              {
+                "t": "Treat 40% confidence the same as 90% confidence",
+                "c": false
+              }
+            ],
+            "hint": "Graceful degradation: the system should continue operating safely with degraded performance rather than failing completely.",
+            "exp": "Report obstacle with low confidence (40%), flag the HC-SR04 failure on the LCD, and increase safety margins (treat 40% confidence as if it were 70% for safety decisions). This is graceful degradation — the system still protects against obstacles even with a failed sensor, while alerting the operator to the hardware fault. Never fail silently."
+          },
+          "sim": {
+            "title": "Simulation Version — Project 2: Sensor Fusion System",
+            "desc": "Build multi-sensor fusion. Sim version first, then hardware.",
+            "deliverables": [
+              "generate synthetic data for all sensors with realistic noise models",
+              "implement fusion: Kalman for distance, complementary filter for light+IR",
+              "environment state dashboard — real-time visualization of all sensors + fused state",
+              "inject sensor faults — test graceful degradation",
+              "demo video of simulation with fault injection"
+            ],
+            "hint": "Log 5 minutes of real sensor data to CSV. Compare noise characteristics to your simulation models. This validates or invalidates your noise assumptions."
+          },
+          "hw": {
+            "title": "Hardware Version — Project 2: Sensor Fusion System",
+            "desc": "Build multi-sensor fusion. Sim version first, then hardware.",
+            "deliverables": [
+              "all sensors wired to Arduino, streaming to Pi",
+              "same fusion algorithm running on Pi in real-time",
+              "LCD showing fused environment state, LED showing obstacle level",
+              "demonstrate: block HC-SR04 (hardware fault) — does system degrade gracefully?"
+            ],
+            "hint": "Log 5 minutes of real sensor data to CSV. Compare noise characteristics to your simulation models. This validates or invalidates your noise assumptions."
+          },
+          "readme_deliverables": [
+            "README: noise model comparison (simulated vs real), graceful degradation behavior"
+          ],
+          "linkedin": ""
+        },
+        {
+          "id": "hw6-3",
+          "title": "Project 3: Perception → Action",
+          "meta": "Sim: PyBullet robot → Hardware: Pi Camera + Arduino motor",
+          "xp": 350,
+          "watch": {
+            "title": "Perception to action: sim to hardware",
+            "url": "https://www.youtube.com/results?search_query=perception+action+loop+raspberry+pi+arduino+robot",
+            "focus": "How to bridge the perception-action gap from simulation to real hardware. What changes and what stays the same."
+          },
+          "concept": {
+            "title": "The full loop: see → decide → act",
+            "body": "<p>This project implements the complete perception-action loop end-to-end. <strong>Sim version</strong>: PyBullet robot responds to objects detected in simulated camera — visual logic is verified. <strong>Hardware version</strong>: the same decision logic, now with a real Pi Camera and real motor responding to real objects in the real world.</p><p>The decision logic should NOT change between sim and hardware — only the I/O layer changes. If you need to change the logic, you had a bug in simulation that hardware exposed.</p>",
+            "analogy": "The sim-to-hardware transition should feel like switching from a practice dummy to a real patient. The procedure (decision logic) is the same. The environment (I/O) is different and less predictable.",
+            "visual": "Sim version:\nPyBullet camera → YOLO → decision → PyBullet motor\n\nHardware version:\nPi Camera → YOLO → decision → Arduino motor\n\nDifference: only camera input and motor output\nDecision logic: IDENTICAL\n\nIf logic changes between sim and hardware:\n→ you had a bug in simulation"
+          },
+          "challenge": {
+            "q": "In simulation, your robot correctly approaches \"target\" objects and avoids \"obstacle\" objects. On hardware, it approaches everything including obstacles. Most likely cause?",
+            "opts": [
+              {
+                "t": "The YOLO model performs differently on real images vs simulated images",
+                "c": false
+              },
+              {
+                "t": "Class label mismatch: simulated class IDs do not match real YOLO class IDs for your objects",
+                "c": true
+              },
+              {
+                "t": "The Arduino motor is wired incorrectly",
+                "c": false
+              },
+              {
+                "t": "Hardware is always more difficult than simulation",
+                "c": false
+              }
+            ],
+            "hint": "Your decision layer maps class labels to actions. What could cause the class labels to be different between sim and hardware?",
+            "exp": "Class label mismatch. In simulation, you defined \"target\" = class 0 and \"obstacle\" = class 1. Your YOLO model on real hardware uses the COCO class IDs where \"target\" object might be class 46 (banana) and \"obstacle\" might be class 75 (vase). The decision logic maps the wrong class IDs to the wrong actions. Fix: print the detected class names and IDs on hardware, verify they match your simulation assumptions."
+          },
+          "sim": {
+            "title": "Simulation Version — Project 3: Perception → Action",
+            "desc": "Complete perception-action loop. Sim version first, then hardware.",
+            "deliverables": [
+              "PyBullet scene with objects of two types (target and obstacle)",
+              "YOLO detection on simulated camera → classify as target or obstacle",
+              "decision layer: approach target, avoid obstacle, stop if uncertain",
+              "PID controller for smooth simulated robot motion",
+              "demo video showing robot responding correctly to all object types"
+            ],
+            "hint": "Use a config file for class-to-action mapping. sim_config.yaml and hardware_config.yaml. Same decision code, different configs. This is clean engineering."
+          },
+          "hw": {
+            "title": "Hardware Version — Project 3: Perception → Action",
+            "desc": "Complete perception-action loop. Sim version first, then hardware.",
+            "deliverables": [
+              "Pi Camera detects target/obstacle (same YOLO model, verify class IDs)",
+              "Pi decision layer (same logic as sim, only I/O changed)",
+              "Arduino motor responds to decisions (approach = motor extends, avoid = motor retracts)",
+              "HC-SR04 hardware safety stop: stop motor if distance < 10cm regardless of decision",
+              "demo video — Pi camera seeing different objects, motor responding correctly"
+            ],
+            "hint": "Use a config file for class-to-action mapping. sim_config.yaml and hardware_config.yaml. Same decision code, different configs. This is clean engineering."
+          },
+          "readme_deliverables": [
+            "README: what class label mismatch issues did you encounter? How did you debug them?"
+          ],
+          "linkedin": ""
+        },
+        {
+          "id": "hw6-4",
+          "title": "Project 4: Visual Tracking System",
+          "meta": "Sim: SORT tracker → Hardware: Pi Camera + motor pan",
+          "xp": 380,
+          "watch": {
+            "title": "Visual tracking from simulation to hardware",
+            "url": "https://www.youtube.com/results?search_query=visual+object+tracking+raspberry+pi+servo+motor",
+            "focus": "Multi-object tracking in simulation and the challenges of porting to real hardware: latency, vibration, lighting changes."
+          },
+          "concept": {
+            "title": "Tracking across frames and across environments",
+            "body": "<p><strong>Sim version</strong>: multi-object tracking with SORT in simulation. Multiple objects, consistent IDs, uncertainty per track. <strong>Hardware version</strong>: single-object tracking with motor following the highest-confidence track. The motor introduces a new challenge: camera shake. When the motor moves, the camera image blurs and detections fail momentarily — you must design for this.</p>",
+            "analogy": "Sim tracking is like playing chess on a stable table. Hardware tracking is like playing chess on a ship — the board (camera view) moves as the motor responds to previous detections. You must account for the movement in your tracking logic.",
+            "visual": "Hardware tracking challenge:\nMotor moves → camera shake → detection fails\n→ tracker loses target → motor stops\n→ camera stabilizes → detection returns\n→ motor moves again → loop\n\nFix: during motor movement:\n→ use Kalman prediction for track position\n→ do not update motor during high-motion frames\n→ wait for image to stabilize before new motor command"
+          },
+          "challenge": {
+            "q": "Your visual tracker loses the target during motor movement (camera shake causes failed detections). How do you design the tracking system to handle this?",
+            "opts": [
+              {
+                "t": "Increase motor speed so movement is shorter duration",
+                "c": false
+              },
+              {
+                "t": "Use Kalman prediction to maintain track during movement; gate motor commands to only send when target is stationary in frame (track converged)",
+                "c": true
+              },
+              {
+                "t": "Stop the motor completely once target is detected",
+                "c": false
+              },
+              {
+                "t": "Switch to a different detection model that handles blur better",
+                "c": false
+              }
+            ],
+            "hint": "During motor movement, the camera shakes. What should the tracker do when it cannot get a reliable detection?",
+            "exp": "Kalman prediction during occlusion is the correct approach. When the motor is moving, switch to prediction-only mode: the Kalman filter predicts where the target is based on its velocity before the shake started. Only issue new motor commands when the track has converged (low Kalman uncertainty) and the target is off-center. This prevents the oscillation loop where motor movement causes tracking failure causes motor movement."
+          },
+          "sim": {
+            "title": "Simulation Version — Project 4: Visual Tracking System",
+            "desc": "Multi-object tracking in sim, single-object motor tracking on hardware.",
+            "deliverables": [
+              "SORT tracker on simulated camera with multiple moving objects",
+              "uncertainty per track — flag high-uncertainty tracks",
+              "demo video: multiple objects tracked with consistent IDs"
+            ],
+            "hint": "Track the time since last stable detection. If > 200ms, switch to Kalman prediction only and freeze motor. Reset when stable detection resumes."
+          },
+          "hw": {
+            "title": "Hardware Version — Project 4: Visual Tracking System",
+            "desc": "Multi-object tracking in sim, single-object motor tracking on hardware.",
+            "deliverables": [
+              "Pi Camera detects and tracks highest-confidence target",
+              "PID controller → motor follows target",
+              "Kalman-gated motor commands: do not move during detection uncertainty spike",
+              "HC-SR04: stop tracking/motor if obstacle < 15cm (physical safety)",
+              "RGB LED: green (tracking stable), yellow (tracking uncertain), red (target lost)",
+              "demo video: camera smoothly tracking a moving object with LED status"
+            ],
+            "hint": "Track the time since last stable detection. If > 200ms, switch to Kalman prediction only and freeze motor. Reset when stable detection resumes."
+          },
+          "readme_deliverables": [
+            "README: how did you handle camera shake? What PID values work for your motor?"
+          ],
+          "linkedin": ""
+        },
+        {
+          "id": "hw6-5",
+          "title": "Project 5: Autonomous Navigation",
+          "meta": "Sim: always done → Hardware: HC-SR04 radar on motor (no chassis needed)",
+          "xp": 400,
+          "watch": {
+            "title": "Autonomous navigation simulation and sensing",
+            "url": "https://www.youtube.com/results?search_query=autonomous+navigation+obstacle+avoidance+raspberry+pi+simulation",
+            "focus": "Navigation algorithm design in simulation. How to validate navigation logic before testing on hardware."
+          },
+          "concept": {
+            "title": "Navigation sensing without a robot chassis",
+            "body": "<p><strong>Sim version (always done)</strong>: full autonomous navigation in PyBullet — differential drive robot, obstacle avoidance, path planning, uncertainty-aware slowdown. This is a complete navigation system regardless of whether you have robot hardware.</p><p><strong>Hardware version (no chassis needed)</strong>: mount your HC-SR04 on the motor. Rotate 180° to build a radar-style obstacle map. Identify the safe direction. This IS navigation sensing — the perception layer of autonomous navigation — without needing wheels.</p>",
+            "analogy": "The hardware version is like building the radar and navigation computer of a ship without building the ship hull. The sensing and decision logic is complete and demonstrable — you just do not have the actuator (wheels) to execute the navigation yet.",
+            "visual": "Hardware navigation sensing:\nMotor rotates HC-SR04 slowly (10°/step)\n→ trigger HC-SR04 at each angle\n→ record: angle, distance\n→ build polar obstacle map\n→ find angle with maximum distance (safe direction)\n→ display safe direction on LCD\n→ if minimum distance < 20cm: LED red (danger)"
+          },
+          "challenge": {
+            "q": "Your HC-SR04 radar scan shows a safe direction at 90° (directly right). But when you add a forward-facing IR sensor, it detects an obstacle directly ahead that the HC-SR04 missed (object too close for HC-SR04 minimum range). What does this tell you about your navigation sensing design?",
+            "opts": [
+              {
+                "t": "HC-SR04 is broken — replace it",
+                "c": false
+              },
+              {
+                "t": "HC-SR04 has a 2cm minimum range — very close obstacles are invisible to it. IR fills this gap. Always fuse multiple sensors for navigation.",
+                "c": true
+              },
+              {
+                "t": "The safe direction calculation is wrong — recalibrate",
+                "c": false
+              },
+              {
+                "t": "Very close obstacles are not a navigation hazard",
+                "c": false
+              }
+            ],
+            "hint": "HC-SR04 minimum range is ~2cm. What happens to objects closer than this minimum range?",
+            "exp": "HC-SR04 has a blind spot at < 2cm (some models < 5cm). An obstacle touching the sensor housing will not be detected. The forward IR sensor fills this gap for very close obstacles. This is why autonomous systems use multiple sensor modalities with overlapping coverage — no single sensor covers all ranges and angles. Your sensor fusion from Project 2 applies directly to navigation sensing."
+          },
+          "sim": {
+            "title": "Simulation Version — Project 5: Autonomous Navigation",
+            "desc": "Full navigation in simulation. HC-SR04 radar on motor for hardware sensing.",
+            "deliverables": [
+              "PyBullet differential drive robot in obstacle-filled environment",
+              "navigation algorithm: wall-following or potential field or simple RRT",
+              "uncertainty-aware: slow down when detection uncertainty high",
+              "demo video: robot navigating autonomously to a goal while avoiding obstacles"
+            ],
+            "hint": "Motor step control: send CMD:MOTOR:{angle} for each 10° step. Wait 200ms for HC-SR04 to settle. Trigger distance reading. Build dict: {angle: distance}. Safe direction: max(scan.values()) — returns angle with farthest obstacle."
+          },
+          "hw": {
+            "title": "Hardware Version — Project 5: Autonomous Navigation",
+            "desc": "Full navigation in simulation. HC-SR04 radar on motor for hardware sensing.",
+            "deliverables": [
+              "mount HC-SR04 on motor (secure with tape, mount, or 3D print if available)",
+              "scan 180° arc (0° to 180°, 10° steps)",
+              "build polar obstacle map: {angle: distance} for each scan",
+              "identify safe direction: angle with maximum distance",
+              "display on LCD: safe direction angle, minimum obstacle distance, danger flag",
+              "RGB LED: green (path clear), yellow (obstacle detected), red (obstacle < 20cm all directions)",
+              "demo video: place obstacles around the sensor, watch safe direction update in real-time"
+            ],
+            "hint": "Motor step control: send CMD:MOTOR:{angle} for each 10° step. Wait 200ms for HC-SR04 to settle. Trigger distance reading. Build dict: {angle: distance}. Safe direction: max(scan.values()) — returns angle with farthest obstacle."
+          },
+          "readme_deliverables": [
+            "README: sim navigation algorithm explanation + hardware radar demo — both complete"
+          ],
+          "linkedin": ""
+        },
+        {
+          "id": "hw6-6",
+          "title": "Project 6: Medical Imaging on the Edge",
+          "meta": "Sim: edge constraints → Hardware: Pi clinical device",
+          "xp": 450,
+          "watch": {
+            "title": "Edge AI for medical imaging — design considerations",
+            "url": "https://www.youtube.com/results?search_query=edge+AI+medical+imaging+embedded+deployment",
+            "focus": "What makes medical AI deployment on edge devices different from cloud deployment. Clinical interface design, reliability requirements, failure mode handling."
+          },
+          "concept": {
+            "title": "Your research as a deployed clinical tool",
+            "body": "<p><strong>Sim version</strong>: simulate edge constraints on your laptop — limit CPU, memory, add inference latency, test your clinical interface under these constraints. Verify your conformal prediction sets, uncertainty calibration, and abstention policy work correctly before hardware.</p><p><strong>Hardware version</strong>: this is your PhD research deployed as a physical clinical device. The Pi Camera captures X-rays displayed on a phone. The LCD, RGB LED, and buzzer form the clinical interface. This is what your research looks like in the real world.</p>",
+            "analogy": "The sim version is your clinical trial protocol — carefully designed and tested on paper. The hardware version is running the actual clinical trial. The protocol must be perfect before you start the trial.",
+            "visual": "Clinical interface design principles:\n1. Output must be interpretable by a clinician\n2. Uncertainty must be visible, not hidden\n3. Ambiguous cases must flag for review\n4. OOD inputs must never get confident predictions\n5. The system must fail safely\n\nYour interface:\nLCD: class + confidence + conformal set\nLED: trust level (green/yellow/red)\nBuzzer: flag for specialist review\nRelay: trigger review request workflow"
+          },
+          "challenge": {
+            "q": "Your medical edge device has been running for 2 hours when it starts giving unexpected predictions. You check — the camera lens has fogged from room humidity. From a trustworthy AI perspective, what should the system have done?",
+            "opts": [
+              {
+                "t": "Nothing — hardware failures are not the AI system's responsibility",
+                "c": false
+              },
+              {
+                "t": "OOD detection should have flagged the fogged images as out-of-distribution and triggered a high-uncertainty alert before the unexpected predictions",
+                "c": true
+              },
+              {
+                "t": "The system should have shut down automatically",
+                "c": false
+              },
+              {
+                "t": "Temperature sensors should have detected the humidity and corrected for it",
+                "c": false
+              }
+            ],
+            "hint": "Fogged images are very different from the clean X-ray images in your training set. What does your OOD detector say about them?",
+            "exp": "Your OOD detector (energy score or Mahalanobis distance) should detect fogged images as out-of-distribution — they look nothing like training X-rays. This should trigger: high uncertainty flag, LED red, buzzer alert, and LCD message \"INPUT QUALITY LOW — CHECK CAMERA\". This is why OOD detection is essential for deployed medical AI — unexpected sensor degradation should trigger an alert, not silent wrong predictions."
+          },
+          "sim": {
+            "title": "Simulation Version — Project 6: Medical Imaging on the Edge",
+            "desc": "Sim edge constraints first. Then full hardware clinical device.",
+            "deliverables": [
+              "profile medical classifier: memory, inference time, accuracy",
+              "simulate edge constraints: limit CPU to 1 core, add artificial inference latency",
+              "build clinical terminal interface: class, confidence, conformal set, uncertainty",
+              "test: confident normal, confident pneumonia, ambiguous (multi-set), OOD (non-X-ray)",
+              "demo video: clinical interface in simulation with all four test cases"
+            ],
+            "hint": "The clinical guide section of your README is as important as the code. Write it as if you are handing this device to a radiologist who has never seen it before. Every output must have a clear interpretation and recommended action."
+          },
+          "hw": {
+            "title": "Hardware Version — Project 6: Medical Imaging on the Edge",
+            "desc": "Sim edge constraints first. Then full hardware clinical device.",
+            "deliverables": [
+              "INT8 quantized MobileNetV2 medical classifier on Pi",
+              "Pi Camera → captures from phone/monitor displaying X-ray images",
+              "MC Dropout (T=5) triggered when confidence < 0.7",
+              "Conformal prediction sets (q̂ loaded from offline calibration JSON)",
+              "LCD: class + confidence + conformal set + uncertainty",
+              "RGB LED: green (singleton confident), yellow (multi-set), red (high uncertainty/OOD)",
+              "Buzzer: alert when set size > 1 or OOD detected",
+              "demo video: all four test cases on real hardware"
+            ],
+            "hint": "The clinical guide section of your README is as important as the code. Write it as if you are handing this device to a radiologist who has never seen it before. Every output must have a clear interpretation and recommended action."
+          },
+          "readme_deliverables": [
+            "Clinical guide (README section): how to interpret each output, when to refer to specialist",
+            "README: performance metrics, clinical interpretation guide, failure modes and how system handles them"
+          ],
+          "linkedin": ""
+        }
+      ]
+    }
+  ]
+}

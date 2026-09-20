@@ -1,0 +1,582 @@
+{
+  "version": 2,
+  "resources": [
+    {
+      "id": "math_linalg",
+      "title": "MIT 18.06 Linear Algebra — Gilbert Strang",
+      "type": "course",
+      "format": "YouTube (36 lectures) + MIT OCW",
+      "url": "https://www.youtube.com/playlist?list=PLE7DDD91010BC51F8",
+      "access": "free",
+      "what": "The definitive linear algebra course. 36 lectures by Prof. Gilbert Strang covering vectors, matrices, determinants, eigenvalues, SVD, and linear transformations. Every concept in this course appears directly in the academy — matrix multiplication for transforms, SVD for circle fitting, eigendecomposition for uncertainty ellipses.",
+      "how_used": "Primary Watch for Math Pre-Section Unit 1 (Linear Algebra). The foundation for all sections.",
+      "academy_sections": [
+        "math"
+      ],
+      "academy_units": [
+        "math1-1"
+      ],
+      "priority": "primary",
+      "status": "integrated"
+    },
+    {
+      "id": "math_prob",
+      "title": "Harvard Statistics 110 — Probability (Joe Blitzstein)",
+      "type": "course",
+      "format": "YouTube (34 lectures) + free edX course",
+      "url": "https://www.youtube.com/playlist?list=PL2SOU6wwxB0uwwH80KTQ6ht66KWxbzTIo",
+      "access": "free",
+      "what": "The best probability course available. 34 lectures by Joe Blitzstein covering sample spaces, Bayes' theorem, distributions, expectation, joint distributions, Markov chains, and Multivariate Normal. Companion edX course has interactive problems. Over 250 practice problems with solutions.",
+      "how_used": "Primary Watch for Math Pre-Section Unit 2 (Probability and Statistics). Direct foundation for TDL and Robotics sections.",
+      "academy_sections": [
+        "math"
+      ],
+      "academy_units": [
+        "math1-2"
+      ],
+      "priority": "primary",
+      "status": "integrated"
+    },
+    {
+      "id": "math_calculus",
+      "title": "MIT 18.02 Multivariable Calculus — Denis Auroux + 3Blue1Brown Essence of Calculus",
+      "type": "course",
+      "format": "MIT OCW (35 lectures) + YouTube visual series",
+      "url": "https://ocw.mit.edu/courses/18-02-multivariable-calculus-fall-2007/",
+      "access": "free",
+      "what": "Two complementary resources: 3Blue1Brown's Essence of Calculus (youtube.com/playlist?list=PLZHQObOWTQDMsr9K-rj53DwVRMYO3t5Yr) for visual intuition first, then MIT 18.02 by Denis Auroux for rigorous multivariate calculus — partial derivatives, Jacobians, gradients, and vector calculus. Jacobians appear directly in your EKF units.",
+      "how_used": "Primary Watch for Math Pre-Section Unit 3 (Multivariate Calculus). Start with 3B1B videos 1-4 for intuition, then MIT 18.02 Lectures 1-10 for rigor.",
+      "academy_sections": [
+        "math"
+      ],
+      "academy_units": [
+        "math1-3"
+      ],
+      "priority": "primary",
+      "status": "integrated"
+    },
+    {
+      "id": "math_diffeq",
+      "title": "MIT 18.03SC Differential Equations — Arthur Mattuck et al.",
+      "type": "course",
+      "format": "YouTube + MIT OCW (full notes, problem sets, interactive demos)",
+      "url": "https://www.youtube.com/playlist?list=PL64BDFBDA2AF24F7E",
+      "access": "free",
+      "what": "Complete differential equations course by Arthur Mattuck. Covers first-order ODEs, second-order linear ODEs, Laplace transforms, systems of DEs, and phase portraits. The OCW Scholar format includes lecture videos, notes, problem sets, and Java interactive demos. DEs appear in your robot dynamics and Kalman filter derivation units.",
+      "how_used": "Primary Watch for Math Pre-Section Unit 4 (Differential Equations). Focus on Lectures 1-9 (first and second order ODEs) as priority.",
+      "academy_sections": [
+        "math"
+      ],
+      "academy_units": [
+        "math1-4"
+      ],
+      "priority": "primary",
+      "status": "integrated"
+    },
+    {
+      "id": "murphy_pml",
+      "title": "Probabilistic Machine Learning: An Introduction — Kevin Murphy (MIT Press 2022)",
+      "type": "book",
+      "format": "Free PDF + GitHub notebooks (JAX/PyTorch)",
+      "url": "https://probml.github.io/pml-book/book1.html",
+      "access": "free",
+      "what": "The modern Bayesian ML textbook by Kevin Murphy (MIT Press, 2022). Free draft PDF. Covers probability, linear algebra, optimization, neural networks, and generalization from a unified probabilistic perspective. Every figure has a runnable colab notebook. Endorsed by Hinton, Bishop, and Koller as essential for ML PhD students.",
+      "how_used": "Primary Reference for TDL Section — the mathematical depth behind uncertainty, Bayesian inference, and calibration. Secondary Watch for ML Foundations Chapters 3-4 (probability and generalization). More current than MacKay (2022 vs 2003).",
+      "academy_sections": [
+        "ml",
+        "tdl"
+      ],
+      "academy_units": [
+        "ml3-1",
+        "ml4-1",
+        "tdl1-1",
+        "tdl1-2",
+        "tdl1-3"
+      ],
+      "priority": "primary",
+      "status": "integrated"
+    },
+    {
+      "id": "eecs498",
+      "title": "Michigan EECS 498 — Deep Learning for Computer Vision (Justin Johnson)",
+      "type": "course",
+      "format": "YouTube (22 lectures)",
+      "url": "https://www.youtube.com/playlist?list=PL5-TkQAfAZFbzxjBHtzdVCWE0Zbhomg7r",
+      "access": "free",
+      "what": "Justin Johnson's 2022 version of CS231N at Michigan. Covers image classification, CNNs, training neural networks, object detection, segmentation, attention, transformers, CLIP, and diffusion models. More recent than CS231N (covers modern architectures CS231N does not). Johnson was the original CS231N instructor.",
+      "how_used": "Primary Watch for entire Computer Vision section — replaces CS231N as primary resource. Each unit links to the specific EECS 498 lecture.",
+      "academy_sections": [
+        "cv"
+      ],
+      "academy_units": [
+        "cv1-1",
+        "cv1-2",
+        "cv2-1",
+        "cv2-2",
+        "cv3-1",
+        "cv3-2",
+        "cv4-1",
+        "cv5-1"
+      ],
+      "priority": "primary",
+      "status": "integrated"
+    },
+    {
+      "id": "cs231n",
+      "title": "Stanford CS231N — Deep Learning for Computer Vision",
+      "type": "course",
+      "format": "YouTube lectures",
+      "url": "https://www.youtube.com/watch?v=2fq9wYslV0A&list=PLoROMvodv4rOmsNzYBMe0gJY2XS8AQg16",
+      "access": "free",
+      "what": "The original definitive computer vision course from Stanford. Historically important — established the modern CNN curriculum. EECS 498 is now primary for new content, but CS231N remains valuable for its specific lecture style and the 2017 versions of the foundational lectures.",
+      "how_used": "Secondary Watch for CV Section. Use when a specific CS231N lecture covers a topic more clearly than EECS 498.",
+      "academy_sections": [
+        "cv"
+      ],
+      "academy_units": [
+        "cv1-3",
+        "cv2-2"
+      ],
+      "priority": "secondary",
+      "status": "integrated"
+    },
+    {
+      "id": "cs229",
+      "title": "Stanford CS229 — Machine Learning",
+      "type": "course",
+      "format": "YouTube lectures",
+      "url": "https://www.youtube.com/watch?v=jGwO_UgTS7I&list=PLoROMvodv4rMiGQp3WXShtMGgzqpfVfbU",
+      "access": "free",
+      "what": "The gold standard ML theory course. Covers linear/logistic regression, SVMs, neural networks, generalization, probability, MLE, EM, and more. Andrew Ng at Stanford. Mathematical and rigorous — builds from first principles.",
+      "how_used": "Primary Watch for entire ML Foundations section. Each unit links to the specific CS229 lecture.",
+      "academy_sections": [
+        "ml"
+      ],
+      "academy_units": [
+        "ml1-1",
+        "ml1-2",
+        "ml2-1",
+        "ml3-1",
+        "ml4-1",
+        "ml5-2"
+      ],
+      "priority": "primary",
+      "status": "integrated"
+    },
+    {
+      "id": "cs230",
+      "title": "Stanford CS230 — Deep Learning",
+      "type": "course",
+      "format": "YouTube lectures (8 lectures)",
+      "url": "https://www.youtube.com/watch?v=PySo_6S4ZAg&list=PLoROMvodv4rNRRGdS0rBbXOUGA0wjdh1X",
+      "access": "free",
+      "what": "Applied deep learning by Andrew Ng. Covers full training pipeline, structuring ML projects, and error analysis. More practical than CS229. 8 lectures.",
+      "how_used": "Secondary Watch for ML Ch5 (Neural Networks from Scratch). Lecture 1 gives the applied engineering perspective.",
+      "academy_sections": [
+        "ml"
+      ],
+      "academy_units": [
+        "ml5-1"
+      ],
+      "priority": "secondary",
+      "status": "integrated"
+    },
+    {
+      "id": "dl_specialization",
+      "title": "Deep Learning Specialization — deeplearning.ai (5 courses)",
+      "type": "specialization",
+      "format": "Video course (audit free)",
+      "url": "https://www.deeplearning.ai/specializations/deep-learning",
+      "access": "audit_free",
+      "what": "5-course specialization by Andrew Ng. Course 2 (Practical Deep Learning) is most uniquely valuable — covers hyperparameter tuning, BatchNorm, gradient problems, and optimization in practice.",
+      "how_used": "Secondary Watch for ML Ch2 (Optimization) and Ch6 (Deep Learning in Practice). Use Course 2 Week 1 specifically.",
+      "academy_sections": [
+        "ml"
+      ],
+      "academy_units": [
+        "ml2-1",
+        "ml6-1"
+      ],
+      "priority": "secondary",
+      "status": "integrated"
+    },
+    {
+      "id": "mit_15773",
+      "title": "MIT 15.773 — Hands-On Deep Learning",
+      "type": "course",
+      "format": "YouTube lectures",
+      "url": "https://www.youtube.com/watch?v=kyQ0CRkYhy4&list=PLUl4u3cNGP60YyhMjYmXuVmX562QcClSp",
+      "access": "free",
+      "what": "MIT practical deep learning course covering production training: mixed precision, gradient accumulation, checkpointing, experiment tracking, distributed training.",
+      "how_used": "Primary Watch for ML Ch6 Unit 2 (Production Training Infrastructure).",
+      "academy_sections": [
+        "ml"
+      ],
+      "academy_units": [
+        "ml6-2"
+      ],
+      "priority": "primary",
+      "status": "integrated"
+    },
+    {
+      "id": "mit_6830",
+      "title": "MIT 6.8300 — Advances in Computer Vision",
+      "type": "course",
+      "format": "MIT OCW (free lecture notes + slides)",
+      "url": "https://ocw.mit.edu/courses/6-8300-advances-in-computer-vision-spring-2024/",
+      "access": "free",
+      "what": "MIT graduate CV course. Covers image formation, stereo geometry, 3D reconstruction, optical flow. More mathematically rigorous than EECS 498.",
+      "how_used": "Primary Watch for CV Ch1 Unit 3 (Camera Models) and CV Ch4 Unit 1 (3D Vision and Depth).",
+      "academy_sections": [
+        "cv"
+      ],
+      "academy_units": [
+        "cv1-3",
+        "cv4-1"
+      ],
+      "priority": "primary",
+      "status": "integrated"
+    },
+    {
+      "id": "d2l",
+      "title": "Dive into Deep Learning (D2L.ai)",
+      "type": "book",
+      "format": "Free interactive online book + runnable PyTorch notebooks",
+      "url": "https://d2l.ai",
+      "access": "free",
+      "what": "Interactive deep learning textbook with math, code, and discussion. Unique value: every concept has a runnable Jupyter notebook. Covers optimization, attention, transformers, and numerical stability in depth.",
+      "how_used": "Secondary Watch (Go Deeper) for ML Ch6 and Ch7. Use specific chapters, not the whole book.",
+      "academy_sections": [
+        "ml",
+        "tdl"
+      ],
+      "academy_units": [
+        "ml6-1",
+        "ml7-3"
+      ],
+      "priority": "secondary",
+      "status": "integrated"
+    },
+    {
+      "id": "mackay",
+      "title": "Information Theory, Inference, and Learning Algorithms — MacKay",
+      "type": "book",
+      "format": "Free PDF",
+      "url": "http://www.inference.org.uk/mackay/itila/",
+      "access": "free",
+      "what": "Free textbook by David MacKay (Cambridge). The entropy and KL divergence chapters are the mathematical foundation of your TDL uncertainty work.",
+      "how_used": "Primary Watch for TDL Ch1 Unit 3. Chapters 1-2 only.",
+      "academy_sections": [
+        "tdl"
+      ],
+      "academy_units": [
+        "tdl1-3"
+      ],
+      "priority": "primary",
+      "status": "integrated"
+    },
+    {
+      "id": "corke_rvc",
+      "title": "Robotics, Vision & Control — Peter Corke (3rd ed., Python)",
+      "type": "book",
+      "format": "Book + free online + Python toolbox",
+      "url": "https://petercorke.com/rvc/index.html",
+      "access": "free",
+      "what": "Comprehensive robotics textbook using Python. Covers transforms, kinematics, dynamics, vision, and planning with runnable Python code. Install: pip install rvc3python",
+      "how_used": "Secondary Watch (Go Deeper) for Robotics Ch1 Unit 2 and Ch2 Unit 1.",
+      "academy_sections": [
+        "robotics"
+      ],
+      "academy_units": [
+        "r1-2",
+        "r2-1",
+        "r2-2",
+        "r3-1",
+        "r4-1"
+      ],
+      "priority": "secondary",
+      "status": "integrated"
+    },
+    {
+      "id": "corke_github",
+      "title": "RVC3-Python GitHub — Corke Book Code Companion",
+      "type": "code_repo",
+      "format": "GitHub (Jupyter notebooks for every chapter)",
+      "url": "https://github.com/petercorke/RVC3-python",
+      "access": "free",
+      "what": "Official code repository for Robotics, Vision & Control 3rd edition. Contains Jupyter notebooks for every chapter, all figure code, and example scripts. pip install rvc3python gets you roboticstoolbox-python, machinevisiontoolbox-python, and spatialmath-python. Run rvctool for an interactive IPython session with everything imported.",
+      "how_used": "Code companion to the Corke RVC book. Use alongside the book — run pip install rvc3python and open the notebook for each chapter you are studying.",
+      "academy_sections": [
+        "robotics"
+      ],
+      "academy_units": [
+        "r1-2",
+        "r2-1",
+        "r2-2"
+      ],
+      "priority": "secondary",
+      "status": "integrated"
+    },
+    {
+      "id": "modern_robotics",
+      "title": "Modern Robotics: Mechanics, Planning, and Control — Lynch & Park",
+      "type": "book",
+      "format": "Free PDF + YouTube (97 lectures by Northwestern Robotics)",
+      "url": "https://hades.mech.northwestern.edu/images/7/7f/MR.pdf",
+      "access": "free",
+      "what": "Graduate robotics textbook by Kevin Lynch and Frank Park (Northwestern). Covers screw theory, product of exponentials, forward/inverse kinematics, velocity kinematics, dynamics, and motion planning. The 97-lecture YouTube series (youtube.com/playlist?list=PLggLP4f-rq02vX0OQQ5vrCxbJrzamYDfx) accompanies the book chapter by chapter. Screw theory is the modern formulation used in research — more compact than DH parameters.",
+      "how_used": "Primary Watch for Advanced Robotics Section — specifically Chapters 3-5 (rigid body motions using screw theory) and Chapter 6 (inverse kinematics). Also Secondary Watch for Robotics Section Ch2 Unit 2 as a modern complement to DH parameters.",
+      "academy_sections": [
+        "robotics",
+        "advanced_robotics"
+      ],
+      "academy_units": [
+        "r2-2",
+        "adv1-1",
+        "adv1-2",
+        "adv1-3"
+      ],
+      "priority": "primary",
+      "status": "integrated"
+    },
+    {
+      "id": "nu_me495",
+      "title": "NU ME495 — Sensing, Navigation, and ML for Robotics (Northwestern MSR)",
+      "type": "course",
+      "format": "Online lecture notes (free)",
+      "url": "https://nu-msr.github.io/navigation/",
+      "access": "free",
+      "what": "Graduate robotics course from Northwestern MSR by Prof. Matthew Elwin. Covers 2D transforms, odometry, Gaussian random variables, Kalman filter, EKF-SLAM, circle detection, and data association.",
+      "how_used": "Primary Watch for entire Robotics Section. All 6 interactive widgets built around NU ME495 content.",
+      "academy_sections": [
+        "robotics"
+      ],
+      "academy_units": [
+        "r1-2",
+        "r2-1",
+        "r3-1",
+        "r3-2",
+        "r3-3",
+        "r5-1",
+        "r5-2",
+        "r5-3"
+      ],
+      "priority": "primary",
+      "status": "integrated"
+    },
+    {
+      "id": "aa289",
+      "title": "Stanford AA289/ENGR319 — Robotics Seminars",
+      "type": "seminar_series",
+      "format": "YouTube lectures",
+      "url": "https://www.youtube.com/watch?v=NUtaN10cVDc&list=PLoROMvodv4rMeercb-kvGLUrOq4HR6BZD",
+      "access": "free",
+      "what": "Weekly research seminars from Stanford's Autonomous Systems Lab covering robotic design, perception, navigation, planning, and learning. Research-level talks from active researchers and industry.",
+      "how_used": "Primary Watch for Robotics Ch4 Unit 3 (Learned Control). Also used in Advanced Robotics section for research-level talks on manipulation.",
+      "academy_sections": [
+        "robotics",
+        "advanced_robotics"
+      ],
+      "academy_units": [
+        "r4-3",
+        "adv2-3"
+      ],
+      "priority": "secondary",
+      "status": "integrated"
+    },
+    {
+      "id": "multibody_pt1",
+      "title": "UCLouvain — Modeling and Simulation of Multibody Systems Part I (edX)",
+      "type": "course",
+      "format": "edX (audit free)",
+      "url": "https://www.edx.org/learn/mechanics/universite-catholique-de-louvain-modeling-and-simulation-of-multibody-systems-part-i",
+      "access": "audit_free",
+      "what": "Graduate course on modeling articulated mechanical systems using ROBOTRAN — generates Python equations automatically. Covers kinematics and dynamics of robot arms, vehicles, cranes.",
+      "how_used": "Primary Watch for Robotics Ch2 Unit 3 (Dynamics). Weeks 1-3.",
+      "academy_sections": [
+        "robotics"
+      ],
+      "academy_units": [
+        "r2-3"
+      ],
+      "priority": "primary",
+      "status": "integrated"
+    },
+    {
+      "id": "mit_manipulation",
+      "title": "MIT 6.832 — Robotic Manipulation (Russ Tedrake, Fall 2023)",
+      "type": "course",
+      "format": "Online textbook (free) + YouTube (23 lectures)",
+      "url": "https://manipulation.csail.mit.edu/",
+      "access": "free",
+      "what": "MIT's graduate manipulation course. Covers geometric perception for grasping, trajectory optimization, planning under uncertainty, and learning for manipulation. Uses Drake simulation (runs in browser). YouTube playlist: youtube.com/playlist?list=PLkx8KyIQkMfWr191lqbN8WfV08j-ui8WX (23 lectures, Fall 2023).",
+      "how_used": "Primary Watch for Advanced Robotics Section Ch1 (Robot Manipulation and Grasping). All 5 unlabeled YouTube playlists you originally provided resolved to this same playlist.",
+      "academy_sections": [
+        "advanced_robotics"
+      ],
+      "academy_units": [
+        "adv1-1",
+        "adv1-2",
+        "adv1-3"
+      ],
+      "priority": "primary",
+      "status": "integrated"
+    },
+    {
+      "id": "mit_underactuated",
+      "title": "MIT Underactuated Robotics — Russ Tedrake (Spring 2024)",
+      "type": "course",
+      "format": "YouTube (24 lectures) + underactuated.mit.edu",
+      "url": "https://www.youtube.com/playlist?list=PLkx8KyIQkMfU5szP43GlE_S1QGSPQfL9s",
+      "access": "free",
+      "what": "MIT's graduate course on dynamics and control of underactuated systems — pendulums, walking robots, quadrotors, and manipulation under contact constraints. 24 lectures Spring 2024. Covers Lyapunov stability, LQR control, trajectory optimization, and reinforcement learning for control. Companion textbook at underactuated.mit.edu.",
+      "how_used": "Primary Watch for Advanced Robotics Section Ch2 (Underactuated Systems and Dynamic Control).",
+      "academy_sections": [
+        "advanced_robotics"
+      ],
+      "academy_units": [
+        "adv2-1",
+        "adv2-2",
+        "adv2-3"
+      ],
+      "priority": "primary",
+      "status": "integrated"
+    },
+    {
+      "id": "multibody_pt2",
+      "title": "UCLouvain — Modeling and Simulation of Multibody Systems Part II (edX)",
+      "type": "course",
+      "format": "edX (audit free)",
+      "url": "https://www.edx.org/learn/engineering/universite-catholique-de-louvain-modeling-and-simulation-of-multibody-systems-part-ii",
+      "access": "audit_free",
+      "what": "Advanced continuation of Part I. Covers constrained multibody systems — parallel manipulators, flexible systems, contact mechanics, and inverse dynamics.",
+      "how_used": "Primary Watch for Advanced Robotics Section Ch3 (Constrained Multibody Systems).",
+      "academy_sections": [
+        "advanced_robotics"
+      ],
+      "academy_units": [
+        "adv3-1",
+        "adv3-2"
+      ],
+      "priority": "primary",
+      "status": "integrated"
+    },
+    {
+      "id": "mathworks_eds",
+      "title": "MathWorks — Engineering Design and Simulation (edX, 4 courses)",
+      "type": "specialization",
+      "format": "edX professional certificate (audit free)",
+      "url": "https://www.edx.org/certificates/professional-certificate/mathworks-engineering-design-and-simulation",
+      "access": "audit_free",
+      "what": "4-course series: MATLAB Essentials, Simulink for System Modeling, Control Design, Deep Learning for Image Applications. Courses 2-3 teach system-level simulation concepts applicable to PyBullet even if Python-first.",
+      "how_used": "Primary Watch for Engineering Design & Simulation Section Ch1 and Ch2.",
+      "academy_sections": [
+        "simulation"
+      ],
+      "academy_units": [
+        "sim1-1",
+        "sim1-2",
+        "sim2-1"
+      ],
+      "priority": "primary",
+      "status": "integrated"
+    },
+    {
+      "id": "delftx_robots",
+      "title": "DelftX — Building Robots: From Mechatronic Components to Robotics (edX, 4 courses)",
+      "type": "specialization",
+      "format": "edX professional certificate (audit free)",
+      "url": "https://www.edx.org/certificates/professional-certificate/delftx-building-robots-from-mechatronic-components-to-robotics",
+      "access": "audit_free",
+      "what": "4 courses from TU Delft: Electrical Drives, Sensors and Data Acquisition, Communication Protocols, System Integration. Course 2 covers ADC and sensor calibration — exactly what you do with HC-SR04 and light sensor.",
+      "how_used": "Secondary Watch (Go Deeper) for Hardware Ch3 (Arduino + Sensors).",
+      "academy_sections": [
+        "hardware",
+        "simulation"
+      ],
+      "academy_units": [
+        "hw3-1",
+        "hw3-3",
+        "sim1-3"
+      ],
+      "priority": "secondary",
+      "status": "integrated"
+    },
+    {
+      "id": "gt_mechatronics",
+      "title": "Georgia Tech — The Mechatronics Revolution (edX)",
+      "type": "course",
+      "format": "edX (audit free)",
+      "url": "https://www.edx.org/learn/engineering/the-georgia-institute-of-technology-the-mechatronics-revolution-fundamentals-and-core-concepts",
+      "access": "audit_free",
+      "what": "Introductory mechatronics course from Georgia Tech. Covers sensors, actuators, microcontrollers, embedded systems, and control fundamentals.",
+      "how_used": "Reference for Engineering Design & Simulation Section Ch2 and Hardware Ch4.",
+      "academy_sections": [
+        "hardware",
+        "simulation"
+      ],
+      "academy_units": [
+        "hw4-1",
+        "sim2-2"
+      ],
+      "priority": "reference",
+      "status": "integrated"
+    },
+    {
+      "id": "hello_ros",
+      "title": "Hello (Real) World with ROS — TU Delft (edX / OCW)",
+      "type": "course",
+      "format": "Free on OCW (ocw.tudelft.nl)",
+      "url": "https://ocw.tudelft.nl/courses/hello-real-world-ros-robot-operating-system/",
+      "access": "free",
+      "what": "Comprehensive ROS course from TU Delft. Covers ROS Essentials, Gazebo simulation, navigation, and manipulation. Free on OCW.",
+      "how_used": "Primary Watch for Robotics Ch1 (Robot Architecture and ROS).",
+      "academy_sections": [
+        "robotics"
+      ],
+      "academy_units": [
+        "r1-1",
+        "r1-3"
+      ],
+      "priority": "primary",
+      "status": "integrated"
+    },
+    {
+      "id": "duckietown",
+      "title": "Self-Driving Cars with Duckietown",
+      "type": "course",
+      "format": "duckietown.org (free)",
+      "url": "https://www.duckietown.org/",
+      "access": "free",
+      "what": "Complete miniature autonomous vehicle course covering the full autonomy stack: camera calibration, lane detection, obstacle avoidance, SLAM, and fleet management.",
+      "how_used": "Primary Watch for Robotics Ch4 Unit 3 (end-to-end autonomous system integration).",
+      "academy_sections": [
+        "robotics"
+      ],
+      "academy_units": [
+        "r4-3"
+      ],
+      "priority": "primary",
+      "status": "integrated"
+    },
+    {
+      "id": "ai_medicine",
+      "title": "AI for Medicine Specialization — deeplearning.ai (3 courses)",
+      "type": "specialization",
+      "format": "Video course (audit free)",
+      "url": "https://learn.deeplearning.ai/specializations/ai-for-medicine/lesson/k22qhi/welcome-to-the-specialization-with-andrew-and-pranav",
+      "access": "audit_free",
+      "what": "3-course specialization by Andrew Ng and Pranav Rajpurkar. Course 1: AI for Medical Diagnosis — Dice/IoU metrics, soft Dice loss, class imbalance handling, UNet segmentation.",
+      "how_used": "Selective — Secondary Watch (Go Deeper) for CV Ch3 Unit 2 (Segmentation). Course 1 Weeks 2-3 only.",
+      "academy_sections": [
+        "cv",
+        "tdl"
+      ],
+      "academy_units": [
+        "cv3-2"
+      ],
+      "priority": "selective",
+      "status": "integrated"
+    }
+  ]
+}

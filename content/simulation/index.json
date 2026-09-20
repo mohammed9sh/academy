@@ -1,0 +1,274 @@
+{
+  "id": "simulation",
+  "key": "simulation",
+  "icon": "⚙️",
+  "title": "Engineering Design and Simulation",
+  "desc": "System-level modeling, simulation-driven design, and control system engineering for physical AI systems. Bridges theory and hardware — every system you build in the Hardware section gets a rigorous simulation counterpart here.",
+  "chapters": [
+    {
+      "id": "sim1",
+      "title": "System Modeling and Simulation",
+      "sub": "Block diagrams · State-space · PyBullet advanced · Simulink concepts",
+      "units": [
+        {
+          "id": "sim1-1",
+          "title": "State-Space Modeling",
+          "meta": "From ODEs to state-space — the universal system representation",
+          "xp": 110,
+          "watch": {
+            "title": "MathWorks — Engineering Design and Simulation: System Modeling with Simulink (edX, audit free)",
+            "url": "https://www.edx.org/certificates/professional-certificate/mathworks-engineering-design-and-simulation",
+            "focus": "Course 2 (Simulink for System Modeling): focus on Week 1-2 covering block diagrams, signal flow, and state-space representation. You do not need MATLAB — watch to understand the concepts, then implement in Python. The Simulink block diagram is a graphical version of the state-space equations you will implement in scipy."
+          },
+          "concept": {
+            "title": "State-space: the universal language of dynamic systems",
+            "body": "<p>Any physical dynamic system — robot arm, drone, car, circuit — can be written in state-space form: <strong>ẋ = Ax + Bu</strong> (dynamics) and <strong>y = Cx + Du</strong> (output). x is the state vector (what you need to know to predict future behavior), u is the input (control), y is the measured output.</p><p>For a robot joint: state x = [θ, θ̇], input u = τ (torque), output y = θ (angle). The state-space matrices A, B, C, D encode all the physics. For linear systems, these are constant. For nonlinear systems (real robots), you linearize around an operating point to get local A, B, C, D.</p><p><strong>Why state-space matters:</strong> every tool in control engineering — LQR, Kalman filter, controllability analysis, observability analysis — is defined in terms of the state-space representation. Getting this right is the foundation of everything else.</p>",
+            "analogy": "A block diagram (Simulink) is a graphical state-space model — the same equations drawn as boxes and arrows. A state-space model is the matrix version — the same equations written compactly. Both represent the same physics; the matrix form is what you analyze and implement in code.",
+            "visual": "State-space form:\nẋ = A·x + B·u  (dynamics — how state evolves)\ny  = C·x + D·u  (output — what you measure)\n\nExample: DC motor\nState: x = [angle θ, velocity θ̇]\nInput: u = voltage V\nA = [[0,    1  ],    B = [[0  ],\n     [0, -b/J ]]         [K/J]]\nC = [1, 0],  D = [0]\n\nControllability: is [B, AB, A²B, ...] full rank?\n→ can we reach any state from any initial state?\n\nObservability: is [C, CA, CA², ...]ᵀ full rank?\n→ can we reconstruct state from output measurements?"
+          },
+          "challenge": {
+            "q": "Your robot joint has state x = [θ, θ̇], input u = τ. The A matrix is [[0,1],[0,-b/J]]. What does a large b/J ratio mean physically and for control?",
+            "opts": [
+              {"t": "High b/J means high inertia — the joint is hard to accelerate", "c": false},
+              {"t": "High b/J means high damping relative to inertia — the joint slows down quickly. Good for stability but needs more torque to maintain speed.", "c": true},
+              {"t": "High b/J means the system is unstable — eigenvalues become positive", "c": false},
+              {"t": "b/J only affects the B matrix, not the A matrix dynamics", "c": false }
+            ],
+            "hint": "The -b/J term in A affects how θ̇ decays over time. What physical parameter does b represent and J represent?",
+            "exp": "b = damping coefficient (friction, back-EMF), J = moment of inertia. The eigenvalues of A are [0, -b/J]. The mode at -b/J represents exponential decay of velocity with time constant J/b. High b/J (strong damping, low inertia): velocity decays fast → good stability, but you need more torque to overcome friction and maintain desired speed. Low b/J (low damping, high inertia): velocity decays slowly → more oscillatory, but easier to maintain speed. This ratio directly affects your PID tuning — high b/J systems need higher Ki to overcome steady-state friction error."
+          },
+          "project": {
+            "title": "State-Space Robot Joint Simulator",
+            "desc": "Build a complete state-space simulator for a DC motor driving a robot joint. Implement and compare three control strategies.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Implement DC motor state-space model: A, B, C, D matrices from physical parameters",
+              "Simulate with scipy.integrate.odeint: step response for different b/J ratios",
+              "Check controllability and observability using numpy rank tests",
+              "Implement P, PD, and PID controllers — show step response for each",
+              "Add Kalman filter: estimate θ and θ̇ from noisy angle measurement only",
+              "Plot: state estimates vs true states, control effort vs time",
+              "README: what b/J ratio gave the best PID tracking? Why?"
+            ],
+            "hint": "scipy.linalg.matrix_rank for controllability/observability. For KF: use your implementation from Robotics Section. Controllability matrix: np.hstack([B, A@B, A@A@B, A@A@A@B])."
+          }
+        },
+        {
+          "id": "sim1-2",
+          "title": "Simulation-Driven Design",
+          "meta": "Design iteration in simulation before building hardware — reducing physical risk",
+          "xp": 110,
+          "watch": {
+            "title": "MathWorks — Engineering Design and Simulation: Control Design with Simulink (edX, audit free)",
+            "url": "https://www.edx.org/certificates/professional-certificate/mathworks-engineering-design-and-simulation",
+            "focus": "Course 3 (Control Design with Simulink): Week 1-2 on PID autotuning concepts and simulation-based validation. Translate the concepts to Python: use scipy.signal for frequency domain analysis, control library (pip install control) for root locus and Bode plots. The key insight is using simulation to validate designs before touching hardware."
+          },
+          "concept": {
+            "title": "Why you simulate first — and what simulation cannot tell you",
+            "body": "<p><strong>Simulation-driven design</strong>: design and validate the full system in simulation before ordering parts or wiring anything. For each hardware project in Section 5: build the simulation model first, tune all parameters in simulation, then transfer to hardware with pre-validated settings.</p><p><strong>What simulation gives you:</strong> fast iteration (no wiring, no burning components), parameter sweeps (test 1000 combinations in minutes), failure mode testing (what happens if a sensor fails), and documentation (the simulation model IS the system specification).</p><p><strong>What simulation cannot tell you:</strong> real friction variation, cable flex, thermal effects, electromagnetic interference, manufacturing tolerances. The sim-to-real gap is real — but a well-validated simulation dramatically reduces hardware debugging time.</p><p><strong>Bode plots and frequency domain:</strong> instead of testing each frequency on hardware, compute the system transfer function analytically and plot gain/phase vs frequency. Identifies resonances, bandwidth limits, and gain/phase margins before hardware.</p>",
+            "analogy": "Aerospace engineers simulate every flight condition before the first test flight — not because simulation is perfect, but because discovering a stability problem at 30,000 feet is more expensive than finding it in simulation. Your robot arm is smaller stakes, but the same principle applies: find the problems in simulation where fixing them costs seconds, not hours of hardware debugging.",
+            "visual": "Design iteration loop:\nPhysics model → State-space A,B,C,D\n→ Simulate step response → tune controller\n→ Frequency analysis (Bode plot) → verify margins\n→ Monte Carlo (vary parameters ±20%) → robustness\n→ Hardware implementation → measure deviation\n→ Update model with real measurements → repeat\n\nKey metrics from simulation:\nSettling time: time to reach ±2% of setpoint\nOvershoot: max(y)/setpoint - 1 (%)\nSteady-state error: |y_final - setpoint|\nPhase margin: how much extra phase lag before instability\nGain margin: how much gain increase before instability"
+          },
+          "challenge": {
+            "q": "Your simulated PID controller has 5% overshoot and 0.8s settling time. On hardware the same gains produce 35% overshoot. What is the most likely cause?",
+            "opts": [
+              {"t": "The hardware has a manufacturing defect — simulation is correct", "c": false},
+              {"t": "Unmodeled actuator delay: simulation assumed instant torque response; real motor has ~50ms latency. Delay adds phase lag, reducing phase margin and causing overshoot.", "c": true},
+              {"t": "The PID gains need to be higher on hardware to overcome friction", "c": false},
+              {"t": "Temperature affects performance — run the hardware longer to warm up", "c": false }
+            ],
+            "hint": "Overshoot increases when phase margin decreases. What does hardware have that simulation typically ignores?",
+            "exp": "Actuator delay is the most common and most underestimated sim-to-real gap for control. A 50ms delay at 10Hz control adds 180° of phase lag at 10Hz — effectively halving the phase margin. The PID controller that was stable in simulation becomes marginally stable on hardware with this extra phase lag. Fix: add a transport delay block in simulation to model the actuator latency, retune with the delay present. Also reduce derivative gain (D amplifies noise) and increase integral time. This is why system identification — measuring the actual step response on hardware — is the first step of any real control design."
+          },
+          "project": {
+            "title": "Simulation-to-Hardware Design Validation",
+            "desc": "Design a controller in simulation, predict its hardware behavior, implement on Arduino+Pi, and measure the sim-to-hardware gap.",
+            "format": "Jupyter notebook + Arduino sketch + README",
+            "deliverables": [
+              "Model your DC motor from Hardware Section: measure step response on hardware, fit A, B matrices",
+              "Design PID controller in simulation: tune for 10% overshoot, < 1s settling",
+              "Frequency analysis: compute Bode plot using python-control library, measure phase/gain margin",
+              "Add 30ms transport delay to model: re-tune controller, show difference in Bode plot",
+              "Implement on Arduino: same PID gains, measure actual step response",
+              "Compare: simulated vs measured step response — overshoot, settling time, steady-state error",
+              "README: what was the actual sim-to-hardware gap? What caused most of the difference?"
+            ],
+            "hint": "pip install control. control.bode_plot(sys) for Bode plot. control.margin(sys) for phase/gain margins. Measure motor step response: apply step voltage, log encoder counts via serial to Python, fit first-order model."
+          }
+        },
+        {
+          "id": "sim1-3",
+          "title": "Advanced PyBullet — Sensor Simulation and HIL",
+          "meta": "Realistic sensor simulation, hardware-in-the-loop testing, ROS integration",
+          "xp": 120,
+          "watch": {
+            "title": "DelftX — Building Robots Course 4: System Integration (edX, audit free)",
+            "url": "https://www.edx.org/certificates/professional-certificate/delftx-building-robots-from-mechatronic-components-to-robotics",
+            "focus": "Course 4 (System Integration): focus on hardware-in-the-loop (HIL) testing concepts — running part of your system on real hardware while simulating the rest. Apply this to your Pi+Arduino setup: simulate the environment in PyBullet, run your real CV/control code on the Pi, close the loop between them. Also read the PyBullet quickstart on getCameraImage() and rayTest() for sensor fidelity."
+          },
+          "concept": {
+            "title": "Hardware-in-the-Loop — bridging simulation and hardware",
+            "body": "<p><strong>Hardware-in-the-Loop (HIL)</strong>: part of your system runs on real hardware, part is simulated. The real hardware processes real-time inputs from the simulation and sends real-time outputs back. For your setup: PyBullet simulates the robot and environment → sends camera images and sensor readings to your Pi → your Pi runs CV inference and control → sends motor commands back to PyBullet → cycle repeats at 10Hz.</p><p>This lets you test your real Pi code (with real latency, real inference time, real serial communication) against a simulated environment. You discover timing issues, communication bottlenecks, and code bugs before touching real motors.</p><p><strong>Sensor simulation fidelity:</strong> PyBullet's getCameraImage() produces RGB-D images with configurable noise. rayTest() simulates HC-SR04 ultrasonic with configurable range and angle. Adding Gaussian noise and occasional dropouts makes simulation more realistic and your code more robust.</p>",
+            "analogy": "HIL is like a flight simulator that connects to a real cockpit — the pilot uses real controls and sees realistic responses, but no real plane is moving. For your robot: your Pi code thinks it is controlling a real robot, but the 'robot' is PyBullet. You get real Pi timing and real inference latency in a safe, repeatable environment.",
+            "visual": "HIL loop for Pi + PyBullet:\n\nPyBullet (laptop):\n  simulate physics at 240Hz\n  getCameraImage() → JPEG → TCP socket → Pi\n  rayTest() → distances → TCP socket → Pi\n  receive cmd_vel from Pi → apply to robot\n\nRaspberry Pi (real hardware):\n  receive image via TCP\n  run YOLOv8n inference (~200ms on Pi)\n  compute control output\n  send cmd_vel to PyBullet via TCP\n\nLoop rate: limited by Pi inference time (~5Hz)\nThis reveals real timing constraints before hardware"
+          },
+          "challenge": {
+            "q": "Your HIL loop runs at 5Hz (limited by Pi inference). You simulate at 240Hz in PyBullet. What is the minimum buffer design needed to prevent simulation from blocking on Pi responses?",
+            "opts": [
+              {"t": "No buffer needed — PyBullet waits for Pi at every step", "c": false},
+              {"t": "Decouple loops: PyBullet runs at 240Hz with the last received Pi command; Pi processes images asynchronously and sends commands whenever ready. Use a thread-safe queue.", "c": true},
+              {"t": "Run PyBullet at 5Hz to match Pi inference rate", "c": false},
+              {"t": "Use ROS to synchronize them automatically", "c": false }
+            ],
+            "hint": "If PyBullet blocks waiting for Pi at every step (5Hz), simulation runs at 5Hz — too slow. How do you decouple two loops with different rates?",
+            "exp": "Decouple with asynchronous communication: PyBullet simulation runs at 240Hz, always applying the last received command from Pi (even if stale). Pi runs its inference loop as fast as it can (~5Hz), sending new commands whenever ready. A thread-safe queue (queue.Queue()) on the Pi side stores the latest command; the simulation reads from it without blocking. This is the standard producer-consumer pattern for multi-rate control systems. The 200ms Pi latency becomes a modeling parameter — add it to your state-space simulation model as a transport delay."
+          },
+          "project": {
+            "title": "Hardware-in-the-Loop Vision System",
+            "desc": "Build a HIL system: PyBullet environment on laptop connected to your Raspberry Pi running real CV inference. Close the loop.",
+            "format": "Python (laptop) + Python (Pi) + README",
+            "deliverables": [
+              "PyBullet scene: robot with camera, simulated objects on a table",
+              "Laptop server: getCameraImage() → JPEG compress → send via TCP socket to Pi",
+              "Pi client: receive JPEG → YOLOv8n inference → send detections back to laptop",
+              "Laptop: receive detections → compute control command → apply to PyBullet robot",
+              "Log: round-trip latency (socket send to command apply), inference time on Pi, loop rate",
+              "Fidelity test: add Gaussian noise to simulated images — does Pi detection degrade gracefully?",
+              "README: what was the actual HIL loop rate? What was the bottleneck?"
+            ],
+            "hint": "TCP socket: laptop = server (socket.bind, socket.accept), Pi = client (socket.connect). JPEG compression: cv2.imencode('.jpg', img, [cv2.IMWRITE_JPEG_QUALITY, 80]) reduces bandwidth 10x. Use threading on Pi to separate receive/inference/send."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "sim1-a",
+        "title": "Complete Simulation-Driven Design Project",
+        "xp": 400,
+        "desc": "Design, simulate, validate, and partially deploy a complete control system — from physics model through frequency analysis to hardware validation.",
+        "deliverables": [
+          "System identification: measure real motor step response, fit state-space model",
+          "Controller design in simulation: PID with frequency-domain validation (Bode plot, margins)",
+          "Monte Carlo robustness: vary model parameters ±30%, verify controller stability in 100 trials",
+          "HIL validation: run Pi control code against PyBullet simulation, measure real latency",
+          "Hardware deployment: same PID gains on real Arduino motor, measure step response",
+          "Gap analysis report: table of simulated vs measured metrics, identified causes of discrepancy",
+          "README: what parameters most affected the sim-to-hardware gap?"
+        ],
+        "hint": "System identification is the most important step — a well-fitted model makes all subsequent simulation meaningful. Use least-squares on measured step response data to fit the model parameters.",
+        "linkedin": "Completed a full simulation-driven design project: system identification → state-space modeling → frequency analysis → Monte Carlo robustness → HIL validation → hardware deployment. The sim-to-hardware gap analysis was the most instructive part. #ControlSystems #Simulation #Engineering"
+      }
+    },
+    {
+      "id": "sim2",
+      "title": "Control System Design",
+      "sub": "Root locus · Frequency response · LQR · Model Predictive Control",
+      "units": [
+        {
+          "id": "sim2-1",
+          "title": "Classical Control Design",
+          "meta": "PID tuning, root locus, Bode plots, gain and phase margins",
+          "xp": 120,
+          "watch": {
+            "title": "MathWorks — Control Design with Simulink (edX) + Brian Douglas Control Theory YouTube Series",
+            "url": "https://www.edx.org/certificates/professional-certificate/mathworks-engineering-design-and-simulation",
+            "focus": "Course 3 Week 2-3. Supplement with Brian Douglas's Control System Lectures on YouTube (search 'Brian Douglas root locus' or 'Brian Douglas Bode plots') — clearest visual explanations of frequency domain control available. Focus on: root locus as a tool for understanding how pole locations change with gain, reading Bode plots for stability margins, and the relationship between frequency domain specs and time domain behavior."
+          },
+          "concept": {
+            "title": "Why frequency domain thinking changes how you design controllers",
+            "body": "<p>Time domain: you tune PID by trial and error watching step responses. Frequency domain: you compute exactly how much gain and phase margin you have before instability, and you design to specific bandwidth and margin targets.</p><p><strong>Root locus</strong>: shows how closed-loop poles move as gain K increases. Poles in left half-plane = stable. As K increases, poles can cross to right half-plane = instability. Root locus tells you the maximum stable gain before you implement anything.</p><p><strong>Bode plot</strong>: gain |G(jω)| and phase ∠G(jω) vs frequency. <strong>Gain margin</strong>: how much extra gain before instability (want > 6dB). <strong>Phase margin</strong>: how much extra phase lag before instability (want > 45°). These are the two numbers that tell you if your controller is robust.</p><p><strong>Bandwidth</strong>: the frequency range where the system tracks inputs well. Higher bandwidth = faster response but more noise amplification and actuator stress.</p>",
+            "analogy": "Tuning PID in time domain is like adjusting a speaker EQ by ear. Frequency domain design is like using a spectrum analyzer — you can see exactly which frequencies are too loud (unstable) or too quiet (sluggish), and you design the correction analytically before touching the hardware.",
+            "visual": "Transfer function (DC motor):\nG(s) = K / (s(τs+1))\nwhere K = motor gain, τ = time constant\n\nBode plot tells you:\nGain crossover frequency ωgc: |G(jωgc)| = 0dB\nPhase margin PM = 180° + ∠G(jωgc)\n\nPM > 45° → stable with good damping\nPM 20-45° → stable but oscillatory\nPM < 0° → UNSTABLE\n\nPID in frequency domain:\nP: adds constant gain (affects bandwidth)\nI: adds gain at low freq (improves steady-state)\nD: adds gain at high freq (adds phase lead)"
+          },
+          "challenge": {
+            "q": "Your Bode plot shows gain margin = 12dB and phase margin = 25°. Your system is currently stable. Should you be concerned?",
+            "opts": [
+              {"t": "No — 12dB gain margin means you have plenty of headroom", "c": false},
+              {"t": "Yes — phase margin of 25° is below the 45° target. The closed-loop will be oscillatory and small parameter changes (temperature, load) could destabilize it.", "c": true},
+              {"t": "No — both margins are positive so the system is stable by definition", "c": false},
+              {"t": "Yes — gain margin of 12dB is too low for any practical system", "c": false }
+            ],
+            "hint": "Both margins need to be adequate. Which one is below its typical design target?",
+            "exp": "Phase margin of 25° is a red flag. The rule of thumb is PM > 45° for robust performance. At PM = 25°, the closed-loop has significant overshoot (~40%) and is sensitive to small changes in the plant (load variations, temperature-dependent friction, aging). A 10° additional phase lag — easily caused by an unmodeled 30ms delay — would reduce PM to 15° and make the system dangerously oscillatory. Fix: add derivative action (D term adds phase lead) or reduce gain. The 12dB gain margin is fine — gain margin and phase margin measure different aspects of stability; both must be adequate."
+          },
+          "project": {
+            "title": "Frequency Domain Controller Design",
+            "desc": "Design a motor position controller using frequency domain methods. Validate in simulation and on hardware.",
+            "format": "Jupyter notebook + Arduino sketch + README",
+            "deliverables": [
+              "Fit transfer function G(s) = K/(s(τs+1)) to measured motor step response",
+              "Plot open-loop Bode plot using python-control library",
+              "Design PID: add phase lead to achieve PM > 45°, compute closed-loop step response",
+              "Root locus: plot for proportional-only control, find max stable gain",
+              "Simulate: closed-loop step response with designed PID — verify meets specs",
+              "Implement on Arduino: verify measured step response matches simulation prediction",
+              "README: how close was the predicted vs measured phase margin?"
+            ],
+            "hint": "pip install control. sys = control.tf([K], [tau, 1, 0]). control.bode_plot(sys). control.margin(sys) returns gm, pm, wgc, wpc. PID in s-domain: C(s) = Kp(1 + 1/(Ti·s) + Td·s). Loop gain: L(s) = C(s)·G(s)."
+          }
+        },
+        {
+          "id": "sim2-2",
+          "title": "Optimal and Predictive Control",
+          "meta": "LQR, Kalman-LQR (LQG), Model Predictive Control",
+          "xp": 130,
+          "watch": {
+            "title": "Georgia Tech — The Mechatronics Revolution (edX) + MIT Underactuated Robotics LQR lectures",
+            "url": "https://www.edx.org/learn/engineering/the-georgia-institute-of-technology-the-mechatronics-revolution-fundamentals-and-core-concepts",
+            "focus": "Georgia Tech Mechatronics: Week on control fundamentals for context. Then MIT Underactuated Robotics Lecture 4 (LQR) on YouTube (youtube.com/playlist?list=PLkx8KyIQkMfU5szP43GlE_S1QGSPQfL9s). Focus on: LQR as the optimal full-state feedback controller for linear systems, the Q and R weight matrices as design parameters, and LQG (LQR + Kalman filter) as the optimal output-feedback controller when you cannot measure all states."
+          },
+          "concept": {
+            "title": "LQR and LQG — optimal control for physical systems",
+            "body": "<p><strong>LQR (Linear Quadratic Regulator)</strong>: given ẋ = Ax + Bu, find u = -Kx that minimizes J = ∫(xᵀQx + uᵀRu)dt. Q penalizes state deviation, R penalizes control effort. The optimal gain K = R⁻¹BᵀP where P solves the algebraic Riccati equation AᵀP + PA - PBR⁻¹BᵀP + Q = 0.</p><p>LQR is the principled alternative to PID tuning: instead of trial-and-error on Kp, Ki, Kd, you specify what you care about (state deviation vs control effort) and compute the optimal gain analytically.</p><p><strong>LQG (Linear Quadratic Gaussian)</strong>: LQR assumes you can measure all states. In practice you only measure y = Cx + noise. LQG = Kalman filter (estimate x̂ from y) + LQR (control using x̂). Separation principle: design KF and LQR independently, they combine optimally.</p><p><strong>MPC</strong>: extend LQR to handle constraints. At each step, solve a finite-horizon LQR problem with constraints on u and x. More expensive but handles actuator limits, state constraints, and reference tracking with preview.</p>",
+            "analogy": "PID is like manually tuning a guitar by ear. LQR is like a tuner that computes the exact tension needed to minimize pitch error and string stress simultaneously. LQG adds a microphone (Kalman filter) when you cannot directly feel the string tension. MPC is a tuner that also knows the concert starts in 30 seconds and plans the whole tuning sequence accordingly.",
+            "visual": "LQR design:\n1. Specify Q (state cost), R (input cost)\n2. Solve Riccati: AᵀP+PA-PBR⁻¹BᵀP+Q=0\n   → scipy.linalg.solve_continuous_are(A,B,Q,R)\n3. Compute gain: K = R⁻¹BᵀP\n4. Apply: u = -K·x\n\nLQG = KF + LQR:\n  x̂_{k+1} = Ax̂_k + Bu_k + L(y_k - Cx̂_k)  ← Kalman\n  u_k = -K·x̂_k                               ← LQR\n  L = Kalman filter gain (from Riccati)\n  K = LQR gain (from Riccati)\n  Design independently, combine freely"
+          },
+          "challenge": {
+            "q": "You design LQR with Q = I (identity) and R = 0.001 (small input penalty). What does this likely produce compared to Q = I, R = 100?",
+            "opts": [
+              {"t": "R = 0.001 gives slower response — small R means less control effort", "c": false},
+              {"t": "R = 0.001 gives aggressive fast control (high gains, large u, fast convergence). R = 100 gives gentle slow control (low gains, small u, slow convergence).", "c": true},
+              {"t": "R has no effect when Q = I for both cases", "c": false},
+              {"t": "R = 0.001 produces instability — R must be ≥ 1 for LQR to work", "c": false }
+            ],
+            "hint": "R penalizes control effort. Small R = control effort is cheap = use as much as needed. Large R = control effort is expensive = be conservative.",
+            "exp": "Small R (0.001) says 'control effort is nearly free — minimize state error aggressively.' The Riccati equation produces large K gains, large control signals, fast state convergence. But large u may saturate actuators on real hardware. Large R (100) says 'control effort is expensive — be gentle.' Small K gains, small u, slow convergence. In practice: start with R = 1, increase R if actuators saturate, decrease R if response is too slow. The Q/R ratio is the real design parameter — scale both by the same factor changes nothing."
+          },
+          "project": {
+            "title": "LQG Controller for Robot Joint",
+            "desc": "Design an LQG controller (Kalman filter + LQR) for the DC motor joint. Compare to your PID design from sim2-1.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "State-space model from sim1-1: A, B, C, D matrices for your DC motor",
+              "LQR design: solve Riccati equation with scipy.linalg.solve_continuous_are, compute K",
+              "Simulate LQR: full-state feedback, step response with different Q/R ratios",
+              "Kalman filter: design using Riccati equation (process noise W, measurement noise V)",
+              "LQG: combine KF + LQR, simulate step response from noisy angle measurement only",
+              "Compare: PID vs LQR vs LQG — step response, noise sensitivity, control effort",
+              "MPC sketch: implement a simple 5-step horizon MPC using quadprog or scipy.optimize",
+              "README: for your hardware motor, which controller gave the best performance/effort tradeoff?"
+            ],
+            "hint": "scipy.linalg.solve_continuous_are(A, B, Q, R) for LQR Riccati. For KF Riccati: solve_continuous_are(A.T, C.T, W, V). Kalman gain: L = P_kf @ C.T @ np.linalg.inv(V). LQR gain: K = np.linalg.inv(R) @ B.T @ P_lqr."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "sim2-a",
+        "title": "Complete Control System Design Project",
+        "xp": 420,
+        "desc": "Design a complete control system for a multi-DOF robot using classical, optimal, and predictive methods. Validate in simulation and hardware.",
+        "deliverables": [
+          "System identification for 2-DOF robot (two DC motors with encoders)",
+          "Classical design: PID for each joint, frequency domain validation",
+          "Optimal design: LQR for coupled 2-DOF system, Q/R sweep analysis",
+          "LQG: add Kalman filter for state estimation from encoder measurements",
+          "MPC: receding-horizon with joint angle and torque constraints",
+          "Comparative evaluation: PID vs LQR vs LQG vs MPC — tracking error, control effort, robustness",
+          "Hardware deployment: best controller on real 2-DOF hardware, measure tracking performance",
+          "Research writeup (2 pages): when would you choose each controller for a real robotic system?"
+        ],
+        "hint": "The 2-DOF coupled system is the most interesting case — LQR can account for coupling between joints that two independent PIDs cannot. This is where optimal control shows its advantage.",
+        "linkedin": "Completed a full control system design project: system identification → PID (frequency domain) → LQR (optimal) → LQG (optimal + estimation) → MPC (predictive). Deployed on real hardware and measured the performance gap between each method. #ControlSystems #Robotics #OptimalControl"
+      }
+    }
+  ]
+}

@@ -1,0 +1,953 @@
+{
+  "id": "robotics",
+  "key": "robotics",
+  "icon": "🤖",
+  "title": "Robotics & Physical Systems",
+  "desc": "ROS, kinematics, state estimation, motion planning, and SLAM — enriched with NU ME495 Northwestern University content.",
+  "chapters": [
+    {
+      "id": "r1",
+      "title": "Robot Architecture & ROS",
+      "sub": "ROS nodes · Topics · Transforms · URDF",
+      "units": [
+        {
+          "id": "r1-1",
+          "title": "What is a Robot System?",
+          "meta": "Hardware, software, sensing, actuation, ROS",
+          "xp": 90,
+          "watch": {
+            "title": "Hello (Real) World with ROS — TU Delft (edX, free on OCW)",
+            "url": "https://ocw.tudelft.nl/courses/hello-real-world-ros-robot-operating-system/",
+            "focus": "Week 1: ROS Essentials — nodes, topics, services, actions. Watch the ROS Essentials video (1.1.1). Focus on: what a node is, what a topic is, how they communicate via publish/subscribe. This is the architecture of every ROS system you will build."
+          },
+          "concept": {
+            "title": "Robots are systems, not just models",
+            "body": "<p>A robot system has four layers: <strong>Sensing</strong> (cameras, LiDAR, IMU), <strong>Perception</strong> (your CV/ML work), <strong>Planning</strong> (deciding what to do), <strong>Actuation</strong> (motors, arms). <strong>ROS</strong> (Robot Operating System): middleware that connects all layers.</p><p>In ROS, <strong>nodes</strong> are processes, <strong>topics</strong> are communication channels. Each node publishes/subscribes to topics. This decoupling lets you swap out perception modules without changing the control code — critical for research.</p>",
+            "analogy": "A robot is like a company with departments. ROS is the company Slack — every department publishes updates, subscribes to relevant channels, and acts on incoming information without knowing who sent it.",
+            "visual": "ROS architecture:\nNode A (camera) → publishes /image_raw\nNode B (detector) → subscribes /image_raw, publishes /detections\nNode C (planner) → subscribes /detections, publishes /cmd_vel\nNode D (motors) → subscribes /cmd_vel\n\nKey tools:\nrostopic list  → see all active topics\nrostopic echo /detections  → debug live data\nrqt_graph  → visualize node connections"
+          },
+          "challenge": {
+            "q": "Your perception node publishes detections at 30Hz, but your planning node processes at 10Hz. What ROS feature prevents the planner from being overwhelmed?",
+            "opts": [
+              {
+                "t": "ROS automatically throttles publishers to match subscriber rate",
+                "c": false
+              },
+              {
+                "t": "Message queues: the subscriber has a queue_size parameter that buffers or drops messages",
+                "c": true
+              },
+              {
+                "t": "ROS topics are synchronous — publisher waits for subscriber",
+                "c": false
+              },
+              {
+                "t": "The faster publisher is automatically slowed down",
+                "c": false
+              }
+            ],
+            "hint": "What mechanism in publish/subscribe architectures handles rate mismatches between producers and consumers?",
+            "exp": "Message queues with configurable queue_size. The planning node processes the most recent message in its queue — older messages are dropped if the queue is full. This is by design: the planner should use the most recent perception data, not stale data from 3 seconds ago."
+          },
+          "project": {
+            "title": "First ROS System",
+            "desc": "Build a minimal ROS system: camera feed → simple detector → visualization.",
+            "format": "Python scripts + README",
+            "deliverables": [
+              "Install ROS (or use Docker), create a catkin/colcon workspace",
+              "Publisher node: read from camera or video file, publish /image_raw",
+              "Subscriber node: receive image, detect something simple (motion or color), publish /detections",
+              "Visualize in RViz or a matplotlib subscriber",
+              "README: draw the node graph. What is the latency from capture to detection?"
+            ],
+            "hint": "rospy for Python ROS nodes. std_msgs, sensor_msgs for message types. rostopic echo to debug. rqt_graph to visualize."
+          }
+        },
+        {
+          "id": "r1-2",
+          "title": "Coordinate Frames & Transforms",
+          "meta": "SE(2), SE(3), TF, rigid body motion — NU ME495",
+          "xp": 110,
+          "watch": {
+            "title": "NU ME495 Lecture 2 — 2D Transforms Review",
+            "url": "https://nu-msr.github.io/navigation/lectures/rigid2d.html",
+            "focus": "Read sections: Overview, 2D Rigid Body Transforms, Transformation Matrix. Focus on: why we need frames, what the transformation matrix encodes, and the \"thought experiment\" in the notes — it builds the right intuition."
+          },
+          "concept": {
+            "title": "Every measurement needs a reference frame — and transforms connect them",
+            "body": "<p>In robotics, every sensor measurement is in a different coordinate frame. A camera sees an object at (x,y,z) in the <em>camera frame</em>. The robot needs it in the <em>world frame</em> to act on it.</p><p>A <strong>2D rigid body transform</strong> T ∈ SE(2) combines rotation AND translation in one matrix. A 2D pose (x, y, θ) becomes a 3×3 homogeneous transformation matrix. Chaining transforms: T_world_object = T_world_robot · T_robot_camera · T_camera_object.</p><p>ROS <strong>tf</strong> manages this chain automatically — it tracks all transform relationships over time and lets you query \"where is the object in the world frame?\" at any timestamp.</p>",
+            "analogy": "You see a coffee cup 30cm to your right (in YOUR frame). To tell a robot arm where it is, you need to express it in the arm's base frame. tf does this automatically — you describe each frame relationship once, and it computes all the rest.",
+            "visual": "2D Transform T ∈ SE(2):\nT = [[cos θ, -sin θ, x],\n     [sin θ,  cos θ, y],\n     [0,      0,     1]]\n\nTransform a point p=[px, py, 1]:\nT·p = [(cos θ)px - (sin θ)py + x,\n       (sin θ)px + (cos θ)py + y, 1]\n\nChain: T_AC = T_AB · T_BC"
+          },
+          "challenge": {
+            "q": "You have T_world_robot (robot pose in world) and T_robot_camera (camera pose on robot). How do you get the position of a detected object (given in camera frame) in world frame?",
+            "opts": [
+              {
+                "t": "p_world = T_world_robot + T_robot_camera + p_camera",
+                "c": false
+              },
+              {
+                "t": "p_world = T_world_robot · T_robot_camera · p_camera (matrix multiplication chain)",
+                "c": true
+              },
+              {
+                "t": "p_world = T_robot_camera · T_world_robot · p_camera",
+                "c": false
+              },
+              {
+                "t": "You need a separate calibration step — transforms cannot be chained",
+                "c": false
+              }
+            ],
+            "hint": "Transform chains: to go from camera frame to world frame, you compose the transforms in order: camera → robot → world.",
+            "exp": "p_world = T_world_robot · T_robot_camera · p_camera. Matrix multiplication composes the transformations in sequence. Order matters — T_AB · T_BC takes you from C to A, NOT B to A. This is the most common robotics coordinate transform mistake. The NU ME495 \"thought experiment\" in the notes is worth reading to build the intuition for why the order works this way."
+          },
+          "project": {
+            "title": "Transform Chain Implementation",
+            "desc": "Implement 2D rigid body transforms from scratch. Build the full world→robot→camera→object chain.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Implement SE2 class: from (x,y,theta), returns 3×3 matrix",
+              "Implement compose(T1, T2) and transform_point(T, p)",
+              "Build transform chain: world → robot → camera → object",
+              "Given object in camera frame, compute position in world frame",
+              "Visualize: 3D matplotlib plot showing all coordinate frames and the object",
+              "README: what is the reprojection error when you round-trip a point through the chain?"
+            ],
+            "hint": "numpy for 3×3 matrices. Use homogeneous coordinates [x,y,1]. Compose: T_AC = T_AB @ T_BC. Visualize with matplotlib arrows for each frame axis."
+          },
+          "secondary_watch": {
+            "title": "Robotics, Vision & Control (Corke, 3rd ed. Python) — Chapter 2: Position and Orientation",
+            "url": "https://petercorke.com/rvc/index.html",
+            "focus": "Chapter 2: SO(2) rotation matrices, SE(2) homogeneous transforms, and roboticstoolbox-python examples. Install: pip install roboticstoolbox-python. Run the 2D transform examples interactively. The Python reference companion for everything in this section."
+          }
+        },
+        {
+          "id": "r1-3",
+          "title": "URDF & Sensor Integration",
+          "meta": "Robot description, joint types, multi-sensor fusion",
+          "xp": 100,
+          "watch": {
+            "title": "Building a Visual Robot Model with URDF — ROS Official Tutorial",
+            "url": "https://docs.ros.org/en/rolling/Tutorials/Intermediate/URDF/URDF-Main.html",
+            "focus": "Read: \"Building a Visual Robot Model with URDF from Scratch\". Focus on: links, joints, the tree structure of a URDF, and how joint types (revolute, prismatic, fixed) correspond to physical robot constraints."
+          },
+          "concept": {
+            "title": "Describing your robot so ROS understands it",
+            "body": "<p><strong>URDF</strong> (Universal Robot Description Format): XML describing robot geometry, joints, and physical properties. Links = rigid bodies. Joints = connections (revolute, prismatic, fixed). Every tf frame in your robot corresponds to a link in the URDF.</p><p><strong>Sensor integration</strong>: different sensors run at different rates and in different frames. <strong>time synchronization</strong> (message_filters.ApproximateTimeSynchronizer) aligns data from sensors running at different rates. Calibration gives you the transform between sensor frames.</p>",
+            "analogy": "URDF is like an assembly manual for the robot — it tells ROS exactly how every part connects to every other part. Without it, ROS cannot compute the tf chain that maps between sensor frames.",
+            "visual": "URDF structure:\n<link name='base_link'><visual>...</visual></link>\n<joint name='joint1' type='revolute'>\n  <parent link='base_link'/>\n  <child link='arm_link'/>\n  <axis xyz='0 0 1'/>\n  <limit lower='-1.57' upper='1.57'/>\n</joint>\n\nTime sync:\ncamera 30Hz + LiDAR 10Hz\n→ ApproximateTimeSynchronizer(slop=0.05s)\n→ synchronized pairs"
+          },
+          "challenge": {
+            "q": "Your robot has camera (30Hz) and HC-SR04 (10Hz). You want to fuse them. What is the fused output rate, and what is the core challenge?",
+            "opts": [
+              {
+                "t": "30Hz — use camera rate, interpolate HC-SR04",
+                "c": false
+              },
+              {
+                "t": "10Hz — limited by the slower sensor; challenge is that data is from different times and frames",
+                "c": true
+              },
+              {
+                "t": "20Hz — average of both rates",
+                "c": false
+              },
+              {
+                "t": "1Hz — sensors must be fully synchronized before fusion",
+                "c": false
+              }
+            ],
+            "hint": "The fused output requires data from both sensors. What limits the fused output rate?",
+            "exp": "10Hz — the slower sensor limits fusion rate. The core challenge is dual: (1) temporal — camera and HC-SR04 data are from slightly different times; and (2) spatial — they measure from different physical positions (different frames). Time synchronization handles (1), calibration handles (2). Both must be solved for reliable sensor fusion."
+          },
+          "project": {
+            "title": "Multi-Sensor ROS Pipeline",
+            "desc": "Build a ROS pipeline that fuses camera and simulated distance data. Implement time synchronization.",
+            "format": "Python ROS nodes + README",
+            "deliverables": [
+              "Camera node: publish /image_raw and /camera_info",
+              "Simulated distance node: publish /distance at 10Hz (fake HC-SR04)",
+              "Fusion node: synchronize both streams with ApproximateTimeSynchronizer",
+              "Publish fused output: {timestamp, image, distance, frame_id}",
+              "README: what is the latency from capture to fused output? What breaks if you skip synchronization?"
+            ],
+            "hint": "message_filters.ApproximateTimeSynchronizer for time sync. cv_bridge for ROS↔OpenCV image conversion. rospy.Timer for fixed-rate publishing."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "r1-a",
+        "title": "Complete Robot Perception Stack",
+        "xp": 350,
+        "desc": "Build a complete robot perception stack in ROS: camera → detection → 3D localization → coordinate transform → visualization.",
+        "deliverables": [
+          "ROS workspace with proper package structure",
+          "Camera driver node + detector node (using your CV Section 1 models)",
+          "SE2 transform chain: camera frame → robot base frame (implement from scratch)",
+          "Object 3D position in robot base frame (ready for planning)",
+          "tf publisher: broadcast your computed transforms so other nodes can use them",
+          "RViz visualization: camera feed, detections, 3D positions, coordinate frames",
+          "README: architecture diagram + latency analysis (end-to-end capture to 3D position)"
+        ],
+        "hint": "This is your first full robot system. Each component is a real engineering artifact. The tf broadcast is the bridge between your custom transforms and the ROS ecosystem.",
+        "linkedin": "Built my first complete robot perception stack in ROS: camera driver → CV detector → coordinate transforms → 3D localization → RViz visualization. Implementing 2D rigid body transforms from scratch (SE2) and then seeing them work in ROS was the moment robotics became real to me. #ROS #Robotics #ComputerVision"
+      }
+    },
+    {
+      "id": "r2",
+      "title": "Kinematics & Dynamics",
+      "sub": "2D transforms · DH · IK · Odometry — NU ME495",
+      "units": [
+        {
+          "id": "r2-1",
+          "title": "Differential Drive Kinematics",
+          "meta": "Derive kinematics, twist, center of rotation — NU ME495",
+          "xp": 120,
+          "watch": {
+            "title": "NU ME495 Lecture 3 — Derive Kinematics + Lecture 4 — Odometry",
+            "url": "https://nu-msr.github.io/navigation/lectures/derive_kinematics.html",
+            "focus": "How wheel velocities produce a body twist (v, ω). The concept of the Instantaneous Center of Rotation (ICR). Why the odometry equations come from the kinematic constraints. Read both Derive Kinematics and Odometry lectures."
+          },
+          "concept": {
+            "title": "How wheel velocities become robot motion",
+            "body": "<p>For a differential drive robot, left wheel velocity v_l and right wheel velocity v_r produce a <strong>body twist</strong>: linear velocity v = (v_r + v_l)/2 and angular velocity ω = (v_r - v_l)/d where d is the track width.</p><p>The robot moves along an arc whose <strong>center of curvature</strong> (ICR) is at distance R = v/ω from the robot center. When v_l = v_r: straight line (ICR at infinity). When v_l = -v_r: pure rotation (ICR at center).</p><p><strong>Integrating the twist</strong> gives the new pose. This is odometry — accumulating pose from wheel encoder readings.</p>",
+            "analogy": "Differential drive is like a boat with two paddles. Both paddles forward: straight ahead. Right paddle faster: turn left. Left paddle backward: spin in place. The twist tells you the instantaneous motion; integrating it tells you where you ended up.",
+            "visual": "v_l = ω_l · r,   v_r = ω_r · r   (r = wheel radius)\nLinear vel:  v = (v_r + v_l) / 2\nAngular vel: ω = (v_r - v_l) / d   (d = track width)\nRadius of curvature: R = v / ω\n\nICR cases:\nv_l = v_r  → ω=0, straight line (ICR at ∞)\nv_l = -v_r → v=0, pure spin (ICR at center)"
+          },
+          "challenge": {
+            "q": "A differential drive robot has wheel radius r=0.1m, track width d=0.3m. Left wheel: ω_l=2 rad/s, Right wheel: ω_r=3 rad/s. What is the radius of curvature R?",
+            "opts": [
+              {
+                "t": "R = 0.5m (turning left)",
+                "c": false
+              },
+              {
+                "t": "R = 1.5m (turning left)",
+                "c": true
+              },
+              {
+                "t": "R = 1.5m (turning right)",
+                "c": false
+              },
+              {
+                "t": "R = 0.3m (tight turn)",
+                "c": false
+              }
+            ],
+            "hint": "v_l = 2×0.1 = 0.2 m/s. v_r = 3×0.1 = 0.3 m/s. v = 0.25 m/s, ω = (0.3-0.2)/0.3. R = v/ω.",
+            "exp": "v_l=0.2, v_r=0.3. v=(0.3+0.2)/2=0.25 m/s. ω=(0.3-0.2)/0.3=0.333 rad/s. R=0.25/0.333=0.75m. The right wheel is faster, so the robot turns LEFT, moving along a leftward arc with radius 0.75m. Use the interactive widget above to verify — set wl=2, wr=3 and step forward."
+          },
+          "project": {
+            "title": "Odometry Dead-Reckoning System",
+            "desc": "Implement differential drive odometry from scratch. Simulate drift accumulation over long trajectories.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Implement: twist_from_wheels(wl, wr, r, d) → (v, omega)",
+              "Implement: integrate_twist(pose, v, omega, dt) → new_pose",
+              "Simulate: 100-step trajectory with random small noise added to wheel velocities",
+              "Compare: ideal trajectory vs noisy trajectory — show drift accumulation",
+              "Quantify: final position error after N steps as a function of noise level",
+              "README: why does drift accumulate? What is the only way to correct it? (Hint: loop closure)"
+            ],
+            "hint": "pose = (x, y, theta). For small dt: if omega≈0, x+=v*dt*cos(theta), y+=v*dt*sin(theta). Otherwise use exact arc integration: R=v/omega, x+=R*(sin(theta+omega*dt)-sin(theta)), etc."
+          },
+          "secondary_watch": {
+            "title": "Robotics, Vision & Control (Corke, 3rd ed. Python) — Chapter 7: Robot Arm Kinematics",
+            "url": "https://petercorke.com/rvc/index.html",
+            "focus": "Chapter 7: DH parameters as systematic frame assignment, the DHRobot class in roboticstoolbox-python, and the fkine() method. The code examples let you visualize 3D robot arm configurations interactively."
+          }
+        },
+        {
+          "id": "r2-2",
+          "title": "Forward & Inverse Kinematics",
+          "meta": "DH parameters, Jacobian IK, singularities",
+          "xp": 130,
+          "watch": {
+            "title": "Robotic Manipulation — MIT (manipulation.csail.mit.edu)",
+            "url": "https://manipulation.csail.mit.edu/",
+            "focus": "Chapter on kinematic description of robot arms, forward kinematics, and how coordinate frames chain together. Read the online notes — they include interactive simulations."
+          },
+          "concept": {
+            "title": "From joint angles to end-effector position",
+            "body": "<p><strong>Forward kinematics</strong>: given joint angles θ, compute end-effector pose. Each joint is described by 4 DH parameters (a, α, d, θ). The transform for joint i is a 4×4 homogeneous matrix. FK = product of all joint transforms.</p><p><strong>Inverse kinematics</strong>: given desired end-effector pose, find joint angles. Harder than FK — multiple solutions or no solutions. <strong>Jacobian IK</strong>: ẋ = J(θ)·θ̇, so θ̇ = J⁺·ẋ. Iterate until position error ≈ 0. Use <strong>damped least squares</strong> J⁺=(JᵀJ+λI)⁻¹Jᵀ near singularities.</p>",
+            "analogy": "FK is like knowing how to fold a map — given the fold angles, you compute where the tip lands. IK is the reverse: given where you want the tip, find the fold angles. Often multiple solutions exist (your arm can reach a point in many configurations).",
+            "visual": "DH Transform per joint i:\nT_i = Rot_z(θ_i)·Trans_z(d_i)·Trans_x(a_i)·Rot_x(α_i)\nFK: T_0_n = T_0_1 · T_1_2 · ... · T_{n-1}_n\n\nJacobian IK:\nẋ = J(θ)·θ̇\nθ̇ = J⁺·(x_target - x_current)\nIterate: θ_{k+1} = θ_k + α·θ̇_k\nDamped: J⁺ = Jᵀ(JJᵀ+λI)⁻¹  ← handles singularities"
+          },
+          "challenge": {
+            "q": "Your Jacobian IK solver fails when the robot arm is fully extended straight. What is happening and the fix?",
+            "opts": [
+              {
+                "t": "Target position is unreachable — arm needs to be shorter",
+                "c": false
+              },
+              {
+                "t": "Kinematic singularity: Jacobian is rank-deficient at full extension, pseudo-inverse becomes unstable → use damped least squares",
+                "c": true
+              },
+              {
+                "t": "Jacobian IK only works for 3-DOF arms",
+                "c": false
+              },
+              {
+                "t": "The algorithm has a numerical bug",
+                "c": false
+              }
+            ],
+            "hint": "What happens to the Jacobian matrix when all joints are aligned and the robot has no \"elbow room\" to maneuver?",
+            "exp": "Kinematic singularity: at full extension, certain joint motions produce no end-effector motion. J loses rank → J⁺ becomes numerically unstable (entries → ∞). Damped least squares: J⁺=(JᵀJ+λI)⁻¹Jᵀ adds λI to avoid division by near-zero. λ is small normally (no damping) but prevents instability near singularities. This is the standard industrial solution."
+          },
+          "project": {
+            "title": "Kinematics Library",
+            "desc": "Implement FK, numerical Jacobian, and IK for a 2-DOF planar robot arm.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "FK: implement DH transform matrix per joint (numpy 3×3 for 2D)",
+              "Numerical Jacobian: perturb each joint angle by ε, measure FK change → column of J",
+              "Jacobian IK: iterate θ = θ + α·J⁺·(target - FK(θ)) until error < 1mm",
+              "Damped least squares: add λI, demonstrate stability near singularity",
+              "Animate: robot arm moving from start to target configuration",
+              "README: what happens at singularity with and without damping?"
+            ],
+            "hint": "2D planar arm: FK is just 2D trigonometry. J is 2×2. Singularity: fully extended or fully folded. ε=1e-5 for numerical Jacobian."
+          }
+        },
+        {
+          "id": "r2-3",
+          "title": "Dynamics & Physical Constraints",
+          "meta": "Equations of motion, torques, gravity compensation",
+          "xp": 120,
+          "watch": {
+            "title": "UCLouvain — Modeling and Simulation of Multibody Systems Part I (edX, audit free)",
+            "url": "https://www.edx.org/learn/mechanics/universite-catholique-de-louvain-modeling-and-simulation-of-multibody-systems-part-i",
+            "focus": "Week 2-3: dynamics of multibody systems — equations of motion, torques, forces. Focus on: Newton-Euler formulation for robot arms, how torque requirements are computed, and the ROBOTRAN tool that generates Python code from your dynamic model."
+          },
+          "concept": {
+            "title": "Forces, torques, and physical reality",
+            "body": "<p>Kinematics tells you where. Dynamics tells you how hard. Robot dynamics: <strong>τ = M(θ)θ̈ + C(θ,θ̇)θ̇ + G(θ)</strong>. M=inertia matrix, C=Coriolis/centripetal, G=gravity.</p><p><strong>Gravity compensation</strong>: command τ = G(θ) to counteract gravity — the arm stays in place despite gravity. This is the simplest practical use of dynamics and it is used in every real robot arm.</p><p>Why this matters for ML: a neural network that ignores torque limits will produce physically impossible commands that real hardware will refuse or that will damage actuators.</p>",
+            "analogy": "Kinematics: where can the robot reach (geometry). Dynamics: what force does it need to get there and stay there (physics). A surgeon needs both: where to cut (kinematics) and how hard to press (dynamics).",
+            "visual": "Robot dynamics:\nτ = M(θ)·θ̈ + C(θ,θ̇)·θ̇ + G(θ)\n\nτ: joint torques (what motors provide)\nM: inertia (resistance to acceleration)\nC: Coriolis (velocity-dependent forces)\nG: gravity (holding configuration upright)\n\nGravity compensation: τ_cmd = G(θ)\n→ net torque = 0 → arm stays in place"
+          },
+          "challenge": {
+            "q": "Robot arm holds a 2kg surgical instrument horizontally 0.4m from the elbow. Motor max torque = 10Nm. Can the motor hold this?",
+            "opts": [
+              {
+                "t": "No — 2kg is too heavy for any motor at 0.4m",
+                "c": false
+              },
+              {
+                "t": "No — gravity torque = 7.84Nm which exceeds the 10Nm limit",
+                "c": false
+              },
+              {
+                "t": "Yes — gravity torque = 2×9.8×0.4 = 7.84Nm < 10Nm limit. Motor can hold it with 21% margin.",
+                "c": true
+              },
+              {
+                "t": "Cannot determine without joint angle information",
+                "c": false
+              }
+            ],
+            "hint": "Gravity torque = mass × g × lever arm distance = 2 × 9.8 × 0.4. Compare to motor limit.",
+            "exp": "Gravity torque = 2 × 9.8 × 0.4 = 7.84Nm. 7.84Nm < 10Nm → motor can hold it with 2.16Nm margin. This is the calculation you do before any robot deployment in medical or industrial settings. Always verify torque margins before commanding a new configuration."
+          },
+          "project": {
+            "title": "Robot Dynamics Simulator",
+            "desc": "Build a 2-DOF robot arm dynamics simulator. Implement gravity compensation.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Implement equations of motion for 2-DOF planar arm (M, C, G matrices)",
+              "Numerically integrate dynamics: given torques, simulate joint angle trajectories over time",
+              "Demonstrate: without gravity compensation, arm falls. With G(θ) compensation, arm holds position.",
+              "Implement trajectory tracking: PD controller + feedforward gravity compensation",
+              "Plot: joint angle vs time, tracking error vs time",
+              "README: how does adding gravity compensation feedforward change tracking error?"
+            ],
+            "hint": "scipy.integrate.odeint for numerical integration. Planar 2-DOF: M, C, G have known analytical forms (look up 2-DOF planar arm dynamics in any robotics textbook)."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "r2-a",
+        "title": "Robot Kinematics & Dynamics Library",
+        "xp": 380,
+        "desc": "Build a reusable robotics library: FK, IK, odometry, and dynamics for both a differential drive robot and a 2-DOF arm.",
+        "deliverables": [
+          "DiffDrive class: twist_from_wheels(), integrate_pose(), simulate_trajectory()",
+          "PlanarArm class: FK via DH, numerical Jacobian, damped least squares IK",
+          "Dynamics: gravity compensation for 2-DOF arm",
+          "Odometry drift simulation: show drift accumulation over 200 steps with and without noise",
+          "Full test suite: verify FK accuracy, IK convergence, dynamics stability",
+          "Demo notebook: animate both robot types performing a task",
+          "README: designed as an open-source robotics utility library"
+        ],
+        "hint": "Structure: /src/diff_drive.py, /src/planar_arm.py, /src/dynamics.py, /tests/. This becomes your permanent robotics math foundation.",
+        "linkedin": "Built a robotics kinematics + dynamics library from scratch: differential drive odometry (with drift simulation), 2-DOF arm FK/IK with Jacobian pseudo-inverse and singularity handling, gravity compensation. The NU ME495 lecture notes on 2D transforms and odometry were essential. #Robotics #Kinematics"
+      }
+    },
+    {
+      "id": "r3",
+      "title": "Probability, Gaussians & State Estimation",
+      "sub": "Probability review · Gaussian RVs · EKF · NU ME495",
+      "units": [
+        {
+          "id": "r3-1",
+          "title": "Probability for Robotics",
+          "meta": "Bayes theorem, Gaussian RVs, noise models — NU ME495",
+          "xp": 100,
+          "watch": {
+            "title": "NU ME495 Lecture 7 — Probability Review + Lecture 9 — Gaussian Random Variables",
+            "url": "https://nu-msr.github.io/navigation/lectures/probability.html",
+            "focus": "Read both lectures. Focus on: Bayes theorem applied to sensor fusion, the jointly Gaussian distribution (mean vector μ, covariance matrix Σ), and the key result: linear transformation of a Gaussian is still Gaussian. This is what makes the Kalman filter tractable."
+          },
+          "concept": {
+            "title": "Probability is the language of robot uncertainty",
+            "body": "<p>Robots are uncertain. Sensors are noisy. Actuators are imperfect. Probability is how we represent and reason about that uncertainty.</p><p>From NU ME495: a <strong>jointly Gaussian random variable</strong> X ~ N(μ, Σ) has mean vector μ and covariance matrix Σ. Its level sets are ellipsoids. Key result: if X ~ N(μ,Σ) and Y = AX + b, then <strong>Y ~ N(Aμ+b, AΣAᵀ)</strong>. This linearity is why Kalman filters work — linear transforms of Gaussians stay Gaussian.</p><p>The <strong>conditional distribution</strong> is the key to Bayesian estimation: given some measurements, what is our updated belief about the robot state?</p>",
+            "analogy": "Probability in robotics is like a doctor's reasoning: 'The patient has symptom A (sensor reading). Given my prior knowledge and this symptom, what is the probability of disease B (robot state)?' Bayes theorem formalizes this update.",
+            "visual": "Gaussian: X ~ N(μ, Σ)\nμ ∈ R^k: mean vector\nΣ ∈ R^{k×k}: covariance (positive definite)\n\nLevel sets: (x-μ)ᵀ Σ⁻¹ (x-μ) = c (ellipsoids)\nLarge σ² → wide ellipse → high uncertainty\nSmall σ² → narrow ellipse → low uncertainty\n\nLinear transform: Y=AX+b → Y~N(Aμ+b, AΣAᵀ)\nThis is WHY Kalman filter works."
+          },
+          "challenge": {
+            "q": "A robot pose estimate is X ~ N([2,3]ᵀ, [[0.1,0],[0,0.5]]). What does the covariance matrix tell you about the uncertainty?",
+            "opts": [
+              {
+                "t": "Equal uncertainty in all directions — covariance is always symmetric",
+                "c": false
+              },
+              {
+                "t": "Higher uncertainty in the y-direction (σ²_y=0.5 > σ²_x=0.1) — the ellipse is taller than it is wide",
+                "c": true
+              },
+              {
+                "t": "The robot is more likely to be at (3,2) than (2,3)",
+                "c": false
+              },
+              {
+                "t": "The off-diagonal zeros mean x and y positions are perfectly correlated",
+                "c": false
+              }
+            ],
+            "hint": "Diagonal elements of Σ are variances per dimension. Off-diagonal elements are covariances between dimensions. What do the magnitudes tell you?",
+            "exp": "σ²_x=0.1, σ²_y=0.5. The uncertainty in y is 5× larger than in x. The confidence ellipse is elongated in the y-direction — the robot knows its x-position much better than its y-position (e.g., it has been moving along a wall in the x-direction). Off-diagonal zeros mean x and y uncertainty are independent (uncorrelated). This kind of structured uncertainty appears constantly in SLAM."
+          },
+          "project": {
+            "title": "Gaussian Uncertainty Visualizer",
+            "desc": "Build a 2D Gaussian uncertainty visualization tool for robot state estimation.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Implement: draw_gaussian_ellipse(mu, Sigma, ax, n_sigma=2) using eigendecomposition",
+              "Visualize: robot pose uncertainty as a 2D Gaussian ellipse (x-y position + theta)",
+              "Demonstrate: how covariance grows with dead-reckoning (odometry drift)",
+              "Demonstrate: how covariance shrinks when a measurement arrives (simulate GPS update)",
+              "Implement: multivariate Gaussian noise generation (Cholesky method from NU ME495 notes)",
+              "README: connect to your TDL section — why is this the same math as MC Dropout uncertainty?"
+            ],
+            "hint": "Covariance ellipse: eigendecompose Σ, scale eigenvectors by sqrt(eigenvalues) × n_sigma. matplotlib patches.Ellipse. Cholesky: L = np.linalg.cholesky(Sigma), samples = mu + L @ np.random.randn(k, n_samples)."
+          }
+        },
+        {
+          "id": "r3-2",
+          "title": "Kalman Filter from Scratch",
+          "meta": "Predict, update, Kalman gain — NU ME495",
+          "xp": 140,
+          "watch": {
+            "title": "NU ME495 Lecture 10 — Kalman Filter",
+            "url": "https://nu-msr.github.io/navigation/lectures/kalman_filter.html",
+            "focus": "Read the full lecture. Focus on: the predict step (uncertainty grows), the update step (uncertainty shrinks via Kalman gain), and the derivation of the Kalman gain K = P⁻H/(HPH+R). Understand why K balances between the prediction and the measurement."
+          },
+          "concept": {
+            "title": "The optimal filter for linear Gaussian systems",
+            "body": "<p>The Kalman filter maintains a Gaussian belief about the state: mean x̂ and covariance P. Two steps per timestep:</p><p><strong>Predict</strong>: x̂⁻ = Ax̂ + Bu (state propagates via dynamics). P⁻ = APAᵀ + Q (uncertainty grows with process noise Q). <strong>Update</strong>: K = P⁻Hᵀ(HP⁻Hᵀ + R)⁻¹ (Kalman gain). x̂ = x̂⁻ + K(z - Hx̂⁻) (measurement pulls the estimate). P = (I-KH)P⁻ (uncertainty shrinks).</p><p>The Kalman gain K balances: when R is large (noisy sensor), K is small (trust the prediction more). When Q is large (unpredictable dynamics), K is large (trust the measurement more).</p>",
+            "analogy": "The Kalman filter is the mathematical version of a detective reasoning under uncertainty. 'My prediction says the suspect is here (prior). The witness says they saw them there (measurement). I'll combine both, weighting by how reliable each source is (Kalman gain).'",
+            "visual": "Kalman Filter cycle:\n\nPREDICT:\n  x̂⁻ = A·x̂ + B·u      (predict state)\n  P⁻ = A·P·Aᵀ + Q      (uncertainty grows)\n\nUPDATE:\n  K = P⁻·Hᵀ·(H·P⁻·Hᵀ + R)⁻¹  (Kalman gain)\n  x̂ = x̂⁻ + K·(z - H·x̂⁻)     (correct estimate)\n  P = (I - K·H)·P⁻              (uncertainty shrinks)\n\nQ: process noise (dynamics uncertainty)\nR: measurement noise (sensor uncertainty)"
+          },
+          "challenge": {
+            "q": "In the Kalman update step, if R → 0 (perfect sensor), what does K become and what does this mean?",
+            "opts": [
+              {
+                "t": "K → 0 — perfect sensor means we ignore it",
+                "c": false
+              },
+              {
+                "t": "K → H⁻¹ — we fully trust the measurement, prediction is ignored",
+                "c": true
+              },
+              {
+                "t": "K → I — standard identity update",
+                "c": false
+              },
+              {
+                "t": "K → ∞ — the filter becomes unstable",
+                "c": false
+              }
+            ],
+            "hint": "K = P⁻Hᵀ(HP⁻Hᵀ + R)⁻¹. What happens as R → 0?",
+            "exp": "As R→0: K → P⁻Hᵀ(HP⁻Hᵀ)⁻¹ = H⁻¹ (for square H). This means x̂ = x̂⁻ + K(z-Hx̂⁻) = x̂⁻ + H⁻¹(z-Hx̂⁻) = H⁻¹z — we completely trust the measurement and discard the prediction. When the sensor is perfect, why would you trust the noisy dynamics? Conversely, as R→∞ (terrible sensor), K→0 and we fully trust the prediction. Use the interactive widget above — drag R to 0.1 and watch how the posterior snaps to the measurement."
+          },
+          "project": {
+            "title": "Kalman Filter for HC-SR04 Distance Tracking",
+            "desc": "Implement a Kalman filter to track distance from HC-SR04 sensor data. Show predict/update cycle.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Implement Kalman filter class: KF(x0, P0, A, B, H, Q, R)",
+              "Implement predict(u) and update(z) methods",
+              "Simulate HC-SR04 data: true position + Gaussian noise + occasional dropouts",
+              "Run KF on simulated data: compare raw sensor readings vs filtered estimate",
+              "Tune Q and R: show effect of each on filter behavior",
+              "Visualize: true position, noisy measurements, KF estimate — all on same plot",
+              "README: what Q/R ratio gave the best tracking? Why?"
+            ],
+            "hint": "1D KF: A=1 (static target), B=0, H=1. State = distance. Q=process noise variance, R=HC-SR04 measurement noise variance (measure empirically!). For moving target: A=[[1,dt],[0,1]], state=[distance, velocity]."
+          }
+        },
+        {
+          "id": "r3-3",
+          "title": "Extended Kalman Filter",
+          "meta": "EKF linearization, robotics SLAM preview — NU ME495",
+          "xp": 130,
+          "watch": {
+            "title": "NU ME495 SLAM Implementation Notes (PDF) — EKF section",
+            "url": "https://nu-msr.github.io/navigation/lectures/slam/slam.pdf",
+            "focus": "Focus on pages covering EKF: the linearization step (Jacobian instead of exact transform), why we need EKF for nonlinear systems like robot pose estimation, and the structure of the EKF predict/update cycle."
+          },
+          "concept": {
+            "title": "Kalman filter for nonlinear systems",
+            "body": "<p>The standard Kalman filter assumes linear dynamics (Ax) and linear measurements (Hx). Robot systems are nonlinear: the odometry equations (sin, cos) are nonlinear, and landmark measurements (atan2) are nonlinear.</p><p><strong>EKF solution</strong>: linearize at the current estimate using the Jacobian. Replace A with F = ∂f/∂x|_{x̂} and H with G = ∂h/∂x|_{x̂}. Then run the standard KF equations with these local approximations. Works well when nonlinearities are mild and the estimate is close to the truth.</p>",
+            "analogy": "The EKF is like replacing a curved road with its tangent line at your current position. The tangent line (Jacobian) is a good local approximation — and you recompute it at every step as you move, so you're always working with a fresh local approximation.",
+            "visual": "EKF vs KF:\nKF:  predict: x̂⁻ = A·x̂\n     update:  K = P⁻·Hᵀ·...\n\nEKF: predict: x̂⁻ = f(x̂)     ← nonlinear f\n             F = ∂f/∂x |_{x̂} ← Jacobian of f\n             P⁻ = F·P·Fᵀ + Q\n     update:  G = ∂h/∂x |_{x̂} ← Jacobian of h\n             K = P⁻·Gᵀ·(G·P⁻·Gᵀ+R)⁻¹\n             x̂ = x̂⁻ + K·(z - h(x̂⁻))"
+          },
+          "challenge": {
+            "q": "You have a robot at pose [x,y,θ] and observe a landmark at range r and bearing φ. The measurement model h(x,y,θ) = [sqrt((lx-x)²+(ly-y)²), atan2(ly-y, lx-x) - θ] is nonlinear. Why does EKF work here but standard KF cannot?",
+            "opts": [
+              {
+                "t": "Standard KF can handle this — atan2 is just a special case of a linear function",
+                "c": false
+              },
+              {
+                "t": "Standard KF requires H to be a matrix (linear measurement model). atan2 is nonlinear — EKF linearizes h at the current estimate via Jacobian G = ∂h/∂x",
+                "c": true
+              },
+              {
+                "t": "EKF is always better than KF regardless of linearity",
+                "c": false
+              },
+              {
+                "t": "The issue is that the state is 3D — KF only works in 1D",
+                "c": false
+              }
+            ],
+            "hint": "KF assumes z = Hx (linear). What category does atan2(ly-y, lx-x) - θ fall into?",
+            "exp": "atan2 is nonlinear — it cannot be expressed as Hx for any matrix H. Standard KF would require linearizing it manually and using a fixed approximation (which would be wrong everywhere except the linearization point). EKF computes the Jacobian G = ∂h/∂x at the current state estimate — a local linear approximation that is updated every timestep. This is valid as long as the estimate error is small relative to the nonlinearity scale, which it typically is in well-designed SLAM systems."
+          },
+          "project": {
+            "title": "EKF 1D Tracking",
+            "desc": "Implement EKF for a nonlinear 1D tracking problem. Compare to standard KF.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Define nonlinear dynamics f(x) = sin(x) + u (simple nonlinear system)",
+              "Compute Jacobian F = ∂f/∂x = cos(x) analytically",
+              "Implement EKF predict: x̂⁻ = f(x̂), P⁻ = F·P·Fᵀ + Q",
+              "Define nonlinear measurement h(x) = x² and Jacobian G = 2x",
+              "Implement EKF update using G instead of H",
+              "Compare: KF (wrong, using linearized H=1) vs EKF on the same trajectory",
+              "README: when does EKF fail? Show a case where the linearization breaks down."
+            ],
+            "hint": "The key is computing Jacobians analytically. If f(x)=sin(x)+u then F=∂f/∂x=cos(x). Evaluate at current estimate x̂. Use this F in the predict step instead of a fixed A matrix."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "r3-a",
+        "title": "Kalman Filter Sensor Suite",
+        "xp": 380,
+        "desc": "Build a complete Kalman filter-based state estimation system for your robot sensor suite.",
+        "deliverables": [
+          "KalmanFilter class: general implementation supporting any A, B, H, Q, R",
+          "EKF extension: support nonlinear f and h with Jacobian computation",
+          "HC-SR04 tracking: 1D KF tuned to real sensor noise characteristics",
+          "Robot pose estimation: EKF for differential drive robot (nonlinear odometry)",
+          "Gaussian uncertainty visualization: plot confidence ellipses for all estimates",
+          "Sensor fusion: combine odometry (predict) + simulated GPS (update) in one EKF",
+          "Research report (1 page): compare KF vs EKF on your robot — when does each apply?"
+        ],
+        "hint": "The robot pose EKF is the core of SLAM. Your state is [x, y, θ]. Predict uses odometry (nonlinear → EKF). Update uses landmark measurements. This assignment is the mathematical foundation of Chapter 4.",
+        "linkedin": "Implemented Kalman filter and Extended Kalman Filter from scratch for robot state estimation. The NU ME495 lecture notes made the math clear. Now running it on differential drive odometry with HC-SR04 measurements. The uncertainty ellipses growing and shrinking are strangely satisfying. #Robotics #KalmanFilter #StateEstimation"
+      }
+    },
+    {
+      "id": "r4",
+      "title": "Motion Planning & Control",
+      "sub": "Path planning · PID · Trajectory optimization",
+      "units": [
+        {
+          "id": "r4-1",
+          "title": "Path Planning — RRT & Configuration Space",
+          "meta": "C-space, RRT, A* — visual and interactive",
+          "xp": 120,
+          "watch": {
+            "title": "MIT Robotic Manipulation — Motion Planning (manipulation.csail.mit.edu)",
+            "url": "https://manipulation.csail.mit.edu/pick.html",
+            "focus": "Chapter: Geometric Pose Estimation and planning sections. Focus on: configuration space concept, why obstacles in Cartesian space become forbidden regions in C-space, and sampling-based planning (RRT). The textbook includes interactive Drake simulations you can run in the browser."
+          },
+          "concept": {
+            "title": "From goal to collision-free trajectory",
+            "body": "<p><strong>Configuration space (C-space)</strong>: the space of all possible robot configurations (joint angles). A robot pose is a point in C-space. Obstacles in Cartesian space map to regions in C-space. Planning in C-space reduces the problem to finding a path between two points while avoiding forbidden regions.</p><p><strong>RRT</strong> (Rapidly-exploring Random Tree): grows a tree by sampling random configurations, extending toward them, and checking for collisions. Fast for high-dimensional spaces. <strong>A*</strong>: optimal on a grid but exponential in dimension — impractical for 6-DOF arms.</p>",
+            "analogy": "C-space: instead of thinking 'avoid that wall', think 'avoid these joint angle combinations that would put my arm through the wall'. Planning in C-space turns the physical obstacle avoidance problem into finding a path on a map — much cleaner.",
+            "visual": "RRT algorithm:\n1. Sample random q_rand in C-space\n2. Find nearest node q_near in tree\n3. Extend tree from q_near toward q_rand by step δ\n4. Check collision: does the new config hit an obstacle?\n5. Add to tree if collision-free\n6. Repeat until goal is reached\n\nA* complexity: k^n cells for n-DOF robot\nk=100, n=6: 10^12 cells → infeasible\nRRT: ~1000-10000 samples → tractable"
+          },
+          "challenge": {
+            "q": "Your 6-DOF robot arm uses grid-based A* in joint space with 100 values per joint. How many C-space cells does this create, and why is RRT preferred?",
+            "opts": [
+              {
+                "t": "600 cells — 100×6. Manageable.",
+                "c": false
+              },
+              {
+                "t": "10^12 cells — curse of dimensionality. RRT samples randomly and is tractable in any dimension.",
+                "c": true
+              },
+              {
+                "t": "10^6 cells — the number scales linearly with joints, not exponentially.",
+                "c": false
+              },
+              {
+                "t": "A* is always preferred — it finds the optimal path.",
+                "c": false
+              }
+            ],
+            "hint": "A* discretizes the space into a grid. How many cells does a 6D grid with k values per dimension have?",
+            "exp": "k^n = 100^6 = 10^12 cells — completely infeasible. This is the curse of dimensionality: grid-based methods scale exponentially with the number of dimensions. RRT samples randomly without discretizing — it works in any dimension by exploring the space tree-like, focusing samples where the tree has not yet reached. Use the interactive widget above to see how the tree explores space and finds a path."
+          },
+          "project": {
+            "title": "RRT Path Planner",
+            "desc": "Implement RRT for a 2D robot in an obstacle-filled environment.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Implement RRT: random sampling, nearest neighbor (KDTree), collision check, tree extension",
+              "Add RRT*: rewire step for asymptotically optimal paths",
+              "Test in an obstacle environment: compare RRT vs RRT* paths (length and smoothness)",
+              "Add 2D robot arm: translate Cartesian obstacles into C-space obstacles for a 2-DOF arm",
+              "Visualize: C-space with obstacles + RRT tree + planned path + robot arm motion",
+              "README: how many iterations did RRT need to find a path? How does it scale with obstacles?"
+            ],
+            "hint": "scipy.spatial.KDTree for nearest neighbor search (much faster than brute force). Collision check: for each obstacle, check if the new node position is within obstacle radius + robot radius."
+          }
+        },
+        {
+          "id": "r4-2",
+          "title": "PID Control",
+          "meta": "Proportional-integral-derivative, tuning, anti-windup",
+          "xp": 100,
+          "watch": {
+            "title": "Brian Douglas PID Control tutorial series",
+            "url": "https://www.youtube.com/watch?v=UR0hOmjaHp0",
+            "focus": "What each PID term does (P=proportional response, I=integral accumulated error, D=derivative anticipation), why all three are needed together, and how to tune them systematically."
+          },
+          "concept": {
+            "title": "The most used controller in the world",
+            "body": "<p>PID: u(t) = Kp·e(t) + Ki·∫e(τ)dτ + Kd·de/dt. <strong>P</strong>: responds to current error — immediate response but may overshoot. <strong>I</strong>: accumulates error over time — eliminates steady-state error. <strong>D</strong>: rate of change — anticipates and dampens oscillations.</p><p>For robotics: each joint has a PID controller tracking desired position/velocity. Your planning layer sends desired positions; the PID layer commands motor torques. <strong>Anti-windup</strong>: clamp the integral term to prevent it from accumulating during saturation.</p>",
+            "analogy": "P: how hard you push based on how far you are from target (more error = more force). I: builds up if you are consistently off — like accumulated debt you must pay. D: brakes as you approach to prevent overshoot — feeling the rate of change and slowing down proactively.",
+            "visual": "u(t) = Kp·e + Ki·∫e dt + Kd·ė\ne(t) = desired - actual\n\nHigh Kp: fast response but oscillates\nHigh Ki: eliminates steady error but can wind up\nHigh Kd: dampens oscillations but amplifies noise\nAnti-windup: integral_term = clip(integral, -max, max)"
+          },
+          "challenge": {
+            "q": "Your robot joint PID controller has a persistent 2° steady-state error (always 2° below target even when stable). Which term to increase and why?",
+            "opts": [
+              {
+                "t": "Kp — more proportional gain will push harder toward target",
+                "c": false
+              },
+              {
+                "t": "Ki — integral term accumulates the persistent error over time and generates corrective action proportional to the total accumulated error",
+                "c": true
+              },
+              {
+                "t": "Kd — derivative term will help reach the target faster",
+                "c": false
+              },
+              {
+                "t": "All three need retuning simultaneously",
+                "c": false
+              }
+            ],
+            "hint": "Steady-state error (constant offset that persists after transient dies) is exactly what the integral term is designed to eliminate. What does the integral of a constant error equal?",
+            "exp": "Ki. Steady-state means ė=0 (no change) and the P term = Kp·e balances some opposing force (friction, gravity, etc.). Adding more Kp would just reach a different steady-state. The I term accumulates: ∫e dt = e·t → grows over time → eventually large enough to overcome the friction/gravity. Once error=0, integration stops and the integral term holds the corrective action. This is the fundamental purpose of the I term."
+          },
+          "project": {
+            "title": "PID Tuning Lab",
+            "desc": "Implement and tune PID controllers. Demonstrate P, PI, PID behavior on a simulated robot joint.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Implement PID controller class with anti-windup",
+              "Simulate 1-DOF robot joint with friction and gravity: J·θ̈ = τ_pid - b·θ̇ - G·cos(θ)",
+              "Step response: show P-only (steady-state error), PD (no steady error but slower), PID (eliminates error)",
+              "Tune Kp, Ki, Kd using Ziegler-Nichols or manual tuning — document your process",
+              "Anti-windup demo: show integral windup problem and how clipping fixes it",
+              "Plot: position vs time, error vs time, control effort vs time for each configuration"
+            ],
+            "hint": "scipy.integrate.odeint for simulation. Step response: desired = step from 0 to target_angle at t=1s. Record: settling time, overshoot, steady-state error for each PID configuration."
+          }
+        },
+        {
+          "id": "r4-3",
+          "title": "Trajectory Optimization & Learned Control",
+          "meta": "MPC, imitation learning, sim-to-real",
+          "xp": 130,
+          "watch": {
+            "title": "Stanford AA289 Robotics Seminars — YouTube Playlist",
+            "url": "https://www.youtube.com/watch?v=NUtaN10cVDc&list=PLoROMvodv4rMeercb-kvGLUrOq4HR6BZD",
+            "focus": "Watch lectures on learning-based control and imitation learning. Focus on: how neural network policies are trained from demonstrations, what sim-to-real transfer means in practice, and how industry deploys learned controllers."
+          },
+          "concept": {
+            "title": "Beyond PID: learning and optimization",
+            "body": "<p><strong>MPC</strong> (Model Predictive Control): at each timestep, solve an optimization problem over a receding horizon H. Minimize cost (energy, time, tracking error) subject to dynamics constraints and input limits. Apply first control, re-plan. More systematic than PID tuning, handles constraints explicitly.</p><p><strong>Imitation learning</strong>: learn a control policy by watching expert demonstrations. Behavior cloning = supervised learning on (state, action) pairs from an expert. <strong>Sim-to-real gap</strong>: policies trained in simulation fail on real hardware due to dynamics mismatch, sensor noise, actuator delays.</p>",
+            "analogy": "PID: reactive — respond to current error. MPC: plan ahead — solve 'what should I do in the next 10 steps to reach my goal best?' while respecting all constraints. Imitation learning: learn by watching an expert, not by trial and error.",
+            "visual": "MPC:\nAt time t, solve:\nmin Σ_{k=0}^{H} cost(x_k, u_k)  [horizon H=10]\ns.t. x_{k+1} = f(x_k, u_k)  (dynamics)\n     u_k ∈ [-u_max, u_max]  (input limits)\n     x_k ∈ X_feasible        (state constraints)\nApply u_0, re-plan at t+1\n\nSim-to-real gap mitigations:\n→ Domain randomization (vary sim params)\n→ System identification (fit real dynamics)\n→ Adaptive control (update online)"
+          },
+          "challenge": {
+            "q": "You train a robot grasping policy in simulation with perfect perception. On real hardware with slightly displaced objects it fails. Beyond standard distribution shift, what specific sim assumption is violated?",
+            "opts": [
+              {
+                "t": "The policy architecture is too simple — use a larger network",
+                "c": false
+              },
+              {
+                "t": "Sim-to-real gap: simulation has perfect state estimation, zero actuator delays, exact dynamics — all violated on real hardware simultaneously",
+                "c": true
+              },
+              {
+                "t": "The policy needs more imitation learning data",
+                "c": false
+              },
+              {
+                "t": "Grasping requires a different control algorithm",
+                "c": false
+              }
+            ],
+            "hint": "What does simulation assume that real hardware violates? Think about: state estimation, timing, physics.",
+            "exp": "Sim-to-real gap is multi-dimensional: (1) perfect state estimation in sim vs perceptual uncertainty on hardware, (2) zero actuator delay in sim vs 10-50ms hardware delays, (3) exact dynamics in sim vs joint friction, cable stretch, motor saturation on hardware. Domain randomization (randomly varying sim parameters during training) is the standard mitigation — it exposes the policy to a wide range of conditions, making it robust to the real-world variation."
+          },
+          "project": {
+            "title": "Learned Control Policy vs PID",
+            "desc": "Train an imitation learning controller. Compare to your PID baseline.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Collect expert demonstrations using your PID controller (state, action) pairs",
+              "Train behavior cloning policy: neural network mapping state → action (torch)",
+              "Compare: PID vs learned policy on same task (settling time, overshoot, steady-state error)",
+              "Test generalization: slightly different initial conditions, different target positions",
+              "Show sim-to-real gap: add noise to learned policy inputs — how does performance degrade?",
+              "README: what did the learned policy do better or worse than PID? When would you use each?"
+            ],
+            "hint": "Behavior cloning: state=[angle, angular_velocity, target_angle]. Action=torque. Collect 1000+ (state,action) pairs using PID as expert. Train small MLP (2 hidden layers). Compare on 10 test episodes."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "r4-a",
+        "title": "Motion Planning & Control System",
+        "xp": 400,
+        "desc": "Build a complete motion planning + control pipeline: plan in C-space, execute with PID, compare with learned controller.",
+        "deliverables": [
+          "RRT path planner for 2-DOF arm in obstacle-filled environment",
+          "PID controller tracking the planned trajectory joint by joint",
+          "Imitation learning controller as alternative to PID",
+          "Performance comparison: PID vs learned on accuracy, smoothness, generalization to new goals",
+          "Full demo: plan → execute → visualize in one integrated pipeline",
+          "README: architecture diagram + when each controller is most appropriate"
+        ],
+        "hint": "This is a complete robot motion system. Focus on clean interfaces between the planner (outputs waypoints) and the controller (tracks waypoints). The planner does not know about the controller, and vice versa.",
+        "linkedin": "Built a complete motion planning + control pipeline: RRT path planning in C-space + PID execution + imitation learning controller comparison. The interactive RRT visualization made C-space planning click in a way that textbooks never did. #Robotics #MotionPlanning #LearningFromDemos"
+      }
+    },
+    {
+      "id": "r5",
+      "title": "SLAM & Autonomous Navigation",
+      "sub": "EKF-SLAM · Circle detection · Data association — NU ME495",
+      "units": [
+        {
+          "id": "r5-1",
+          "title": "SLAM — Simultaneous Localization and Mapping",
+          "meta": "EKF-SLAM, state augmentation, landmark initialization — NU ME495",
+          "xp": 160,
+          "watch": {
+            "title": "NU ME495 SLAM Implementation Notes (full PDF)",
+            "url": "https://nu-msr.github.io/navigation/lectures/slam/slam.pdf",
+            "focus": "Read all sections. Focus on: how the robot pose and landmark positions are combined into one big state vector, how new landmarks are added (state augmentation), and how the EKF predict/update cycle works when both robot pose and landmark positions are uncertain."
+          },
+          "concept": {
+            "title": "Building a map while figuring out where you are",
+            "body": "<p><strong>SLAM</strong>: simultaneously estimate robot pose AND build a map of the environment. The challenge: you need the map to localize, and you need localization to build the map. EKF-SLAM solves both together by maintaining a joint Gaussian over [robot pose, all landmark positions].</p><p><strong>State vector</strong>: [x, y, θ, lx₁, ly₁, lx₂, ly₂, ...] — robot pose plus all landmark positions. Each new landmark <strong>augments</strong> the state (adds 2 dimensions). The covariance matrix captures correlations between robot pose and landmark positions — this is what makes EKF-SLAM powerful.</p>",
+            "analogy": "SLAM is like being blindfolded in an unknown room. You can feel the walls (sensor measurements) and count your steps (odometry). SLAM combines both — your step count updates your position estimate, and each wall contact updates both your position AND your map of where the walls are. The map and your position get better together.",
+            "visual": "EKF-SLAM state vector:\nξ = [x, y, θ, lx₁, ly₁, ..., lxN, lyN]\nDimension: 3 + 2N (grows with each new landmark)\n\nCovariance Σ:\n┌─────────────────────────────┐\n│  Σ_rr  │  Σ_rl₁  │  Σ_rl₂  │  robot-landmark correlations\n│  Σ_l₁r │  Σ_l₁l₁ │  Σ_l₁l₂ │\n│  Σ_l₂r │  Σ_l₂l₁ │  Σ_l₂l₂ │\n└─────────────────────────────┘\nWhen robot moves → all correlations update\nWhen landmark observed → robot position tightened"
+          },
+          "challenge": {
+            "q": "In EKF-SLAM, the robot moves and the covariance of ALL landmarks increases, even those far from the robot. Why?",
+            "opts": [
+              {
+                "t": "This is a bug — only nearby landmarks should be affected by robot motion",
+                "c": false
+              },
+              {
+                "t": "Landmarks are defined relative to world frame, and the robot pose uncertainty propagates to all landmark estimates through the cross-covariance terms Σ_rl",
+                "c": true
+              },
+              {
+                "t": "The EKF predict step always increases all uncertainties by the same amount",
+                "c": false
+              },
+              {
+                "t": "Only landmarks within sensor range are affected by robot motion",
+                "c": false
+              }
+            ],
+            "hint": "Look at the EKF-SLAM covariance structure. What do the Σ_rl terms (robot-landmark cross-covariance) represent?",
+            "exp": "The cross-covariance terms Σ_rl capture the correlation between robot pose uncertainty and landmark position uncertainty. When the robot moves (odometry update), robot pose uncertainty grows. Because the landmarks were originally localized relative to the robot, this uncertainty propagates through Σ_rl to all landmarks. This is correct behavior — if you are less certain where the robot is, you are less certain where everything is. The magic of SLAM is that seeing a known landmark in the update step DECREASES robot pose uncertainty AND all landmark uncertainties simultaneously."
+          },
+          "project": {
+            "title": "EKF-SLAM Simulator",
+            "desc": "Implement a complete EKF-SLAM system in 2D. Simulate a robot navigating and building a map.",
+            "format": "Jupyter notebook + README + animation",
+            "deliverables": [
+              "Implement EKF-SLAM: augmented state vector [robot pose + N landmarks]",
+              "Motion model: differential drive odometry (nonlinear → EKF predict)",
+              "Measurement model: range-bearing to landmarks (nonlinear → EKF update)",
+              "Landmark initialization: add new landmarks to state when first observed",
+              "Run: robot on a circular path, 5 landmarks, 200 timesteps",
+              "Visualize: real robot path vs estimated path, true landmarks vs estimated landmarks + uncertainty ellipses",
+              "Show: SLAM estimate converging as the robot revisits areas",
+              "README: how much does the pose estimate drift without landmark updates? How much does it improve with them?"
+            ],
+            "hint": "State: [x,y,theta,lx1,ly1,...,lxN,lyN]. Predict: F=Jacobian of odometry wrt state (sparse matrix, mostly zeros). Update: G=Jacobian of measurement wrt state (also sparse). Numpy operations. scipy.linalg for matrix ops."
+          }
+        },
+        {
+          "id": "r5-2",
+          "title": "Circle Detection from Sensor Data",
+          "meta": "Arc fitting, HC-SR04 scan, NU ME495 algorithm",
+          "xp": 120,
+          "watch": {
+            "title": "NU ME495 Lecture 13 — Circle Fitting (Al-Sharadqah and Chernov algorithm)",
+            "url": "https://nu-msr.github.io/navigation/lectures/circle_fit.html",
+            "focus": "Read the full algorithm (14 steps). Focus on: why this is a machine learning problem (fitting a model to data), the SVD step, and the RMSE computation. This algorithm is specifically designed for partial arcs — exactly what your HC-SR04 radar scan produces."
+          },
+          "concept": {
+            "title": "Detecting circular objects from arc measurements",
+            "body": "<p>Your HC-SR04 radar scan (from Hardware Section Project 5) produces a set of (angle, distance) points. If a cylindrical obstacle is in range, these points form an arc. The NU ME495 algorithm (Al-Sharadqah and Chernov) fits a circle to partial arc data — specifically designed for laser/ultrasonic scan data.</p><p><strong>Why it is an ML problem</strong>: you have data (points) and you are learning a model (circle center + radius) to explain that data. The SVD step finds the best-fit circle by minimizing algebraic distance — a form of least squares.</p>",
+            "analogy": "Circle detection is like looking at footprints in a circle and inferring where the center of the circle was — even if you only have footprints from one quarter of the circle. The algorithm reconstructs the full circle from partial arc data.",
+            "visual": "NU ME495 Circle Fit Algorithm (14 steps):\n1. Compute centroid (x̄, ȳ)\n2. Shift to centroid: xᵢ = x̂ᵢ - x̄\n3. Compute zᵢ = xᵢ² + yᵢ²\n4. Form data matrix Z (n×4)\n5. Moment matrix M = Z^T Z / n\n6. Constraint matrix H\n7. Compute H⁻¹\n8. SVD of Z = UΣVᵀ\n9. If σ₄ < 10⁻¹²: A = 4th column of V\n10. Else: solve eigenvalue problem\n11. Extract center (a,b) and radius R\n12. Shift back: center = (a+x̄, b+ȳ)\n13. Compute RMSE\nOutput: (center_x, center_y, radius, RMSE)"
+          },
+          "challenge": {
+            "q": "Your HC-SR04 radar scan gives 8 points that form a partial arc (~60° of a circle). The circle fit gives RMSE=0.3cm. A new scan gives 12 points over ~20° arc. RMSE=2.1cm. Why is the wider arc better despite fewer points needing a fit?",
+            "opts": [
+              {
+                "t": "More points always give better fits — 8 points is insufficient",
+                "c": false
+              },
+              {
+                "t": "Arc length determines geometric constraint: a 60° arc strongly constrains center+radius, but a 20° arc looks nearly like a line — the circle fit is underconstrained",
+                "c": true
+              },
+              {
+                "t": "The second scan must have had more noise",
+                "c": false
+              },
+              {
+                "t": "RMSE and arc length are unrelated",
+                "c": false
+              }
+            ],
+            "hint": "Think about fitting a circle to a tiny arc vs fitting it to a larger arc. What does a very small arc look like geometrically?",
+            "exp": "Geometric constraint. A 20° arc is nearly indistinguishable from a straight line — infinitely many circles (of different radii) can fit through it equally well. The fit is underconstrained, leading to high RMSE and unreliable radius/center estimates. A 60° arc has clear curvature — the circle center and radius are well-determined. In practice: reject circle fits where the arc spans less than a minimum angle (typically 20–30°) and RMSE exceeds a threshold."
+          },
+          "project": {
+            "title": "Circle Detection for Navigation",
+            "desc": "Implement the NU ME495 circle fitting algorithm. Apply to simulated HC-SR04 scan data.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Implement the full NU ME495 14-step circle fitting algorithm",
+              "Test on synthetic data: generate circular arc with noise, recover center+radius",
+              "Test on partial arcs: 20°, 45°, 90°, 180° arcs — show how RMSE changes with arc length",
+              "Apply to HC-SR04 scan simulation: generate polar scan data, extract arc points, fit circle",
+              "Classify: \"circle detected\" when RMSE < threshold AND arc span > min_angle",
+              "Visualize: scan points + fitted circle + RMSE on polar plot",
+              "README: what arc length and RMSE thresholds work best? Why?"
+            ],
+            "hint": "Convert (angle, distance) HC-SR04 scan to Cartesian (x,y) first. Group consecutive similar-distance readings as potential arc points. Apply circle fit to each group. Use the interactive widget above to build intuition before coding."
+          }
+        },
+        {
+          "id": "r5-3",
+          "title": "Data Association",
+          "meta": "Mahalanobis distance, landmark matching — NU ME495",
+          "xp": 140,
+          "watch": {
+            "title": "NU ME495 Lecture 14 — Data Association for SLAM",
+            "url": "https://nu-msr.github.io/navigation/lectures/data_assoc.html",
+            "focus": "Read the full lecture. Focus on: why nearest-Euclidean distance fails (ignores covariance), what Mahalanobis distance adds (accounts for uncertainty shape), and the provisional landmark concept (avoid adding spurious landmarks)."
+          },
+          "concept": {
+            "title": "Matching new measurements to known landmarks",
+            "body": "<p>In SLAM, when you take a new measurement, you must decide: is this a known landmark, or a new one? Wrong associations corrupt the entire SLAM estimate — a single wrong association can cause the filter to diverge.</p><p><strong>Mahalanobis distance</strong>: d = (z - ẑ)ᵀ Ψ⁻¹ (z - ẑ), where Ψ = G·P·Gᵀ + R is the predicted measurement covariance. This distance is normalized by uncertainty — \"how many standard deviations away is this measurement from what I expected?\" Smaller Mahalanobis distance = better match.</p><p>From NU ME495: temporarily add a new landmark for each measurement. If all existing landmarks have Mahalanobis distance above a threshold, the measurement is from a new landmark.</p>",
+            "analogy": "Mahalanobis distance is like asking 'is this person my friend Bob, given that Bob is usually somewhere in this area (with uncertainty)?' Euclidean distance says: 'how far are they from Bob's last known position?' Mahalanobis says: 'how far are they from Bob's last known position, scaled by how uncertain I am about Bob's position?' If I'm very uncertain, someone quite far away might still be Bob.",
+            "visual": "Data association algorithm (NU ME495):\n1. N = number of known landmarks\n2. For measurement zᵢ:\n   a. Temporarily add landmark N+1 at h⁻¹(zᵢ)\n   b. For each landmark k (including N+1):\n      - Compute Ψ_k = G_k·P·G_kᵀ + R\n      - Compute d_k = (zᵢ-ẑ_k)ᵀ·Ψ_k⁻¹·(zᵢ-ẑ_k)\n   c. Set d_{N+1} = threshold (e.g., 10.0)\n   d. Match to landmark with minimum d_k\n   e. If match is N+1: add new landmark"
+          },
+          "challenge": {
+            "q": "Two landmarks L1 at x=1.0 (σ=0.1) and L2 at x=1.0 (σ=2.0) are at the same position but with different uncertainties. A measurement arrives at x=1.5. Euclidean says both are equidistant. What does Mahalanobis say?",
+            "opts": [
+              {
+                "t": "Mahalanobis also says both are equidistant — same result as Euclidean here",
+                "c": false
+              },
+              {
+                "t": "Mahalanobis says L1 is FARTHER away (5σ) and L2 is CLOSER (0.25σ) — the measurement is more consistent with uncertain L2",
+                "c": true
+              },
+              {
+                "t": "Mahalanobis says L1 is closer because it has smaller uncertainty",
+                "c": false
+              },
+              {
+                "t": "Mahalanobis cannot be computed when two landmarks are at the same position",
+                "c": false
+              }
+            ],
+            "hint": "Mahalanobis distance = (x-μ)²/σ². Compute for each landmark. Which landmark is this measurement more surprising for?",
+            "exp": "d_L1 = (1.5-1.0)²/0.01 = 25 (5 standard deviations — very surprising!). d_L2 = (1.5-1.0)²/4.0 = 0.0625 (0.25 standard deviations — not surprising at all). Measurement associates with L2. This makes sense: L2 is very uncertain (σ=2), so being 0.5m off is expected. L1 is precise (σ=0.1), so being 0.5m off is almost impossible (5σ). Use the interactive widget to verify — set landmark positions equal and vary uncertainty."
+          },
+          "project": {
+            "title": "Data Association System",
+            "desc": "Implement Mahalanobis-based data association. Integrate with your EKF-SLAM.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Implement: mahalanobis_distance(z, z_hat, Psi) → scalar",
+              "Implement: associate(measurement, landmarks, P, threshold) → landmark_index (or NEW_LANDMARK)",
+              "Implement: provisional landmarks — only add a landmark when seen N times",
+              "Test on synthetic data: 10 landmarks, 200 measurements, some from same landmark, some new",
+              "Compare: nearest-Euclidean vs Mahalanobis association — show cases where Euclidean fails",
+              "Integrate with EKF-SLAM from previous unit: full SLAM with data association",
+              "README: what threshold worked best? What happens when landmarks are too close together?"
+            ],
+            "hint": "Start with threshold=5.0 (5σ). Provisional landmark list: keep count of how many times each tentative landmark has been seen. Only promote to permanent after 3 observations."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "r5-a",
+        "title": "Full SLAM + Navigation System",
+        "xp": 600,
+        "desc": "Complete autonomous navigation system: EKF-SLAM for localization + circle detection for landmark extraction + data association + RRT path planning. This is Module 3 from your research roadmap.",
+        "deliverables": [
+          "EKF-SLAM: full implementation with state augmentation",
+          "Circle detection: extract circular landmarks from simulated scan data (NU ME495 algorithm)",
+          "Data association: Mahalanobis-based matching with provisional landmarks",
+          "RRT path planner: generate collision-free path using current SLAM map",
+          "PID execution: track the planned path",
+          "Full simulation: robot navigating an unknown environment, building a map, following a goal path",
+          "Animation: show robot path, landmark estimates with uncertainty ellipses, planned path updating as map improves",
+          "Research report (2 pages): SLAM implementation details, data association thresholds chosen, failure analysis"
+        ],
+        "hint": "This is the most complex system you have built. Build it in layers: SLAM alone first, then add circle detection, then data association, then planning on the map. Each layer should work before adding the next.",
+        "linkedin": "Completed my most complex robotics project: a full EKF-SLAM system with circle detection (NU ME495 algorithm), Mahalanobis data association, and RRT path planning — all integrated. The uncertainty ellipses growing and shrinking as the robot explores is when robotics theory becomes visually intuitive. #SLAM #Robotics #EKF #AutonomousNavigation"
+      }
+    }
+  ]
+}

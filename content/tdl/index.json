@@ -1,0 +1,628 @@
+{
+  "id": "tdl",
+  "key": "tdl",
+  "icon": "🛡️",
+  "title": "Trustworthy Deep Learning",
+  "desc": "The mathematics of making models you can trust — uncertainty, calibration, robustness, and domain shift.",
+  "chapters": [
+    {
+      "id": "tdl1",
+      "title": "A — Foundations of Uncertainty",
+      "sub": "Probability · Entropy · KL divergence",
+      "units": [
+        {
+          "id": "tdl1-1",
+          "title": "Probability in ML",
+          "meta": "Frequentist vs Bayesian thinking",
+          "xp": 90,
+          "watch": {
+            "title": "CS229 Lecture 6 — probability review (already seen in ML section)",
+            "url": "https://www.youtube.com/watch?v=z5UQyCESW64",
+            "focus": "Review: Bayes theorem. Now focus on: what it means to put a distribution over MODEL PARAMETERS — the shift from frequentist to Bayesian ML."
+          },
+          "concept": {
+            "title": "Two ways to think about probability",
+            "body": "<p><strong>Frequentist</strong>: probability = long-run frequency. Parameters are fixed, unknown. <strong>Bayesian</strong>: probability = degree of belief. Parameters have distributions. Update with Bayes: P(θ|data) ∝ P(data|θ)·P(θ).</p><p>For trustworthy DL: Bayesian thinking lets us say \"the model is uncertain about its own parameters\" — the foundation of epistemic uncertainty.</p>",
+            "analogy": "Frequentist: 'this coin lands heads 50% of the time' — about the coin's physical property. Bayesian: 'I believe 50% chance this coin is biased' — about your state of knowledge before flipping.",
+            "visual": "Bayes: P(θ|D) ∝ P(D|θ)·P(θ)\nPosterior ∝ Likelihood × Prior\nMLE = MAP with uniform prior\nL2 reg = MAP with Gaussian prior\nBayesian DL: full posterior → approximate"
+          },
+          "challenge": {
+            "q": "You train a NN with MLE. From Bayesian perspective, what prior does MLE implicitly assume?",
+            "opts": [
+              {
+                "t": "Gaussian prior (L2 regularization)",
+                "c": false
+              },
+              {
+                "t": "Uniform prior — all parameter values equally likely before data",
+                "c": true
+              },
+              {
+                "t": "Laplace prior on weights",
+                "c": false
+              },
+              {
+                "t": "MLE has no connection to Bayesian inference",
+                "c": false
+              }
+            ],
+            "hint": "MAP = argmax[log P(D|θ)+log P(θ)]. When P(θ) is constant, MAP = ?",
+            "exp": "MLE implicitly assumes a uniform prior — all parameter settings equally plausible before data. L2 regularization adds a Gaussian prior. This connection means every training decision is a probabilistic choice."
+          },
+          "project": {
+            "title": "Prior Sensitivity Experiment",
+            "desc": "Train same model with different regularization strengths. Interpret each as a prior.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Train 4 nets: no reg, L2(weak), L2(strong), L1",
+              "Measure test accuracy + ECE for each",
+              "Plot: regularization strength vs ECE",
+              "README: interpret each setting as a Bayesian prior. What is strong L2 saying about your beliefs?"
+            ],
+            "hint": "weight_decay in Adam controls L2. Plot weight histograms — does Gaussian prior → Gaussian weights?"
+          }
+        },
+        {
+          "id": "tdl1-2",
+          "title": "Aleatoric vs Epistemic Uncertainty",
+          "meta": "What kind of uncertainty is it?",
+          "xp": 100,
+          "watch": {
+            "title": "Kendall & Gal 2017 \"What Uncertainties Do We Need?\" — abstract + section 1",
+            "url": "https://arxiv.org/abs/1703.04977",
+            "focus": "Foundational paper for uncertainty types in deep learning. Formal definitions of aleatoric and epistemic, how to decompose them in practice."
+          },
+          "concept": {
+            "title": "Not all uncertainty is the same",
+            "body": "<p><strong>Aleatoric</strong>: inherent randomness in data. Blurry image will always be uncertain — more data does not help. <strong>Epistemic</strong>: model ignorance. Reducible with more data. Captured by uncertainty over model parameters.</p><p>Total = aleatoric + epistemic. MC Dropout: epistemic ≈ Var[E(y|x,θ)], aleatoric ≈ E[Var(y|x,θ)].</p>",
+            "analogy": "Aleatoric: measuring boiling liquid temperature — it fluctuates by nature. Epistemic: not knowing the boiling point of an unknown liquid — more experiments resolve this.",
+            "visual": "Total uncertainty = Aleatoric + Epistemic\nAleatoric: E[Var(y|x,θ)] — avg predicted variance\nEpistemic: Var[E(y|x,θ)] — variance of mean preds\nMC Dropout approximates both simultaneously"
+          },
+          "challenge": {
+            "q": "Model uncertain on rare pediatric disease it has never seen. After 10,000 more images, uncertainty drops. Which type?",
+            "opts": [
+              {
+                "t": "Aleatoric — inherent in image quality",
+                "c": false
+              },
+              {
+                "t": "Epistemic — model lacked training examples",
+                "c": true
+              },
+              {
+                "t": "Both equally",
+                "c": false
+              },
+              {
+                "t": "Uncertainty should not change with data",
+                "c": false
+              }
+            ],
+            "hint": "If uncertainty decreases with more data, what type is it by definition?",
+            "exp": "Epistemic — reducible from lack of training data. Adding examples reduced model ignorance. If aleatoric (inherent image ambiguity), more data would not help."
+          },
+          "project": {
+            "title": "Uncertainty Decomposition",
+            "desc": "Train with MC Dropout on MNIST. Decompose into aleatoric and epistemic.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Train CNN with dropout on MNIST",
+              "MC Dropout (T=50) on: MNIST test, rotated MNIST, Fashion-MNIST",
+              "Compute: total entropy, epistemic (variance of means), aleatoric (mean of variances)",
+              "Plot all three for each input type",
+              "README: what does each component tell you about model reliability?"
+            ],
+            "hint": "Epistemic = Var[mean softmax across T runs]. Aleatoric = mean[entropy of each softmax run]."
+          }
+        },
+        {
+          "id": "tdl1-3",
+          "title": "Entropy & KL Divergence",
+          "meta": "Quantifying uncertainty mathematically",
+          "xp": 110,
+          "watch": {
+            "title": "MacKay \"Information Theory, Inference, Learning\" — Chapter 1 (free PDF)",
+            "url": "http://www.inference.org.uk/mackay/itila/",
+            "focus": "Entropy definition, KL divergence definition and asymmetry. 20 min read."
+          },
+          "concept": {
+            "title": "Quantifying uncertainty with information theory",
+            "body": "<p><strong>Entropy</strong> H(p) = −Σp(x)log p(x): how spread out a distribution is. High entropy = high uncertainty. <strong>KL Divergence</strong> KL(p||q) = Σp(x)log(p(x)/q(x)): how different q is from reference p. Not symmetric. Used in variational inference as the regularization term.</p>",
+            "analogy": "Entropy: shuffled deck = maximum uncertainty about next card. Sorted deck = zero entropy. KL: extra bits needed if you assume sorted (q) but it's actually shuffled (p).",
+            "visual": "H(p) = -Σp(x)log₂p(x)  [bits]\nUniform over 4 classes: H=2 bits (maximum)\nCertain (one class=1): H=0 bits\n\nKL(p||q) ≥ 0, = 0 only when p=q\nKL(p||q) ≠ KL(q||p)  (asymmetric!)"
+          },
+          "challenge": {
+            "q": "Model A: [0.97,0.01,0.01,0.01]. Model B: [0.25,0.25,0.25,0.25]. Which has higher entropy?",
+            "opts": [
+              {
+                "t": "Model A: higher entropy, less trustworthy",
+                "c": false
+              },
+              {
+                "t": "Model B: higher entropy — completely uncertain; Model A is highly confident",
+                "c": true
+              },
+              {
+                "t": "Entropy equal — both have 4 classes",
+                "c": false
+              },
+              {
+                "t": "Entropy does not measure trustworthiness",
+                "c": false
+              }
+            ],
+            "hint": "Entropy is maximized by the uniform distribution.",
+            "exp": "Model B has maximum entropy (H=2 bits) — completely uncertain. Model A has very low entropy — highly confident. For a calibrated model, high confidence (low entropy) should correlate with high accuracy. Entropy is your uncertainty score per prediction."
+          },
+          "project": {
+            "title": "Entropy as a Trust Signal",
+            "desc": "Use prediction entropy as an automatic abstention system.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Train classifier, compute entropy of softmax for test set",
+              "Histogram: entropy for correct vs incorrect predictions",
+              "Set threshold: abstain if H > threshold",
+              "Plot accuracy vs coverage curve",
+              "README: what threshold gives the best tradeoff for your use case?"
+            ],
+            "hint": "Entropy = -sum(p*log(p+1e-8)). Plot x=coverage (% predictions made), y=accuracy of those predictions."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "tdl1-a",
+        "title": "Uncertainty Foundation Report",
+        "xp": 250,
+        "desc": "Unified uncertainty analysis: decompose, visualize, and act on all types.",
+        "deliverables": [
+          "Aleatoric + epistemic decomposition on a vision classifier",
+          "Entropy-based abstention with tunable threshold",
+          "KL divergence between model predictions and reference distribution",
+          "Visualization dashboard: all uncertainty signals in one plot",
+          "1-page report: explain each signal in plain English for a clinical collaborator"
+        ],
+        "hint": "The 1-page report is as important as the code. Write it as if explaining to a non-ML clinician who needs to decide whether to trust the system.",
+        "linkedin": "The two types of uncertainty nobody explains properly: aleatoric (irreducible data noise) vs epistemic (model ignorance from lack of data). Thread on measuring both for trustworthy medical AI. #TrustworthyAI"
+      }
+    },
+    {
+      "id": "tdl2",
+      "title": "B — Bayesian Deep Learning",
+      "sub": "MC Dropout · Ensembles · Conformal prediction",
+      "units": [
+        {
+          "id": "tdl2-1",
+          "title": "MC Dropout",
+          "meta": "Gal & Ghahramani 2016 — the key paper",
+          "xp": 130,
+          "watch": {
+            "title": "Gal & Ghahramani 2016 \"Dropout as Bayesian Approximation\" — abstract + sections 1-2",
+            "url": "https://arxiv.org/abs/1506.02142",
+            "focus": "Key insight: keeping dropout ON at test time approximates sampling from the posterior over weights."
+          },
+          "concept": {
+            "title": "Dropout at test time = approximate Bayesian inference",
+            "body": "<p>Standard dropout: random neuron zeroing during <strong>training</strong> only. <strong>MC Dropout</strong>: keep it ON at test time. Run T passes — each samples a different subnetwork, approximating P(θ|data).</p><p>Mean of T predictions = final answer. Variance = epistemic uncertainty. No retraining needed.</p>",
+            "analogy": "Ask 50 doctors who each randomly ignore some knowledge. Average diagnoses → reliable. Disagreement → your uncertainty.",
+            "visual": "T forward passes with dropout ON\npredictions = [f(x,θ₁),...,f(x,θ_T)]\nmean = Σ preds/T  ← final prediction\nvariance = Var(preds) ← epistemic uncertainty\nT=50 is usually sufficient"
+          },
+          "challenge": {
+            "q": "MC Dropout (T=100): 95 runs say \"normal\", 5 say \"pneumonia\". Variance is high. What should system do?",
+            "opts": [
+              {
+                "t": "Report \"normal\" confidently — 95% agree",
+                "c": false
+              },
+              {
+                "t": "Report \"normal\" with HIGH uncertainty flag for clinical review",
+                "c": true
+              },
+              {
+                "t": "Report \"pneumonia\" — be conservative medically",
+                "c": false
+              },
+              {
+                "t": "Reject image, request a new one",
+                "c": false
+              }
+            ],
+            "hint": "The variance IS the uncertainty signal. In safety-critical systems, what do you do with high-variance predictions?",
+            "exp": "Report \"normal\" with HIGH uncertainty flag. The 5 dissenting runs represent real model uncertainty. A trustworthy system surfaces this to the clinician. The clinician makes the final call on ambiguous cases."
+          },
+          "project": {
+            "title": "MC Dropout Spatial Uncertainty Map",
+            "desc": "Add MC Dropout to medical image classifier. Visualize WHERE the model is uncertain spatially.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Add dropout layers to classifier",
+              "T=50 MC Dropout inference passes per image",
+              "Spatial uncertainty: variance per region → uncertainty heatmap",
+              "Overlay heatmap on original image",
+              "Compare: does uncertainty highlight clinically ambiguous regions?"
+            ],
+            "hint": "Variance per region: run T passes with activation hooks, compute variance across passes."
+          }
+        },
+        {
+          "id": "tdl2-2",
+          "title": "Deep Ensembles",
+          "meta": "Multiple models, honest uncertainty",
+          "xp": 120,
+          "watch": {
+            "title": "Lakshminarayanan et al. 2017 — abstract + section 3",
+            "url": "https://arxiv.org/abs/1612.01474",
+            "focus": "Why ensembles work (diversity in function space), how to train them, why they outperform MC Dropout on calibration."
+          },
+          "concept": {
+            "title": "Automated second opinions",
+            "body": "<p>Train N independent models (different seeds). Average predictions at inference. Variance across models = uncertainty. Each model finds a different local minimum — together they explore more of the posterior. Simple, strong, expensive.</p>",
+            "analogy": "You wouldn't trust one doctor for a difficult diagnosis. Get second and third opinions. Deep ensembles are automated second opinions. Their disagreement is honest uncertainty.",
+            "visual": "N=5 independent training runs\nModel i: p_i(y|x)\nMean: p̄ = (1/N)·Σ p_i\nVariance: Var[p_i] ← uncertainty\nHigher N → better but more expensive"
+          },
+          "challenge": {
+            "q": "MC Dropout (T=50) vs Deep Ensembles (N=5) on a resource-constrained robot. Which do you choose?",
+            "opts": [
+              {
+                "t": "Ensembles — always better regardless of resources",
+                "c": false
+              },
+              {
+                "t": "MC Dropout — acceptable uncertainty at 5× lower compute cost",
+                "c": true
+              },
+              {
+                "t": "Neither — too expensive for robotics",
+                "c": false
+              },
+              {
+                "t": "Use both simultaneously",
+                "c": false
+              }
+            ],
+            "hint": "Ensembles require 5× memory and inference time. MC Dropout uses one model with T passes.",
+            "exp": "MC Dropout is the practical choice. N=5 ensembles require 5× memory and inference time. MC Dropout: one model, tune T based on available compute. Quality difference exists but is acceptable for many robotics applications."
+          },
+          "project": {
+            "title": "Ensemble vs MC Dropout Comparison",
+            "desc": "Train ensemble of 5 models. Compare against MC Dropout.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Train 5 independent models (different seeds) for ensemble",
+              "Add MC Dropout to single model, T=50 passes",
+              "Compare: ECE, AUROC (OOD detection), inference time per image",
+              "Calibration curves for both methods",
+              "README: when would you choose each? Be specific about deployment context."
+            ],
+            "hint": "Same architecture for all. ECE and AUROC are your main metrics. time.perf_counter() for latency."
+          }
+        },
+        {
+          "id": "tdl2-3",
+          "title": "Conformal Prediction",
+          "meta": "Guaranteed coverage — the math",
+          "xp": 140,
+          "watch": {
+            "title": "Angelopoulos & Bates 2021 \"A Gentle Introduction to Conformal Prediction\" — sections 1-3",
+            "url": "https://arxiv.org/abs/2107.07511",
+            "focus": "Coverage guarantee, nonconformity scores, how to compute q̂. Clearest introduction to conformal prediction."
+          },
+          "concept": {
+            "title": "Prediction sets with statistical guarantees",
+            "body": "<p>Output a <em>set</em> of classes guaranteed to contain the true label with probability ≥ 1−α. <strong>How</strong>: compute nonconformity scores on calibration set. Find q̂ = (1−α) quantile. At test: include all classes with score ≤ q̂.</p><p><strong>Key guarantee</strong>: P(Y ∈ Ĉ(X)) ≥ 1−α regardless of distribution. Finite-sample, distribution-free. Rare and powerful.</p>",
+            "analogy": "Instead of 'this is pneumonia (90% confident)', say 'diagnosis is in {pneumonia, pleural effusion} — guaranteed to contain the true diagnosis 90% of the time.' Smaller set = more informative = better model.",
+            "visual": "Calibration: s_i = 1-p(y_i|x_i)\nq̂ = (1-α) quantile of {s_1,...,s_n}\nTest: Ĉ(x) = {y: 1-p(y|x) ≤ q̂}\nGuarantee: P(Y∈Ĉ(X)) ≥ 1-α"
+          },
+          "challenge": {
+            "q": "α=0.10, predictor outputs singletons for 60% of images, size 2+ for 40%. What does set size tell you?",
+            "opts": [
+              {
+                "t": "Large sets mean model is wrong — should always output singletons",
+                "c": false
+              },
+              {
+                "t": "Large sets reflect genuine ambiguity — the model is honest about hard cases",
+                "c": true
+              },
+              {
+                "t": "40% large sets means poorly calibrated",
+                "c": false
+              },
+              {
+                "t": "Set size is unrelated to confidence",
+                "c": false
+              }
+            ],
+            "hint": "The guarantee holds regardless of set size. What does a larger set communicate about that specific input?",
+            "exp": "Large sets reflect genuine ambiguity — the model cannot confidently distinguish the included classes. Honest and useful. Smaller average set size while maintaining coverage = better discrimination = better model."
+          },
+          "project": {
+            "title": "Conformal Classifier for Medical Imaging",
+            "desc": "Build conformal predictor. Analyze sets. Verify coverage.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Split: training, calibration (fresh), test sets",
+              "Compute nonconformity scores, find q̂ for α=0.05, 0.10, 0.20",
+              "Apply to test: compute prediction sets per image",
+              "Verify empirical coverage matches guarantee",
+              "Analyze: avg set size, which images get large sets (inspect visually)",
+              "README: how would you present conformal sets to a radiologist?"
+            ],
+            "hint": "Nonconformity score = 1-softmax[true_class]. np.quantile(scores, 1-alpha) gives q̂. Compute q̂ on CALIBRATION set only."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "tdl2-a",
+        "title": "Bayesian Uncertainty System",
+        "xp": 350,
+        "desc": "Production-ready uncertainty module with unified API that any vision model can plug into.",
+        "deliverables": [
+          "UncertaintyEstimator class: wraps any PyTorch model → returns mean, variance, entropy",
+          "Supports MC Dropout and Ensemble modes (unified API)",
+          "Benchmark: ECE, AUROC, latency per method on medical imaging",
+          "Integration demo: plug into CV classifier with zero code changes",
+          "README + API docs — as if publishing open-source"
+        ],
+        "hint": "Clean API: estimator.predict(x, method=\"mc_dropout\", T=50) → {mean, variance, entropy}.",
+        "linkedin": "Released my Bayesian uncertainty estimation library: supports MC Dropout, Deep Ensembles, Conformal Prediction. Clean API, benchmarked on chest X-ray data. #OpenSource #TrustworthyAI"
+      }
+    },
+    {
+      "id": "tdl3",
+      "title": "C — Calibration & Reliability",
+      "sub": "ECE · Temperature scaling · Conformal sets",
+      "units": [
+        {
+          "id": "tdl3-1",
+          "title": "Calibration & ECE",
+          "meta": "Confidence should match accuracy",
+          "xp": 110,
+          "watch": {
+            "title": "Guo et al. 2017 \"On Calibration of Modern Neural Networks\" — abstract + sections 1-3",
+            "url": "https://arxiv.org/abs/1706.04599",
+            "focus": "What ECE measures, the reliability diagram, why modern deep nets are overconfident."
+          },
+          "concept": {
+            "title": "When 90% confident means 90% accurate",
+            "body": "<p>A model is <strong>calibrated</strong> if stated confidence matches actual accuracy. Most deep networks are <strong>overconfident</strong>. <strong>ECE</strong>: bin predictions by confidence, measure |accuracy − confidence| per bin, weight by bin size. ECE=0 is perfect. ECE>0.05 concerning for safety-critical use.</p>",
+            "analogy": "Weather forecaster saying '70% rain' should be right 70% of those days. Says 70%, rains 40% — overconfident. ECE measures this gap systematically.",
+            "visual": "Reliability diagram:\nx=confidence bins, y=accuracy\nPerfect: on diagonal y=x\nOverconfident: points below diagonal\nECE = Σ(|B|/n)·|acc(B)-conf(B)|"
+          },
+          "challenge": {
+            "q": "100 predictions, confidence 0.80–0.90, 65 correct. Calibration error for this bin?",
+            "opts": [
+              {
+                "t": "~0.20 — overconfident by 20 percentage points",
+                "c": true
+              },
+              {
+                "t": "~0.15 — underconfident",
+                "c": false
+              },
+              {
+                "t": "~0.65 — ECE equals accuracy",
+                "c": false
+              },
+              {
+                "t": "Cannot compute without more bins",
+                "c": false
+              }
+            ],
+            "hint": "Avg bin confidence ≈ 0.85. Accuracy = 65/100 = 0.65. Error = |0.85-0.65|.",
+            "exp": "|0.85-0.65| = 0.20. Model claims 85% but is right 65% — 20pp overconfident. For medical AI, 0.20 ECE in the high-confidence range is dangerous."
+          },
+          "project": {
+            "title": "Calibration Audit Pipeline",
+            "desc": "Build a reusable calibration audit tool.",
+            "format": "Jupyter notebook (reusable functions) + README",
+            "deliverables": [
+              "Compute ECE with configurable bins (10, 15, 20)",
+              "Plot reliability diagram with per-bin confidence intervals",
+              "Apply to your CV Chapter 2 classifier: overconfident?",
+              "Apply after MC Dropout: does uncertainty estimation improve calibration?",
+              "README: interpret results as a model card for clinical deployment"
+            ],
+            "hint": "reliability_from_predictions(y_true, y_prob, n_bins) → ECE, bin_accs, bin_confs. Make it reusable across all experiments."
+          }
+        },
+        {
+          "id": "tdl3-2",
+          "title": "Temperature Scaling",
+          "meta": "One parameter to calibrate any model",
+          "xp": 100,
+          "watch": {
+            "title": "Guo et al. 2017 — section 4: Temperature Scaling",
+            "url": "https://arxiv.org/abs/1706.04599",
+            "focus": "How temperature scaling works, why it doesn't change accuracy, how to tune T."
+          },
+          "concept": {
+            "title": "Post-hoc calibration without retraining",
+            "body": "<p>Divide logits by T>1 before softmax. T>1 = softer (less confident). T<1 = sharper. Tune T on validation set by minimizing NLL. <strong>No retraining</strong>. Accuracy unchanged because argmax(logits/T) = argmax(logits).</p>",
+            "analogy": "Volume dial on a speaker. Music (predictions) stays the same — you adjust how loud (confident) it sounds. Turn down (T>1) → sounds less certain, usually more accurately.",
+            "visual": "calibrated_logits = logits/T\nT>1: softer softmax, lower confidence\nT<1: sharper, higher confidence\nTune: minimize NLL(val, logits/T) over T∈[0.1,10]\naccuracy unchanged: argmax(L/T) = argmax(L)"
+          },
+          "challenge": {
+            "q": "After temperature scaling T=2.5: ECE drops 0.12→0.03, accuracy stays identical. Why?",
+            "opts": [
+              {
+                "t": "Temperature scaling changes probabilities but not the argmax prediction",
+                "c": true
+              },
+              {
+                "t": "Accuracy never affected by calibration",
+                "c": false
+              },
+              {
+                "t": "T=2.5 too small to affect model",
+                "c": false
+              },
+              {
+                "t": "ECE and accuracy always independent",
+                "c": false
+              }
+            ],
+            "hint": "Does dividing all logits by T change which class has the highest logit?",
+            "exp": "argmax(logits/T) = argmax(logits) — relative ordering unchanged. Predicted class never changes → accuracy identical. Only probabilities change (softer) → fixes overconfidence."
+          },
+          "project": {
+            "title": "Temperature Scaling from Scratch",
+            "desc": "Implement temperature scaling. Apply to overconfident classifier.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "temperature_scale(logits, T) and find_optimal_T(val_logits, val_labels)",
+              "Apply to your medical classifier",
+              "Reliability diagram before and after scaling",
+              "Plot NLL vs T curve (show convergence)",
+              "README: ECE improvement and clinical trust assessment"
+            ],
+            "hint": "scipy.optimize.minimize_scalar on NLL. Range T∈(0.1,10). Always use val set for tuning, test set only for final evaluation."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "tdl3-a",
+        "title": "Clinical Reliability System",
+        "xp": 400,
+        "desc": "Temperature scaling + conformal prediction sets + abstention policy. Research-paper quality.",
+        "deliverables": [
+          "Temperature scaling from scratch (no library)",
+          "Conformal sets at 90% and 95% coverage",
+          "Abstention policy: set size>2 → route to radiologist",
+          "Coverage verification, set size distribution, abstention rate",
+          "2-page research write-up: methods, results, clinical interpretation"
+        ],
+        "hint": "Structure: motivation, methods, results, clinical implications, limitations. Show to your supervisor as preliminary work.",
+        "linkedin": "Clinical AI reliability: temperature scaling + conformal prediction gives radiologists prediction sets with guaranteed coverage. Sharing methodology from my research. #MedicalAI #ConformalPrediction"
+      }
+    },
+    {
+      "id": "tdl4",
+      "title": "D — Robustness & Distribution Shift",
+      "sub": "Adversarial · Domain shift · Physical systems",
+      "units": [
+        {
+          "id": "tdl4-1",
+          "title": "Adversarial Examples",
+          "meta": "FGSM, PGD — the math",
+          "xp": 140,
+          "watch": {
+            "title": "Goodfellow et al. 2015 \"Explaining and Harnessing Adversarial Examples\" — abstract + sections 1-3",
+            "url": "https://arxiv.org/abs/1412.6572",
+            "focus": "What FGSM is, the sign(gradient) intuition, why adversarial examples exist."
+          },
+          "concept": {
+            "title": "Inputs designed to fool your model",
+            "body": "<p><strong>FGSM</strong>: x_adv = x + ε·sign(∇_x L). One step increasing loss. Fast but weak. <strong>PGD</strong>: iterative FGSM with projection back to ε-ball. Stronger attack, standard benchmark.</p><p>For physical systems: adversarial patches can fool detection in the real world.</p>",
+            "analogy": "A forged painting looks identical to humans but has subtle patterns fooling an AI authentication system. FGSM finds the minimal change that maximally confuses the classifier.",
+            "visual": "FGSM: x_adv = x + ε·sign(∇_x L)\nPGD: repeat T times:\n  x = x + α·sign(∇_x L)\n  x = clip(x, x_orig-ε, x_orig+ε)\nε = max perturbation budget (e.g. 8/255)"
+          },
+          "challenge": {
+            "q": "FGSM uses sign(∇_x L) — the sign, not the full gradient. Why?",
+            "opts": [
+              {
+                "t": "Sign is faster to compute",
+                "c": false
+              },
+              {
+                "t": "Sign ensures equal ε perturbation per pixel under L∞ constraint — maximally effective within the budget",
+                "c": true
+              },
+              {
+                "t": "Raw gradient would overshoot ε",
+                "c": false
+              },
+              {
+                "t": "Sign avoids numerical instability",
+                "c": false
+              }
+            ],
+            "hint": "FGSM operates under L∞ norm ball of radius ε. What does sign() do to each pixel?",
+            "exp": "L∞: every pixel can change by at most ε. sign(gradient) gives ±ε per pixel — maximally effective under this constraint. Raw gradient would give larger changes to high-gradient pixels — less efficient under L∞ budget."
+          },
+          "project": {
+            "title": "Adversarial Attack & Defense",
+            "desc": "Implement FGSM and PGD. Measure robustness. Apply adversarial training.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "FGSM from scratch (~5 lines of PyTorch)",
+              "PGD iterative with projection",
+              "Clean vs FGSM vs PGD accuracy at ε=4/255 and 8/255",
+              "Adversarial training with FGSM, measure improvement",
+              "README: which attack matters most for your deployment context?"
+            ],
+            "hint": "x_adv = (x + eps*x.grad.sign()).clamp(0,1). model.zero_grad(), loss.backward() for gradients."
+          }
+        },
+        {
+          "id": "tdl4-2",
+          "title": "Domain Shift & Generalization",
+          "meta": "Covariate shift, domain adaptation, robustness",
+          "xp": 130,
+          "watch": {
+            "title": "Quinonero-Candela \"Dataset Shift in Machine Learning\" — chapter 1",
+            "url": "https://mitpress.mit.edu/9780262170055/dataset-shift-in-machine-learning/",
+            "focus": "Covariate shift definition, label shift, why standard ML assumes i.i.d. data and why this fails in deployment."
+          },
+          "concept": {
+            "title": "The deployment gap — the real trustworthiness problem",
+            "body": "<p><strong>Covariate shift</strong>: P(X) changes, P(Y|X) same. Scanner differences in medical imaging. <strong>Domain generalization</strong>: train on multiple sources, deploy on unseen target. <strong>Techniques</strong>: data augmentation, domain adversarial training, test-time adaptation.</p>",
+            "analogy": "Training a driver in sunny California, deploying in Norwegian winter. Driving rules are the same. Visual inputs are completely different — snow, ice, darkness.",
+            "visual": "Source: Hospital A, B, C\nTarget: Hospital D (unseen)\nGoal: model on A+B+C → generalizes to D\nCovariate shift: P(X_A) ≠ P(X_D), P(Y|X) same"
+          },
+          "challenge": {
+            "q": "Model: 91% on Hospital A, 68% on Hospital B (same disease). First thing you measure?",
+            "opts": [
+              {
+                "t": "Retrain on Hospital B data immediately",
+                "c": false
+              },
+              {
+                "t": "Measure calibration and uncertainty at B — is the model at least uncertain about its errors?",
+                "c": true
+              },
+              {
+                "t": "Add data augmentation",
+                "c": false
+              },
+              {
+                "t": "Use larger architecture",
+                "c": false
+              }
+            ],
+            "hint": "Before fixing, diagnose. Confidently wrong vs appropriately uncertain — completely different responses.",
+            "exp": "Diagnose first. Confidently wrong at B = dangerous calibration + shift problem. Uncertain on B errors = coverage problem, fixable with targeted data. The uncertainty signal tells you whether the model knows it's failing."
+          },
+          "project": {
+            "title": "Cross-Hospital Generalization Study",
+            "desc": "Simulate multi-site medical imaging. Train on one domain, test on another.",
+            "format": "Jupyter notebook + README",
+            "deliverables": [
+              "Synthetic domain shift: ColorJitter, RandomGamma, RandomBrightnessContrast",
+              "Train on domain A, evaluate on domain B without adaptation",
+              "Measure: accuracy gap, ECE gap, uncertainty increase on B",
+              "Apply: histogram normalization or fine-tuning on 50 B samples",
+              "Report: how much does each fix help?"
+            ],
+            "hint": "albumentations: ColorJitter, RandomGamma simulate scanner differences. Performance gap = dataset shift effect."
+          }
+        }
+      ],
+      "assignment": {
+        "id": "tdl4-a",
+        "title": "Trustworthy AI Capstone — PhD Research",
+        "xp": 600,
+        "desc": "Full audit: adversarial robustness, domain shift, calibration, uncertainty. Research-grade. Your PhD research.",
+        "deliverables": [
+          "Adversarial: FGSM + PGD accuracy curve at multiple ε",
+          "Domain shift: multi-site evaluation, performance + uncertainty profiles",
+          "Calibration: ECE + reliability diagrams pre/post temperature scaling",
+          "Uncertainty: MC Dropout decomposition, OOD detection AUROC",
+          "Conformal sets: coverage verification at 90% and 95%",
+          "Research report 3–4 pages — workshop submission ready"
+        ],
+        "hint": "Structure: abstract, intro, methods, results table+figures, discussion, limitations, future work. Your first full paper draft.",
+        "linkedin": "Submitted my first workshop paper on trustworthy perception for medical imaging: adversarial robustness + domain shift + calibrated uncertainty. Sharing the preprint. #PhDLife #TrustworthyAI"
+      }
+    }
+  ]
+}

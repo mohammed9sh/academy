@@ -1,0 +1,24 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+*.swp
+
+# Logs
+*.log
+
+# Secrets / local env (Firebase keys etc. should never be committed)
+.env
+.env.local
+
+# Build artifacts (if a bundler is introduced later)
+node_modules/
+dist/
+
+# Session-continuity archives — not part of the repo, git replaces this role
+*.zip
+
+# Local scratch from working with Claude — not part of the repo
+Claude outputs/
